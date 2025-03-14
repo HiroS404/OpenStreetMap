@@ -89,7 +89,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
     if (_currentLocation == null || _destination == null) return;
 
     final url = Uri.parse(
-      "http://router.project-osrm.org/route/v1/driving/"
+      "https://router.project-osrm.org/route/v1/driving/"
       "${_currentLocation!.longitude},${_currentLocation!.latitude};"
       "${_destination!.longitude},${_destination!.latitude}?overview=full&geometries=polyline",
     );
