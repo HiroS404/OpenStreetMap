@@ -1,11 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
 class OpenstreetmapScreen extends StatefulWidget {
@@ -17,13 +16,11 @@ class OpenstreetmapScreen extends StatefulWidget {
 
 class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
   final MapController _mapController = MapController();
-  final Location _location = Location();
   final TextEditingController _locationController = TextEditingController();
   bool isLoading = true;
 
   LatLng? _currentLocation;
   LatLng? _destination;
-
   List<LatLng> _route = [];
 
   @override
@@ -33,18 +30,36 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
   }
 
   Future<void> _initializeLocation() async {
-    if (!await _checktheRequestPermission()) return;
+    bool serviceEnabled;
+    LocationPermission permission;
 
-    _location.onLocationChanged.listen((LocationData locationData) {
-      if (locationData.latitude != null && locationData.longitude != null) {
-        setState(() {
-          _currentLocation = LatLng(
-            locationData.latitude!,
-            locationData.longitude!,
-          );
-          isLoading = false;
-        });
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      errorMessage("Location services are disabled.");
+      return;
+    }
+
+    // Request permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        errorMessage("Location permissions are denied.");
+        return;
       }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      errorMessage("Location permissions are permanently denied.");
+      return;
+    }
+
+    // Get current location
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentLocation = LatLng(position.latitude, position.longitude);
+      isLoading = false;
     });
   }
 
@@ -72,17 +87,22 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
 
   Future<void> fetchRoute() async {
     if (_currentLocation == null || _destination == null) return;
+
     final url = Uri.parse(
       "http://router.project-osrm.org/route/v1/driving/"
-      '${_currentLocation!.longitude},${_currentLocation!.latitude};'
-      '${_destination!.longitude},${_destination!.latitude}?overview=full&geometries=polyline',
+      "${_currentLocation!.longitude},${_currentLocation!.latitude};"
+      "${_destination!.longitude},${_destination!.latitude}?overview=full&geometries=polyline",
     );
-    final response = await http.get(url);
 
+    final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final geometry = data['routes'][0]['geometry'];
-      _decodePolyline(geometry);
+      if (data['routes'].isNotEmpty) {
+        final geometry = data['routes'][0]['geometry'];
+        _decodePolyline(geometry);
+      } else {
+        errorMessage('No route found');
+      }
     } else {
       errorMessage('Error fetching route');
     }
@@ -102,35 +122,17 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
     });
   }
 
-  Future<bool> _checktheRequestPermission() async {
-    bool serviceEnabled = await _location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await _location.requestService();
-      if (!serviceEnabled) {
-        return false;
-      }
-    }
-
-    PermissionStatus permissionGranted = await _location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await _location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   Future<void> _userCurrentLocation() async {
-    if (_currentLocation != null) {
-      _mapController.move(_currentLocation!, 15.0);
-    } else {
+    if (_currentLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Location not found'),
+          content: Text('Fetching location...'),
           duration: Duration(seconds: 2),
         ),
       );
+      await _initializeLocation();
+    } else {
+      _mapController.move(_currentLocation!, 15.0);
     }
   }
 
@@ -159,7 +161,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
               minZoom: 0,
               maxZoom: 100,
             ),
-
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -169,7 +170,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
                   marker: DefaultLocationMarker(
                     child: Icon(Icons.location_pin, color: Colors.white),
                   ),
-
                   markerSize: Size(35, 35),
                   markerDirection: MarkerDirection.heading,
                 ),
@@ -224,10 +224,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
                   IconButton(
                     style: IconButton.styleFrom(backgroundColor: Colors.white),
                     onPressed: () {
-                      // ignore: non_constant_identifier_names
-                      final Location = _locationController.text.trim();
-                      if (Location.isNotEmpty) {
-                        fetchCoordinatesPoint(Location);
+                      final location = _locationController.text.trim();
+                      if (location.isNotEmpty) {
+                        fetchCoordinatesPoint(location);
                       }
                     },
                     icon: const Icon(Icons.search),
