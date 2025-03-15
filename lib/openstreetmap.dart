@@ -145,12 +145,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        foregroundColor: Colors.white,
-        title: const Text('MAPAkaon'),
-        backgroundColor: Colors.blue,
-        centerTitle: true,
-      ),
       body: Stack(
         children: [
           FlutterMap(
