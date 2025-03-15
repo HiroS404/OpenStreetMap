@@ -145,6 +145,24 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'MAPAkaon',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.deepOrange,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white, // Slightly darker blue
+        elevation: 4, // Adds a shadow effect
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(16), // Smooth curved bottom
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           FlutterMap(
@@ -233,7 +251,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _userCurrentLocation,
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.deepOrangeAccent,
         child: const Icon(Icons.my_location, size: 30, color: Colors.white),
       ),
     );

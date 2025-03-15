@@ -144,8 +144,14 @@ class RestaurantCard extends StatelessWidget {
                   // Add navigation logic to the Directions page here
                 },
                 icon: const Icon(Icons.directions),
-                label: const Text("Go to Directions"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                label: const Text(
+                  "Go to Directions",
+                  style: TextStyle(color: Colors.black),
+                ),
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                ),
               ),
             ),
           ],

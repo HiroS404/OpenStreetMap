@@ -13,7 +13,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: BottomNavBar());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: BottomNavBar(),
+      title: 'MAPAkaon',
+      theme: ThemeData(primarySwatch: Colors.orange),
+    );
   }
 }
 
@@ -52,24 +57,6 @@ class BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'MAPAkaon',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepOrange,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white, // Slightly darker blue
-        elevation: 4, // Adds a shadow effect
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(16), // Smooth curved bottom
-          ),
-        ),
-      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white, // White background
