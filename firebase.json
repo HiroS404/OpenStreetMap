@@ -1,16 +1,1 @@
-{
-  "hosting": {
-    "public": "build/web",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
+{"flutter":{"platforms":{"android":{"default":{"projectId":"mapa-kaon","appId":"1:920225788373:android:b33df0dc5bc983b0ef8d5c","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"mapa-kaon","configurations":{"android":"1:920225788373:android:b33df0dc5bc983b0ef8d5c","ios":"1:920225788373:ios:dae0651842c7c02eef8d5c","macos":"1:920225788373:ios:dae0651842c7c02eef8d5c","web":"1:920225788373:web:3f30fd9173700616ef8d5c","windows":"1:920225788373:web:1b3454395aca9f7fef8d5c"}}}}}}

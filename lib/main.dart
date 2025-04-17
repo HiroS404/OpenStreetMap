@@ -1,10 +1,14 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:map_try/firebase_options.dart';
 import 'package:map_try/home_page.dart';
 import 'package:map_try/openstreetmap.dart';
 import 'package:map_try/search_modal.dart';
 import 'package:map_try/settings_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
