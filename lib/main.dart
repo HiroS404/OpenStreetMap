@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:map_try/firebase_options.dart';
 import 'package:map_try/home_page.dart';
 import 'package:map_try/openstreetmap.dart';
@@ -22,6 +23,12 @@ class MyApp extends StatelessWidget {
       home: BottomNavBar(),
       title: 'MAPAkaon',
       theme: ThemeData(primarySwatch: Colors.orange),
+      routes: {
+        '/map':
+            (context) => OpenstreetmapScreen(
+              destinationNotifier: ValueNotifier<LatLng?>(null),
+            ),
+      },
     );
   }
 }
@@ -34,20 +41,29 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 1; // Default to map page
+  int _selectedIndex = 1;
 
-  final List<Widget> _pages = [
-    HomePage(),
-    OpenstreetmapScreen(),
-    Placeholder(), // Search is a modal, not a page
-    SettingsPage(),
-  ];
+  final ValueNotifier<LatLng?> destinationNotifier = ValueNotifier(null);
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomePage(),
+      OpenstreetmapScreen(destinationNotifier: destinationNotifier),
+      Container(), // Search will not be visible in IndexedStack
+      SettingsPage(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     if (index == 2) {
       showModalBottomSheet(
         context: context,
-        builder: (context) => SearchModal(),
+        builder:
+            (context) => SearchModal(destinationNotifier: destinationNotifier),
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
       );
@@ -61,14 +77,11 @@ class BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white, // White background
-        elevation: 5, // Slight shadow
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.orange, // Selected item color
-        unselectedItemColor:
-            Colors.black54, // Shaded black for unselected items
+        selectedItemColor: Colors.orange,
+        unselectedItemColor: Colors.black54,
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),

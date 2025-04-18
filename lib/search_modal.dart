@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 class SearchModal extends StatefulWidget {
-  const SearchModal({super.key});
-
+  final ValueNotifier<LatLng?> destinationNotifier;
+  const SearchModal({super.key, required this.destinationNotifier});
   @override
   State<SearchModal> createState() => _SearchModalState();
 }
@@ -21,7 +22,19 @@ class _SearchModalState extends State<SearchModal> {
 
     final List<Map<String, dynamic>> fetchedResults =
         snapshot.docs.map((doc) {
-          return doc.data();
+          final data = doc.data();
+
+          // Extract latitude and longitude as numbers (assumed as 'num' type in Firestore)
+          final latitude = data['latitude'] as double? ?? 0.0;
+          final longitude = data['longitude'] as double? ?? 0.0;
+
+          return {
+            'name': data['name'],
+            'route': data['route'],
+            'latitude': latitude,
+            'longitude': longitude,
+            'photoUrl': data['photoUrl'],
+          };
         }).toList();
 
     setState(() {
@@ -98,7 +111,11 @@ class _SearchModalState extends State<SearchModal> {
                   Expanded(
                     child:
                         _results.isEmpty
-                            ? const Center(child: Text("No results found."))
+                            ? const Center(
+                              child: Text(
+                                "No results found. \n try adobo, pancit canton, or fried chicken, amu plng or example im tired bruhhh",
+                              ),
+                            )
                             : ListView.builder(
                               controller: scrollController,
                               itemCount: _results.length,
@@ -108,9 +125,11 @@ class _SearchModalState extends State<SearchModal> {
                                   name: resto['name'],
                                   description:
                                       "${resto['address']} • Route: ${resto['route']}",
-                                  photoUrl:
-                                      resto['photoUrl'] ??
-                                      '', // fallback if null
+                                  photoUrl: resto['photoUrl'] ?? '',
+                                  latitude: resto['latitude'] ?? 0.0,
+                                  longitude: resto['longitude'] ?? 0.0,
+                                  destinationNotifier:
+                                      widget.destinationNotifier,
                                 );
                               },
                             ),
@@ -130,12 +149,18 @@ class RestaurantCard extends StatelessWidget {
   final String name;
   final String description;
   final String photoUrl;
+  final double latitude;
+  final double longitude;
+  final ValueNotifier<LatLng?> destinationNotifier; // 👈 Add this
 
   const RestaurantCard({
     super.key,
     required this.name,
     required this.description,
     required this.photoUrl,
+    required this.latitude,
+    required this.longitude,
+    required this.destinationNotifier, // 👈 And include in constructor
   });
 
   @override
@@ -185,8 +210,16 @@ class RestaurantCard extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pop(context); // Close modal
-                      // Add navigation logic to Directions page
+                      // ✅ Update the notifier directly instead of navigating
+                      destinationNotifier.value = LatLng(latitude, longitude);
+                      // print(
+                      //   "Database Latitude: ${latitude}, Longitude: ${longitude}",
+                      // );
+                      // print(
+                      //   "Destination updated: ${destinationNotifier.value}",
+                      // );
+
+                      Navigator.pop(context); // Close modal if it's open
                     },
                     icon: const Icon(Icons.directions),
                     label: const Text(

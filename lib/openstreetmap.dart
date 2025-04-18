@@ -8,54 +8,106 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
 class OpenstreetmapScreen extends StatefulWidget {
-  const OpenstreetmapScreen({super.key});
+  final ValueNotifier<LatLng?> destinationNotifier;
+  const OpenstreetmapScreen({super.key, required this.destinationNotifier});
 
   @override
   State<OpenstreetmapScreen> createState() => _OpenstreetmapScreenState();
 }
 
-class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
-  final MapController _mapController = MapController();
-  final TextEditingController _locationController = TextEditingController();
-  bool isLoading = true;
+class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
 
+  final MapController _mapController = MapController();
   LatLng? _currentLocation;
+  late final ValueNotifier<LatLng?> _destinationNotifier;
   LatLng? _destination;
   List<LatLng> _route = [];
+  bool isLoading = true;
+
+  void _fitMapToRoute() {
+    if (_route.isEmpty) return;
+
+    final latitudes = _route.map((p) => p.latitude).toList();
+    final longitudes = _route.map((p) => p.longitude).toList();
+
+    final southWest = LatLng(
+      latitudes.reduce((a, b) => a < b ? a : b),
+      longitudes.reduce((a, b) => a < b ? a : b),
+    );
+
+    final northEast = LatLng(
+      latitudes.reduce((a, b) => a > b ? a : b),
+      longitudes.reduce((a, b) => a > b ? a : b),
+    );
+
+    final centerLat = (southWest.latitude + northEast.latitude) / 2;
+    final centerLng = (southWest.longitude + northEast.longitude) / 2;
+    final center = LatLng(centerLat, centerLng);
+
+    const double zoomLevel = 15.0; // Define a default zoom level
+    _mapController.move(center, zoomLevel);
+  }
 
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
+    _destinationNotifier = widget.destinationNotifier;
+
+    _initializeLocation().then((_) {
+      _destinationNotifier.addListener(() {
+        final newDestination = _destinationNotifier.value;
+        // print("New destination set: $newDestination");
+
+        if (newDestination != null && _currentLocation != null) {
+          _destination = newDestination;
+          fetchRoute(newDestination);
+        }
+      });
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    if (args != null && _destination == null) {
+      final double? lat = args['lat'] as double?;
+      final double? lng = args['lng'] as double?;
+      if (lat != null && lng != null) {
+        final accurateLatLng = LatLng(lat, lng);
+        _destination = accurateLatLng;
+        _destinationNotifier.value = accurateLatLng;
+        fetchRoute(accurateLatLng);
+      }
+    }
   }
 
   Future<void> _initializeLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      errorMessage("Location services are disabled.");
+      _showError("Location services are disabled.");
       return;
     }
 
-    // Request permission
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        errorMessage("Location permissions are denied.");
+        _showError("Location permissions are denied.");
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      errorMessage("Location permissions are permanently denied.");
+      _showError("Location permissions are permanently denied.");
       return;
     }
 
-    // Get current location
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
@@ -63,35 +115,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
     });
   }
 
-  Future<void> fetchCoordinatesPoint(String location) async {
-    final url = Uri.parse(
-      'https://nominatim.openstreetmap.org/search?q=$location&format=json&limit=1',
-    );
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data.isNotEmpty) {
-        final lat = double.parse(data[0]['lat']);
-        final lon = double.parse(data[0]['lon']);
-        setState(() {
-          _destination = LatLng(lat, lon);
-        });
-        await fetchRoute();
-      } else {
-        errorMessage('Location not found');
-      }
-    } else {
-      errorMessage('Error fetching location');
-    }
-  }
-
-  Future<void> fetchRoute() async {
-    if (_currentLocation == null || _destination == null) return;
+  Future<void> fetchRoute(LatLng destination) async {
+    if (_currentLocation == null) return;
 
     final url = Uri.parse(
       "https://router.project-osrm.org/route/v1/driving/"
       "${_currentLocation!.longitude},${_currentLocation!.latitude};"
-      "${_destination!.longitude},${_destination!.latitude}?overview=full&geometries=polyline",
+      "${destination.longitude},${destination.latitude}?overview=full&geometries=polyline",
     );
 
     final response = await http.get(url);
@@ -100,19 +130,18 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
       if (data['routes'].isNotEmpty) {
         final geometry = data['routes'][0]['geometry'];
         _decodePolyline(geometry);
+        _fitMapToRoute();
       } else {
-        errorMessage('No route found');
+        _showError('No route found');
       }
     } else {
-      errorMessage('Error fetching route');
+      _showError('Error fetching route');
     }
   }
 
   void _decodePolyline(String encodedPolyline) {
-    PolylinePoints polylinePoints = PolylinePoints();
-    List<PointLatLng> decodePoints = polylinePoints.decodePolyline(
-      encodedPolyline,
-    );
+    final polylinePoints = PolylinePoints();
+    final decodePoints = polylinePoints.decodePolyline(encodedPolyline);
 
     setState(() {
       _route =
@@ -136,7 +165,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
     }
   }
 
-  void errorMessage(String message) {
+  void _showError(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
@@ -144,6 +173,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -155,98 +185,60 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white, // Slightly darker blue
-        elevation: 4, // Adds a shadow effect
+        backgroundColor: Colors.white,
+        elevation: 4,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(16), // Smooth curved bottom
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
       ),
-      body: Stack(
+      body: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: _currentLocation ?? const LatLng(0, 0),
+          initialZoom: 2.0,
+          minZoom: 0,
+          maxZoom: 300,
+        ),
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _currentLocation ?? const LatLng(0, 0),
-              initialZoom: 2.0,
-              minZoom: 0,
-              maxZoom: 100,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              ),
-              CurrentLocationLayer(
-                style: LocationMarkerStyle(
-                  marker: DefaultLocationMarker(
-                    child: Icon(Icons.location_pin, color: Colors.white),
-                  ),
-                  markerSize: Size(35, 35),
-                  markerDirection: MarkerDirection.heading,
-                ),
-              ),
-              if (_destination != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      width: 50.0,
-                      height: 50.0,
-                      point: _destination!,
-                      child: const Icon(
-                        Icons.location_pin,
-                        size: 40,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              if (_currentLocation != null &&
-                  _destination != null &&
-                  _route.isNotEmpty)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(points: _route, color: Colors.red, strokeWidth: 5),
-                  ],
-                ),
-            ],
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter location',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    style: IconButton.styleFrom(backgroundColor: Colors.white),
-                    onPressed: () {
-                      final location = _locationController.text.trim();
-                      if (location.isNotEmpty) {
-                        fetchCoordinatesPoint(location);
-                      }
-                    },
-                    icon: const Icon(Icons.search),
-                  ),
-                ],
+          CurrentLocationLayer(
+            style: LocationMarkerStyle(
+              marker: DefaultLocationMarker(
+                child: Icon(Icons.location_pin, color: Colors.white),
               ),
+              markerSize: const Size(35, 35),
+              markerDirection: MarkerDirection.heading,
             ),
           ),
+          if (_destinationNotifier.value != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  width: 50.0,
+                  height: 50.0,
+                  point: _destinationNotifier.value!,
+                  child: const Icon(
+                    Icons.location_pin,
+                    size: 40,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ],
+            ),
+          if (_currentLocation != null &&
+              _destination != null &&
+              _route.isNotEmpty)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: _route,
+                  color: Colors.orangeAccent,
+                  strokeWidth: 10,
+                ),
+              ],
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
