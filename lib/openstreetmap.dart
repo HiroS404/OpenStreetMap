@@ -234,7 +234,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               polylines: [
                 Polyline(
                   points: _route,
-                  color: Colors.orangeAccent,
+                  color: Colors.blueAccent,
                   strokeWidth: 10,
                 ),
               ],

@@ -33,6 +33,7 @@ class _SearchModalState extends State<SearchModal> {
             'route': data['route'],
             'latitude': latitude,
             'longitude': longitude,
+            'address': data['address'],
             'photoUrl': data['photoUrl'],
           };
         }).toList();
@@ -113,7 +114,7 @@ class _SearchModalState extends State<SearchModal> {
                         _results.isEmpty
                             ? const Center(
                               child: Text(
-                                "No results found. \n try adobo, pancit canton, or fried chicken, amu plng or example im tired bruhhh",
+                                "No results found. \n try adobo, pancit canton, or fried chicken, amu plng na example brtt brtt \n or try type all para sa debugging",
                               ),
                             )
                             : ListView.builder(
@@ -121,10 +122,13 @@ class _SearchModalState extends State<SearchModal> {
                               itemCount: _results.length,
                               itemBuilder: (context, index) {
                                 final resto = _results[index];
+                                // print("Resto data keys: ${resto.keys}");
+                                // print("Full restaurant document: $resto");
+
                                 return RestaurantCard(
                                   name: resto['name'],
                                   description:
-                                      "${resto['address']} • Route: ${resto['route']}",
+                                      "Short Description sheshh.......\n\n${resto['address'] ?? 'No address'} •  ${resto['route']}",
                                   photoUrl: resto['photoUrl'] ?? '',
                                   latitude: resto['latitude'] ?? 0.0,
                                   longitude: resto['longitude'] ?? 0.0,
@@ -151,7 +155,7 @@ class RestaurantCard extends StatelessWidget {
   final String photoUrl;
   final double latitude;
   final double longitude;
-  final ValueNotifier<LatLng?> destinationNotifier; // 👈 Add this
+  final ValueNotifier<LatLng?> destinationNotifier; //
 
   const RestaurantCard({
     super.key,
@@ -160,7 +164,7 @@ class RestaurantCard extends StatelessWidget {
     required this.photoUrl,
     required this.latitude,
     required this.longitude,
-    required this.destinationNotifier, // 👈 And include in constructor
+    required this.destinationNotifier, //
   });
 
   @override
