@@ -194,8 +194,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          initialCenter: _currentLocation ?? const LatLng(0, 0),
-          initialZoom: 2.0,
+          initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
+          initialZoom: 14.0,
           minZoom: 0,
           maxZoom: 300,
         ),
