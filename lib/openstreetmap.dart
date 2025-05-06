@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
@@ -26,74 +27,23 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   late final ValueNotifier<LatLng?> _destinationNotifier;
   LatLng? _destination;
   List<LatLng> _route = [];
-  bool isLoading = true;
-
-  void _fitMapToRoute() {
-    if (_route.isEmpty) return;
-
-    final latitudes = _route.map((p) => p.latitude).toList();
-    final longitudes = _route.map((p) => p.longitude).toList();
-
-    final southWest = LatLng(
-      latitudes.reduce((a, b) => a < b ? a : b),
-      longitudes.reduce((a, b) => a < b ? a : b),
-    );
-
-    final northEast = LatLng(
-      latitudes.reduce((a, b) => a > b ? a : b),
-      longitudes.reduce((a, b) => a > b ? a : b),
-    );
-
-    final centerLat = (southWest.latitude + northEast.latitude) / 2;
-    final centerLng = (southWest.longitude + northEast.longitude) / 2;
-    final center = LatLng(centerLat, centerLng);
-
-    const double zoomLevel = 15.0; // Define a default zoom level
-    _mapController.move(center, zoomLevel);
-  }
-
   List<LatLng> routePoints = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadRoute();
     _destinationNotifier = widget.destinationNotifier;
 
     _initializeLocation().then((_) {
       _destinationNotifier.addListener(() {
         final newDestination = _destinationNotifier.value;
-        // print("New destination set: $newDestination");
-
         if (newDestination != null && _currentLocation != null) {
           _destination = newDestination;
           fetchRoute(newDestination);
         }
       });
     });
-  }
-
-  void loadRoute() async {
-    routePoints = await loadRouteFromJson();
-    setState(() {}); // Redraw the map
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-
-    if (args != null && _destination == null) {
-      final double? lat = args['lat'] as double?;
-      final double? lng = args['lng'] as double?;
-      if (lat != null && lng != null) {
-        final accurateLatLng = LatLng(lat, lng);
-        _destination = accurateLatLng;
-        _destinationNotifier.value = accurateLatLng;
-        fetchRoute(accurateLatLng);
-      }
-    }
   }
 
   Future<void> _initializeLocation() async {
@@ -122,6 +72,25 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       _currentLocation = LatLng(position.latitude, position.longitude);
       isLoading = false;
     });
+    loadRouteData();
+  }
+
+  void _fitMapToRoute() {
+    if (_route.isEmpty) return;
+
+    final latitudes = _route.map((p) => p.latitude).toList();
+    final longitudes = _route.map((p) => p.longitude).toList();
+
+    final southWest = LatLng(latitudes.reduce(min), longitudes.reduce(min));
+
+    final northEast = LatLng(latitudes.reduce(max), longitudes.reduce(max));
+
+    final center = LatLng(
+      (southWest.latitude + northEast.latitude) / 2,
+      (southWest.longitude + northEast.longitude) / 2,
+    );
+
+    _mapController.move(center, 15.0);
   }
 
   Future<void> fetchRoute(LatLng destination) async {
@@ -154,20 +123,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     setState(() {
       _route =
-          decodePoints
-              .map((point) => LatLng(point.latitude, point.longitude))
-              .toList();
+          decodePoints.map((p) => LatLng(p.latitude, p.longitude)).toList();
     });
   }
 
   Future<void> _userCurrentLocation() async {
     if (_currentLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fetching location...'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Fetching location...')));
       await _initializeLocation();
     } else {
       _mapController.move(_currentLocation!, 15.0);
@@ -179,6 +143,69 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+
+  void loadRouteData() async {
+    List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
+    if (!mounted) return;
+    if (jeepneyRoutes.isNotEmpty && _currentLocation != null) {
+      JeepneyRoute closestRoute = _getClosestRoute(jeepneyRoutes);
+      setState(() {
+        routePoints = closestRoute.coordinates;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Closest Jeepney Route: ${closestRoute.routeNumber} (${closestRoute.direction})",
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "No jeepney routes available or user location not found",
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  JeepneyRoute _getClosestRoute(List<JeepneyRoute> routes) {
+    double closestDistance = double.infinity;
+    JeepneyRoute? closestRoute;
+
+    for (var route in routes) {
+      for (LatLng point in route.coordinates) {
+        double distance = _calculateDistance(_currentLocation!, point);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestRoute = route;
+        }
+      }
+    }
+
+    return closestRoute ?? routes.first;
+  }
+
+  double _calculateDistance(LatLng a, LatLng b) {
+    const double earthRadius = 6371;
+    double dLat = _degToRad(b.latitude - a.latitude);
+    double dLon = _degToRad(b.longitude - a.longitude);
+    double lat1 = _degToRad(a.latitude);
+    double lat2 = _degToRad(b.latitude);
+
+    double aCalc =
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
+
+    return earthRadius * c;
+  }
+
+  double _degToRad(double deg) => deg * (pi / 180.0);
 
   @override
   Widget build(BuildContext context) {
@@ -205,8 +232,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         options: MapOptions(
           initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
           initialZoom: 14.0,
-          minZoom: 0,
-          maxZoom: 300,
         ),
         children: [
           TileLayer(
@@ -236,9 +261,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 ),
               ],
             ),
-          if (_currentLocation != null &&
-              _destination != null &&
-              _route.isNotEmpty)
+          if (_route.isNotEmpty)
             PolylineLayer(
               polylines: [
                 Polyline(
@@ -254,7 +277,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 Polyline(
                   points: routePoints,
                   color: Colors.green,
-                  strokeWidth: 10,
+                  strokeWidth: 8,
                 ),
               ],
             ),
