@@ -6,6 +6,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:map_try/route_loader.dart';
 
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -51,9 +52,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     _mapController.move(center, zoomLevel);
   }
 
+  List<LatLng> routePoints = [];
+
   @override
   void initState() {
     super.initState();
+    loadRoute();
     _destinationNotifier = widget.destinationNotifier;
 
     _initializeLocation().then((_) {
@@ -67,6 +71,11 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         }
       });
     });
+  }
+
+  void loadRoute() async {
+    routePoints = await loadRouteFromJson();
+    setState(() {}); // Redraw the map
   }
 
   @override
@@ -235,6 +244,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 Polyline(
                   points: _route,
                   color: Colors.blueAccent,
+                  strokeWidth: 10,
+                ),
+              ],
+            ),
+          if (routePoints.isNotEmpty)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: routePoints,
+                  color: Colors.green,
                   strokeWidth: 10,
                 ),
               ],
