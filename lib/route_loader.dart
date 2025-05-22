@@ -27,7 +27,7 @@ class JeepneyRoute {
 }
 
 Future<List<JeepneyRoute>> loadRoutesFromJson() async {
-  final String data = await rootBundle.loadString('Assets/route#3.json');
+  final String data = await rootBundle.loadString('Assets/jeepney_routes.json');
   final jsonResult = json.decode(data);
 
   List<JeepneyRoute> routes =

@@ -27,7 +27,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   late final ValueNotifier<LatLng?> _destinationNotifier;
   LatLng? _destination;
   List<LatLng> _route = [];
-  List<LatLng> routePoints = [];
+  List<JeepneyRoute> allRoutes = [];
   bool isLoading = true;
 
   @override
@@ -150,7 +150,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     if (jeepneyRoutes.isNotEmpty && _currentLocation != null) {
       JeepneyRoute closestRoute = _getClosestRoute(jeepneyRoutes);
       setState(() {
-        routePoints = closestRoute.coordinates;
+        allRoutes = jeepneyRoutes;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -271,15 +271,17 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 ),
               ],
             ),
-          if (routePoints.isNotEmpty)
+          if (allRoutes.isNotEmpty)
             PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: routePoints,
-                  color: Colors.green,
-                  strokeWidth: 8,
-                ),
-              ],
+              polylines:
+                  allRoutes.map((route) {
+                    final color = _getColorForRoute(route.routeNumber);
+                    return Polyline(
+                      points: route.coordinates,
+                      color: color,
+                      strokeWidth: 6,
+                    );
+                  }).toList(),
             ),
         ],
       ),
@@ -289,5 +291,18 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         child: const Icon(Icons.my_location, size: 30, color: Colors.white),
       ),
     );
+  }
+}
+
+Color _getColorForRoute(int routeNumber) {
+  switch (routeNumber) {
+    case 3:
+      return Colors.green;
+    case 10:
+      return Colors.orange;
+    case 11:
+      return Colors.purple;
+    default:
+      return Colors.grey;
   }
 }
