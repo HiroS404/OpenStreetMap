@@ -24,6 +24,17 @@ class JeepneyRoute {
       coordinates: coordinatesList,
     );
   }
+  double minDistanceToPoint(LatLng point) {
+    final Distance distance = Distance();
+    double minDist = double.infinity;
+    for (final coord in coordinates) {
+      double dist = distance.as(LengthUnit.Meter, point, coord);
+      if (dist < minDist) {
+        minDist = dist;
+      }
+    }
+    return minDist;
+  }
 }
 
 Future<List<JeepneyRoute>> loadRoutesFromJson() async {
@@ -36,4 +47,16 @@ Future<List<JeepneyRoute>> loadRoutesFromJson() async {
           .toList();
 
   return routes;
+}
+
+extension JeepneyRouteExtension on JeepneyRoute {
+  bool isPointNearRoute(LatLng point, double thresholdInMeters) {
+    final Distance distance = Distance();
+    for (LatLng coord in coordinates) {
+      if (distance.as(LengthUnit.Meter, point, coord) <= thresholdInMeters) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
