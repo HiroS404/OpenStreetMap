@@ -21,7 +21,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-
   final MapController _mapController = MapController();
   LatLng? _currentLocation;
   late final ValueNotifier<LatLng?> _destinationNotifier;
@@ -82,27 +81,39 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     // For debugging: Use a fixed location in Iloilo City
     const LatLng debuggingLocation = LatLng(
-      // 10.732143,
-      // 122.559791,
-      10.733472,
-      122.548947,
+      10.732143,
+      122.559791, //tabuc suba jollibe
+      // 10.733472,
+      // 122.548947, //tubang CPU
       // 10.715609,
-      // 122.562715,
-    ); // SM City Iloilo
+      // 122.562715, // ColdZone West
+      // 10.725203,
+      // 122.556715, //Jaro plaza
+      // 10.696694,
+      // 122.545582, //Molo Plazas
+      // 10.694928, 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+    );
 
     setState(() {
       _currentLocation = debuggingLocation;
       isLoading = false;
     });
     _destinationNotifier.value = const LatLng(
-      10.731068,
-      122.551723,
-      // 10.732143,
-      // 122.559791,
+      // 10.731068,
+      // 122.551723, //sarap station
+      // 10.732143, 122.559791, //tabuc suba jollibe
       // 10.715609,
-      // 122.562715,
-      // 10.733472,
-      // 122.548947,
+      // 122.562715, // ColdZone West
+      // 10.733472, 122.548947, //tubang CPU
+      // 10.696694, 122.545582, //Molo Plazas
+      // 10.694928,
+      // 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+      10.727482,
+      122.558188, // alicias
     ); // your test destination
     _destination = _destinationNotifier.value;
 
@@ -203,14 +214,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         _matchedRoute = matchingRoute;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Using Jeepney Route: ${matchingRoute.routeNumber} (${matchingRoute.direction})",
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              "Sakay ka Jeepney Route: ${matchingRoute.routeNumber} (${matchingRoute.direction})",
+            ),
+            duration: Duration(days: 1),
           ),
-          duration: Duration(seconds: 3),
-        ),
-      );
+        );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -249,7 +262,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       bool nearCurrent = route.isPointNearRoute(
         current,
         500,
-      ); // increased threshold
+      ); // 500, 1000 edit later after debugging
       bool nearDestination = route.isPointNearRoute(destination, 1000);
 
       // DEBUG: print distances to destination for this route
@@ -279,7 +292,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     LatLng current,
     LatLng destination,
     List<JeepneyRoute> routes, {
-    int limit = 2,
+    int limit = 1,
   }) {
     List<MapEntry<JeepneyRoute, double>> scoredRoutes = [];
 
@@ -385,7 +398,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           // CurrentLocationLayer(
           //   style: LocationMarkerStyle(
           //     marker: DefaultLocationMarker(
-          //       child: Icon(Icons.location_pin, color: Colors.white),
+          //       child: Icon(Icons.location_pin, color: Colors.blue),
           //     ),
           //     markerSize: const Size(35, 35),
           //     markerDirection: MarkerDirection.heading,
@@ -431,8 +444,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                       points: route.coordinates,
                       color: _getColorForRoute(
                         route.routeNumber,
-                      ).withAlpha((0.3 * 255).toInt()), // 30% opacity
-                      strokeWidth: 10,
+                      ).withAlpha((0.3 * 255).toInt()), //opacity
+                      strokeWidth: 6,
                     );
                   }).toList(),
             ),
@@ -443,7 +456,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                   points: _matchedRoute!.coordinates,
                   color: _getColorForRoute(
                     _matchedRoute!.routeNumber,
-                  ).withAlpha((0.4 * 255).toInt()), // 70% opacity
+                  ).withAlpha((0.2 * 255).toInt()), // 70% opacity
                   strokeWidth: 10,
                 ),
               ],
@@ -453,10 +466,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               polylines: [
                 Polyline(
                   points: _route,
-                  color:
-                      Colors
-                          .blue, // full opacity, distinct color for cropped segment
-                  strokeWidth: 10,
+                  color: Colors.blue, // cropped segment (may bug)
+                  strokeWidth: 4,
                 ),
               ],
             ),
@@ -476,10 +487,16 @@ Color _getColorForRoute(int routeNumber) {
     case 3:
       return Colors.red;
     case 10:
-      return Colors.black;
+      return const Color.fromARGB(255, 31, 118, 34);
     case 11:
       return Colors.purple;
+    case 2:
+      return const Color.fromARGB(255, 116, 73, 8);
+    case 4:
+      return const Color.fromARGB(255, 6, 165, 12);
+    case 25:
+      return Colors.black;
     default:
-      return Colors.green;
+      return Colors.black;
   }
 }
