@@ -11,6 +11,7 @@ import 'package:map_try/route_loader.dart';
 
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
+
   const OpenstreetmapScreen({super.key, required this.destinationNotifier});
 
   @override
@@ -24,10 +25,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   final MapController _mapController = MapController();
   LatLng? _currentLocation;
   late final ValueNotifier<LatLng?> _destinationNotifier;
+
   LatLng? _destination;
   List<LatLng> _route = [];
   List<JeepneyRoute> allRoutes = [];
   JeepneyRoute? _matchedRoute;
+  bool _isModalOpen = false;
 
   bool isLoading = true;
 
@@ -81,10 +84,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     // For debugging: Use a fixed location in Iloilo City
     const LatLng debuggingLocation = LatLng(
-      10.732143,
-      122.559791, //tabuc suba jollibe
+      // 10.732143,
+      // 122.559791, //tabuc suba jollibe
       // 10.733472,
       // 122.548947, //tubang CPU
+      10.732610,
+      122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -94,6 +99,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.694928, 122.564686, //Rob Main
       // 10.753623,
       // 122.538430, //Gt mall
+      // 10.714335,
+      // 122.551852, // Sm City
     );
 
     setState(() {
@@ -104,16 +111,18 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.731068,
       // 122.551723, //sarap station
       // 10.732143, 122.559791, //tabuc suba jollibe
-      // 10.715609,
-      // 122.562715, // ColdZone West
+      10.715609,
+      122.562715, // ColdZone West
       // 10.733472, 122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
       // 122.564686, //Rob Main
       // 10.753623,
       // 122.538430, //Gt mall
-      10.727482,
-      122.558188, // alicias
+      // 10.727482,
+      // 122.558188, // alicias
+      // 10.714335,
+      // 122.551852, // Sm City
     ); // your test destination
     _destination = _destinationNotifier.value;
 
@@ -213,27 +222,130 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         _route = segment;
         _matchedRoute = matchingRoute;
       });
-
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              "Sakay ka Jeepney Route: ${matchingRoute.routeNumber} (${matchingRoute.direction})",
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                "No matching jeepney route found from your location to destination.",
+              ),
+              duration: Duration(seconds: 5),
             ),
-            duration: Duration(days: 1),
+          );
+      }
+    }
+  }
+
+  void showRouteModal(BuildContext context) {
+    _isModalOpen = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 1,
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.9,
+            minChildSize: 0.2,
+            maxChildSize: 1.0,
+            builder: (context, scrollController) {
+              return NotificationListener<DraggableScrollableNotification>(
+                onNotification: (notification) {
+                  // Close modal if dragged to min size
+                  if (notification.extent <= notification.minExtent + 0.05) {
+                    Navigator.of(context).pop();
+                    _isModalOpen = false;
+                  }
+                  return true;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+
+                      // Just list all route segments without checking isWalking
+                      ListTile(
+                        leading: const Icon(Icons.directions_bus),
+                        title: Text(
+                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.directions_bus),
+                        title: Text(
+                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.directions_bus),
+                        title: Text(
+                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.directions_bus),
+                        title: Text(
+                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.directions_bus),
+                        title: Text(
+                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "No matching jeepney route found from your location to destination.",
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
+      },
+    ).whenComplete(() {
+      _isModalOpen = false;
+    });
   }
 
   JeepneyRoute _getClosestRoute(List<JeepneyRoute> routes) {
@@ -368,116 +480,149 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'MAPAkaon',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepOrange,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 4,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-        ),
-      ),
-      body: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
-          initialZoom: 14.0,
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          ),
-          // CurrentLocationLayer(
-          //   style: LocationMarkerStyle(
-          //     marker: DefaultLocationMarker(
-          //       child: Icon(Icons.location_pin, color: Colors.blue),
-          //     ),
-          //     markerSize: const Size(35, 35),
-          //     markerDirection: MarkerDirection.heading,
-          //   ),
-          // ),
-          if (_currentLocation != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _currentLocation!,
-                  width: 40,
-                  height: 40,
-                  child: const Icon(
-                    Icons.location_pin,
-                    size: 50,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'MAPAkaon',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrange,
+              ),
             ),
-          //delete the above for debuf only
-          if (_destinationNotifier.value != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  width: 50.0,
-                  height: 50.0,
-                  point: _destinationNotifier.value!,
-                  child: const Icon(
-                    Icons.location_pin,
-                    size: 40,
-                    color: Colors.redAccent,
-                  ),
-                ),
-              ],
+            centerTitle: true,
+            backgroundColor: Colors.white,
+            elevation: 4,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
             ),
+          ),
+          body: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter:
+                  _currentLocation ?? const LatLng(10.7202, 122.5621),
+              initialZoom: 14.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              ),
+              // CurrentLocationLayer(
+              //   style: LocationMarkerStyle(
+              //     marker: DefaultLocationMarker(
+              //       child: Icon(Icons.location_pin, color: Colors.blue),
+              //     ),
+              //     markerSize: const Size(35, 35),
+              //     markerDirection: MarkerDirection.heading,
+              //   ),
+              // ),
+              if (_currentLocation != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _currentLocation!,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_pin,
+                        size: 40,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+              //delete the above for debuf only
+              if (_destinationNotifier.value != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      width: 50.0,
+                      height: 50.0,
+                      point: _destinationNotifier.value!,
+                      child: const Icon(
+                        Icons.location_pin,
+                        size: 40,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
 
-          if (allRoutes.isNotEmpty)
-            PolylineLayer(
-              polylines:
-                  allRoutes.map((route) {
-                    return Polyline(
-                      points: route.coordinates,
+              if (allRoutes.isNotEmpty)
+                PolylineLayer(
+                  polylines:
+                      allRoutes.map((route) {
+                        return Polyline(
+                          points: route.coordinates,
+                          color: _getColorForRoute(
+                            route.routeNumber,
+                          ).withAlpha((0.7 * 255).toInt()), //opacity
+                          strokeWidth: 6,
+                        );
+                      }).toList(),
+                ),
+              if (_matchedRoute != null)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _matchedRoute!.coordinates,
                       color: _getColorForRoute(
-                        route.routeNumber,
-                      ).withAlpha((0.3 * 255).toInt()), //opacity
-                      strokeWidth: 6,
-                    );
-                  }).toList(),
-            ),
-          if (_matchedRoute != null)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _matchedRoute!.coordinates,
-                  color: _getColorForRoute(
-                    _matchedRoute!.routeNumber,
-                  ).withAlpha((0.2 * 255).toInt()), // 70% opacity
-                  strokeWidth: 10,
+                        _matchedRoute!.routeNumber,
+                      ).withAlpha((0.2 * 255).toInt()), // 70% opacity
+                      strokeWidth: 10,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          if (_route.isNotEmpty)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _route,
-                  color: Colors.blue, // cropped segment (may bug)
-                  strokeWidth: 4,
+              if (_route.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _route,
+                      color: Colors.blue, // cropped segment (may bug)
+                      strokeWidth: 4,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _userCurrentLocation,
-        backgroundColor: Colors.deepOrangeAccent,
-        child: const Icon(Icons.my_location, size: 30, color: Colors.white),
-      ),
+            ],
+          ),
+          floatingActionButton: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton(
+                  onPressed: _userCurrentLocation,
+                  backgroundColor: Colors.deepOrangeAccent,
+                  child: const Icon(
+                    Icons.my_location,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              if (_matchedRoute != null)
+                Positioned(
+                  bottom: 80, // space above the other FAB
+                  right: 16,
+                  child: FloatingActionButton.extended(
+                    label: const Text('Route'),
+                    icon: const Icon(Icons.route),
+                    backgroundColor: Colors.lightGreenAccent,
+                    onPressed: () {
+                      if (!_isModalOpen) {
+                        showRouteModal(context);
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -496,6 +641,8 @@ Color _getColorForRoute(int routeNumber) {
       return const Color.fromARGB(255, 6, 165, 12);
     case 25:
       return Colors.black;
+    case 1:
+      return const Color.fromARGB(255, 243, 11, 88);
     default:
       return Colors.black;
   }

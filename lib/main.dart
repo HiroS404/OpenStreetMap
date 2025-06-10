@@ -4,7 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:map_try/firebase_options.dart';
 import 'package:map_try/home_page.dart';
 import 'package:map_try/openstreetmap.dart';
-import 'package:map_try/search_modal.dart';
+
+import 'package:map_try/widgets/search_modal.dart';
 import 'package:map_try/settings_page.dart';
 
 void main() async {
@@ -77,7 +78,10 @@ class BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: Stack(
+        children: [IndexedStack(index: _selectedIndex, children: _pages)],
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.deepOrangeAccent,

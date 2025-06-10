@@ -223,7 +223,7 @@ class RestaurantCard extends StatelessWidget {
                       //   "Destination updated: ${destinationNotifier.value}",
                       // );
 
-                      Navigator.pop(context); // Close modal if it's open
+                      Navigator.pop(context); // Close modal if open
                     },
                     icon: const Icon(Icons.directions),
                     label: const Text(
