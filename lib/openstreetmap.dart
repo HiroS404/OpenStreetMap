@@ -19,7 +19,7 @@ class OpenstreetmapScreen extends StatefulWidget {
 }
 
 class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   @override
   bool get wantKeepAlive => true;
   final MapController _mapController = MapController();
@@ -218,6 +218,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         _destination!,
         matchingRoute.coordinates,
       );
+
       setState(() {
         _route = segment;
         _matchedRoute = matchingRoute;
@@ -240,106 +241,116 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   void showRouteModal(BuildContext context) {
     _isModalOpen = true;
+    final animationController = BottomSheet.createAnimationController(this);
+    animationController.duration = const Duration(milliseconds: 1000);
+    animationController.reverseDuration = const Duration(milliseconds: 300);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      transitionAnimationController: animationController,
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 1,
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.9,
-            minChildSize: 0.2,
-            maxChildSize: 1.0,
-            builder: (context, scrollController) {
-              return NotificationListener<DraggableScrollableNotification>(
-                onNotification: (notification) {
-                  // Close modal if dragged to min size
-                  if (notification.extent <= notification.minExtent + 0.05) {
-                    Navigator.of(context).pop();
-                    _isModalOpen = false;
-                  }
-                  return true;
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          padding: MediaQuery.of(context).viewInsets,
+
+          child: FractionallySizedBox(
+            heightFactor: 1,
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              minChildSize: 0.2,
+              maxChildSize: 1.0,
+              builder: (context, scrollController) {
+                return NotificationListener<DraggableScrollableNotification>(
+                  onNotification: (notification) {
+                    // Close modal if dragged to min size
+                    if (notification.extent <= notification.minExtent + 0.05) {
+                      Navigator.of(context).pop();
+                      _isModalOpen = false;
+                    }
+                    return true;
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
-                  ),
-                  child: ListView(
-                    controller: scrollController,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4),
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
-                      ),
 
-                      // Just list all route segments without checking isWalking
-                      ListTile(
-                        leading: const Icon(Icons.directions_bus),
-                        title: Text(
-                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        // Just list all route segments without checking isWalking
+                        ListTile(
+                          leading: const Icon(Icons.directions_bus),
+                          title: Text(
+                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                          ),
                         ),
-                        subtitle: Text(
-                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ListTile(
+                          leading: const Icon(Icons.directions_bus),
+                          title: Text(
+                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                          ),
                         ),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.directions_bus),
-                        title: Text(
-                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ListTile(
+                          leading: const Icon(Icons.directions_bus),
+                          title: Text(
+                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                          ),
                         ),
-                        subtitle: Text(
-                          "Direction: ${_matchedRoute?.direction ?? ''}",
+                        ListTile(
+                          leading: const Icon(Icons.directions_bus),
+                          title: Text(
+                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                          ),
                         ),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.directions_bus),
-                        title: Text(
-                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ListTile(
+                          leading: const Icon(Icons.directions_bus),
+                          title: Text(
+                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                          ),
                         ),
-                        subtitle: Text(
-                          "Direction: ${_matchedRoute?.direction ?? ''}",
-                        ),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.directions_bus),
-                        title: Text(
-                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          "Direction: ${_matchedRoute?.direction ?? ''}",
-                        ),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.directions_bus),
-                        title: Text(
-                          "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          "Direction: ${_matchedRoute?.direction ?? ''}",
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         );
       },
