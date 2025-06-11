@@ -9,6 +9,58 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:map_try/route_loader.dart';
 
+final Distance _distance = Distance();
+
+// Step 1.1: Find nearest point on all jeepney routes
+LatLng findNearestPointOnAllRoutes(
+  LatLng userLocation,
+  List<JeepneyRoute> allRoutes,
+) {
+  LatLng? nearestPoint;
+  double minDistance = double.infinity;
+
+  for (final route in allRoutes) {
+    for (final coord in route.coordinates) {
+      final double dist = _distance(userLocation, coord);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestPoint = coord;
+      }
+    }
+  }
+
+  return nearestPoint!;
+}
+
+// Step 1.2: Create a dotted line (broken into small segments)
+List<Polyline> createDottedLine(LatLng start, LatLng end) {
+  final List<Polyline> dotted = [];
+  const double segmentLength = 7.0;
+  final double totalDistance = _distance(start, end);
+  final int segments = (totalDistance / segmentLength).floor();
+
+  for (int i = 0; i < segments; i += 2) {
+    final double f1 = i / segments;
+    final double f2 = (i + 1) / segments;
+
+    final LatLng segStart = LatLng(
+      start.latitude + (end.latitude - start.latitude) * f1,
+      start.longitude + (end.longitude - start.longitude) * f1,
+    );
+
+    final LatLng segEnd = LatLng(
+      start.latitude + (end.latitude - start.latitude) * f2,
+      start.longitude + (end.longitude - start.longitude) * f2,
+    );
+
+    dotted.add(
+      Polyline(points: [segStart, segEnd], color: Colors.black, strokeWidth: 3),
+    );
+  }
+
+  return dotted;
+}
+
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
 
@@ -101,6 +153,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.538430, //Gt mall
       // 10.714335,
       // 122.551852, // Sm City
+      // 10.731993,
+      // 122.549291, //promenade cpu
     );
 
     setState(() {
@@ -294,16 +348,18 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           ),
                         ),
 
-                        // Just list all route segments without checking isWalking
+                        // unod sang route modal
                         ListTile(
-                          leading: const Icon(Icons.directions_bus),
-                          title: Text(
-                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          leading: const Icon(
+                            Icons.directions_walk,
+                          ), // 👣 change to walking icon
+                          title: const Text(
+                            "Walk to the nearest jeep route",
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(
-                            "Direction: ${_matchedRoute?.direction ?? ''}",
-                          ),
+                          subtitle: const Text(
+                            "Estimated distance or steps (optional)",
+                          ), // optional
                         ),
                         ListTile(
                           leading: const Icon(Icons.directions_bus),
@@ -315,8 +371,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             "Direction: ${_matchedRoute?.direction ?? ''}",
                           ),
                         ),
+
                         ListTile(
-                          leading: const Icon(Icons.directions_bus),
+                          leading: const Icon(Icons.font_download_rounded),
                           title: Text(
                             "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -491,6 +548,22 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    List<Polyline> walkingPolylines = [];
+    // Step 2: Calculate walking line if needed
+    if (_currentLocation != null && allRoutes.isNotEmpty) {
+      final bool isNear = allRoutes.any(
+        (route) => route.isPointNearRoute(_currentLocation!, 30),
+      );
+
+      if (!isNear) {
+        final LatLng nearestPoint = findNearestPointOnAllRoutes(
+          _currentLocation!,
+          allRoutes,
+        );
+        walkingPolylines = createDottedLine(_currentLocation!, nearestPoint);
+      }
+    }
+
     return Stack(
       children: [
         Scaffold(
@@ -510,6 +583,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
             ),
           ),
+
           body: FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -587,6 +661,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                     ),
                   ],
                 ),
+              // Walking dotted line
+              if (walkingPolylines.isNotEmpty)
+                PolylineLayer(polylines: walkingPolylines),
               if (_route.isNotEmpty)
                 PolylineLayer(
                   polylines: [
