@@ -10,8 +10,11 @@ import 'package:http/http.dart' as http;
 import 'package:map_try/route_loader.dart';
 
 final Distance _distance = Distance();
+double walkingDistance = 0.0;
+List<Polyline> walkingPolylines = [];
+double segmentDistance = 0.0;
 
-// Step 1.1: Find nearest point on all jeepney routes
+// Find nearest point on all jeepney routes
 LatLng findNearestPointOnAllRoutes(
   LatLng userLocation,
   List<JeepneyRoute> allRoutes,
@@ -32,7 +35,6 @@ LatLng findNearestPointOnAllRoutes(
   return nearestPoint!;
 }
 
-// Step 1.2: Create a dotted line (broken into small segments)
 List<Polyline> createDottedLine(LatLng start, LatLng end) {
   final List<Polyline> dotted = [];
   const double segmentLength = 7.0;
@@ -136,12 +138,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     // For debugging: Use a fixed location in Iloilo City
     const LatLng debuggingLocation = LatLng(
-      // 10.732143,
-      // 122.559791, //tabuc suba jollibe
+      10.732143,
+      122.559791, //tabuc suba jollibe
       // 10.733472,
       // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
+      // 10.732610,
+      // 122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -165,8 +167,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.731068,
       // 122.551723, //sarap station
       // 10.732143, 122.559791, //tabuc suba jollibe
-      10.715609,
-      122.562715, // ColdZone West
+      // 10.715609,
+      // 122.562715, // ColdZone West
       // 10.733472, 122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
@@ -175,8 +177,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.538430, //Gt mall
       // 10.727482,
       // 122.558188, // alicias
-      // 10.714335,
-      // 122.551852, // Sm City
+      10.714335,
+      122.551852, // Sm City
     ); // your test destination
     _destination = _destinationNotifier.value;
 
@@ -273,6 +275,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         matchingRoute.coordinates,
       );
 
+      segmentDistance = calculateSegmentDistance(segment);
       setState(() {
         _route = segment;
         _matchedRoute = matchingRoute;
@@ -303,6 +306,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       context: context,
       isScrollControlled: true,
       transitionAnimationController: animationController,
+
       builder: (context) {
         return AnimatedPadding(
           duration: const Duration(milliseconds: 500),
@@ -350,56 +354,39 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
                         // unod sang route modal
                         ListTile(
-                          leading: const Icon(
-                            Icons.directions_walk,
-                          ), // 👣 change to walking icon
+                          leading: const Icon(Icons.directions_walk),
                           title: const Text(
                             "Walk to the nearest jeep route",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: const Text(
-                            "Estimated distance or steps (optional)",
+                          subtitle: Text(
+                            walkingDistance > 0
+                                ? "Estimated walking distance: ${walkingDistance.toStringAsFixed(0)} meters (${getWalkingTimeEstimate(walkingDistance)})"
+                                : "You are already near a jeepney route yey!.",
                           ), // optional
                         ),
                         ListTile(
                           leading: const Icon(Icons.directions_bus),
                           title: Text(
-                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            "Sakay ka Jeepney Route: \n #${_matchedRoute?.routeNumber ?? ''}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrangeAccent,
+                            ),
                           ),
                           subtitle: Text(
-                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                            "Route Direction: ${_matchedRoute?.direction ?? ''}",
                           ),
                         ),
 
                         ListTile(
-                          leading: const Icon(Icons.font_download_rounded),
+                          leading: const Icon(Icons.timelapse),
                           title: Text(
-                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                            "From current to Destination resto: ",
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            "Direction: ${_matchedRoute?.direction ?? ''}",
-                          ),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.directions_bus),
-                          title: Text(
-                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "Direction: ${_matchedRoute?.direction ?? ''}",
-                          ),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.directions_bus),
-                          title: Text(
-                            "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "Direction: ${_matchedRoute?.direction ?? ''}",
+                            "Estimated Disttance: ${(segmentDistance / 1000).toStringAsFixed(2)} Km \nEstimated Travel Time: ${estimateJeepneyTime(segmentDistance)} \nDirection: CurrentLocation to Resto Name", //logic here for fetching data from firestore
                           ),
                         ),
                       ],
@@ -526,6 +513,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     } else {
       return routeCoords.sublist(endIndex, startIndex + 1).reversed.toList();
     }
+
+    // // Ensure segment follows route direction (no reversing)
+    // if (startIndex > endIndex) {
+    //   // If destination is behind, return an empty list or just end early
+    //   return [];
+    // }
+    // return routeCoords.sublist(startIndex, endIndex + 1);
   }
 
   double _calculateDistance(LatLng a, LatLng b) {
@@ -544,12 +538,45 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   }
 
   double _degToRad(double deg) => deg * (pi / 180.0);
+  //for walking time estimation
+  String getWalkingTimeEstimate(double distanceInMeters) {
+    if (distanceInMeters <= 0) return '';
+
+    // Estimate time in seconds
+    final seconds = distanceInMeters / 1.4;
+
+    if (seconds < 60) {
+      return "~${seconds.toStringAsFixed(0)} seconds";
+    } else {
+      final minutes = seconds / 60;
+      return "~${minutes.toStringAsFixed(0)} minutes";
+    }
+  }
+
+  //calulate segment distance in meters
+  double calculateSegmentDistance(List<LatLng> segment) {
+    final Distance distance = Distance();
+    double total = 0.0;
+
+    for (int i = 0; i < segment.length - 1; i++) {
+      total += distance.as(LengthUnit.Meter, segment[i], segment[i + 1]);
+    }
+
+    return total; //convert to kilometers
+  }
+
+  //calculate time for current loc to destination estimated
+  String estimateJeepneyTime(double distanceMeters) {
+    const double jeepneySpeedMetersPerMinute = 333.33; // ≈ 20 km/h
+    final double timeInMinutes = distanceMeters / jeepneySpeedMetersPerMinute;
+    return "${timeInMinutes.toStringAsFixed(1)} minutes";
+  }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    List<Polyline> walkingPolylines = [];
-    // Step 2: Calculate walking line if needed
+
+    //dotted line
     if (_currentLocation != null && allRoutes.isNotEmpty) {
       final bool isNear = allRoutes.any(
         (route) => route.isPointNearRoute(_currentLocation!, 30),
@@ -560,7 +587,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           _currentLocation!,
           allRoutes,
         );
+
+        walkingDistance = Distance().as(
+          LengthUnit.Meter,
+          _currentLocation!,
+          nearestPoint,
+        );
         walkingPolylines = createDottedLine(_currentLocation!, nearestPoint);
+      } else {
+        walkingDistance = 0;
       }
     }
 
