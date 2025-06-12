@@ -7,7 +7,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:map_try/route_loader.dart';
+import 'package:map_try/model/route_loader.dart';
 
 final Distance _distance = Distance();
 double walkingDistance = 0.0;
@@ -37,7 +37,7 @@ LatLng findNearestPointOnAllRoutes(
 
 List<Polyline> createDottedLine(LatLng start, LatLng end) {
   final List<Polyline> dotted = [];
-  const double segmentLength = 7.0;
+  const double segmentLength = 3.0;
   final double totalDistance = _distance(start, end);
   final int segments = (totalDistance / segmentLength).floor();
 
@@ -138,12 +138,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     // For debugging: Use a fixed location in Iloilo City
     const LatLng debuggingLocation = LatLng(
-      10.732143,
-      122.559791, //tabuc suba jollibe
+      // 10.732143,
+      // 122.559791, //tabuc suba jollibe
+      // 10.731958,
+      // 122.560223, //sulodlon debug
+      // 10.732178,
+      // 122.559673, //tabuc suba sa piyak
       // 10.733472,
       // 122.548947, //tubang CPU
-      // 10.732610,
-      // 122.548220, // mt building
+      10.732610,
+      122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -164,8 +168,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       isLoading = false;
     });
     _destinationNotifier.value = const LatLng(
-      // 10.731068,
-      // 122.551723, //sarap station
+      10.731068,
+      122.551723, //sarap station
       // 10.732143, 122.559791, //tabuc suba jollibe
       // 10.715609,
       // 122.562715, // ColdZone West
@@ -177,8 +181,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.538430, //Gt mall
       // 10.727482,
       // 122.558188, // alicias
-      10.714335,
-      122.551852, // Sm City
+      // 10.714335,
+      // 122.551852, // Sm City
     ); // your test destination
     _destination = _destinationNotifier.value;
 
@@ -276,6 +280,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       );
 
       segmentDistance = calculateSegmentDistance(segment);
+
       setState(() {
         _route = segment;
         _matchedRoute = matchingRoute;
@@ -389,6 +394,17 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             "Estimated Disttance: ${(segmentDistance / 1000).toStringAsFixed(2)} Km \nEstimated Travel Time: ${estimateJeepneyTime(segmentDistance)} \nDirection: CurrentLocation to Resto Name", //logic here for fetching data from firestore
                           ),
                         ),
+                        // if (userWalk) ...[
+                        //   ListTile(
+                        //     leading: const Icon(Icons.directions_walk),
+                        //     title: const Text(
+                        //       "Cross the road to catch the jeep",
+                        //     ),
+                        //     subtitle: const Text(
+                        //       "The jeepney on your side goes away from your destination.\nCross the road to ride the correct one going your way.",
+                        //     ),
+                        //   ),
+                        // ],
                       ],
                     ),
                   ),
@@ -428,7 +444,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     for (final route in allRoutes) {
       bool nearCurrent = route.isPointNearRoute(
         current,
-        500,
+        1000,
       ); // 500, 1000 edit later after debugging
       bool nearDestination = route.isPointNearRoute(destination, 1000);
 
@@ -579,7 +595,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     //dotted line
     if (_currentLocation != null && allRoutes.isNotEmpty) {
       final bool isNear = allRoutes.any(
-        (route) => route.isPointNearRoute(_currentLocation!, 30),
+        (route) => route.isPointNearRoute(_currentLocation!, 10),
       );
 
       if (!isNear) {
@@ -679,7 +695,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           points: route.coordinates,
                           color: _getColorForRoute(
                             route.routeNumber,
-                          ).withAlpha((0.7 * 255).toInt()), //opacity
+                          ).withAlpha((0.7 * 255).toInt()), //7 opacity
                           strokeWidth: 6,
                         );
                       }).toList(),
@@ -691,7 +707,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                       points: _matchedRoute!.coordinates,
                       color: _getColorForRoute(
                         _matchedRoute!.routeNumber,
-                      ).withAlpha((0.2 * 255).toInt()), // 70% opacity
+                      ).withAlpha((0.1 * 255).toInt()), // 20% opacity
                       strokeWidth: 10,
                     ),
                   ],
@@ -718,6 +734,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 bottom: 16,
                 right: 16,
                 child: FloatingActionButton(
+                  heroTag: 'user-location-fab',
                   onPressed: _userCurrentLocation,
                   backgroundColor: Colors.deepOrangeAccent,
                   child: const Icon(
@@ -750,22 +767,24 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   }
 }
 
-Color _getColorForRoute(int routeNumber) {
+Color _getColorForRoute(String routeNumber) {
   switch (routeNumber) {
-    case 3:
-      return Colors.red;
-    case 10:
+    case '3':
+      return const Color.fromARGB(255, 237, 99, 89);
+    case '10':
       return const Color.fromARGB(255, 31, 118, 34);
-    case 11:
+    case '11':
       return Colors.purple;
-    case 2:
+    case '2':
       return const Color.fromARGB(255, 116, 73, 8);
-    case 4:
-      return const Color.fromARGB(255, 6, 165, 12);
-    case 25:
+    case '4':
+      return const Color.fromARGB(255, 72, 233, 77);
+    case '25':
       return Colors.black;
-    case 1:
-      return const Color.fromARGB(255, 243, 11, 88);
+    case '1A':
+      return const Color.fromARGB(255, 210, 92, 131);
+    case '1B':
+      return const Color.fromARGB(255, 11, 50, 243);
     default:
       return Colors.black;
   }

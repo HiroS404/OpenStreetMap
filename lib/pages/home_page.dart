@@ -78,8 +78,14 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(
-              height: 20,
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.store),
+
+              label: const Text("Sign In as Resto Owner??"),
+              onPressed: () {
+                Navigator.pushNamed(context, '/vendor-profile');
+              },
             ), // Extra space at the bottom for scrolling
           ],
         ),

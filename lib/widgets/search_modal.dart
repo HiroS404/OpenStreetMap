@@ -169,76 +169,93 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Food image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.network(
-              photoUrl,
-              height: 160,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder:
-                  (context, error, stackTrace) => Container(
-                    height: 160,
-                    color: Colors.grey[200],
-                    child: const Center(child: Icon(Icons.broken_image)),
-                  ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // ✅ Update the notifier directly instead of navigating
-                      destinationNotifier.value = LatLng(latitude, longitude);
-                      // print(
-                      //   "Database Latitude: ${latitude}, Longitude: ${longitude}",
-                      // );
-                      // print(
-                      //   "Destination updated: ${destinationNotifier.value}",
-                      // );
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/vendor-profile',
+          arguments: {
+            'name': name,
+            'description': description,
+            'photoUrl': photoUrl,
+            'latitude': latitude,
+            'longitude': longitude,
+          },
+        );
+      },
 
-                      Navigator.pop(context); // Close modal if open
-                    },
-                    icon: const Icon(Icons.directions),
-                    label: const Text(
-                      "Go to Directions",
-                      style: TextStyle(color: Colors.black),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+        margin: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Food image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              child: Image.network(
+                photoUrl,
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (context, error, stackTrace) => Container(
+                      height: 160,
+                      color: Colors.grey[200],
+                      child: const Center(child: Icon(Icons.broken_image)),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orangeAccent,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 5),
+                  Text(
+                    description,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        destinationNotifier.value = LatLng(latitude, longitude);
+                        // print(
+                        //   "Database Latitude: ${latitude}, Longitude: ${longitude}",
+                        // );
+                        // print(
+                        //   "Destination updated: ${destinationNotifier.value}",
+                        // );
+
+                        Navigator.pop(context); // Close modal if open
+                      },
+                      icon: const Icon(Icons.directions),
+                      label: const Text(
+                        "Go to Directions",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orangeAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

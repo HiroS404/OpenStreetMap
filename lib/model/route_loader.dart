@@ -3,7 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:latlong2/latlong.dart';
 
 class JeepneyRoute {
-  final int routeNumber;
+  final String routeNumber;
   final String direction;
   final List<LatLng> coordinates;
 
@@ -19,7 +19,7 @@ class JeepneyRoute {
         coords.map((coord) => LatLng(coord['lat'], coord['lng'])).toList();
 
     return JeepneyRoute(
-      routeNumber: json['route_number'],
+      routeNumber: json['route_number'].toString(),
       direction: json['direction'],
       coordinates: coordinatesList,
     );

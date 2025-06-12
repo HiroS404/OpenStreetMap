@@ -2,11 +2,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_try/firebase_options.dart';
-import 'package:map_try/home_page.dart';
-import 'package:map_try/openstreetmap.dart';
+import 'package:map_try/pages/home_page.dart';
+import 'package:map_try/pages/openstreetmap.dart';
+import 'package:map_try/pages/vendo_profile.dart';
 
 import 'package:map_try/widgets/search_modal.dart';
-import 'package:map_try/settings_page.dart';
+import 'package:map_try/pages/settings_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,22 @@ class MyApp extends StatelessWidget {
             (context) => OpenstreetmapScreen(
               destinationNotifier: ValueNotifier<LatLng?>(null),
             ),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/vendor-profile') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder:
+                (context) => VendorProfileScreen(
+                  name: args['name'],
+                  description: args['description'],
+                  photoUrl: args['photoUrl'],
+                  latitude: args['latitude'],
+                  longtitude: args['longitude'],
+                ),
+          );
+        }
+        return null;
       },
     );
   }
