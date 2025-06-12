@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "920225788373",
+    "project_id": "mapa-kaon",
+    "storage_bucket": "mapa-kaon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920225788373:android:b33df0dc5bc983b0ef8d5c",
+        "android_client_info": {
+          "package_name": "com.example.map_try"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC84Li6KwTgiHnTNVWtlcqVuZ70qhZ9DKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
