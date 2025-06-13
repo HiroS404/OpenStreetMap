@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
@@ -168,11 +169,11 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       isLoading = false;
     });
     _destinationNotifier.value = const LatLng(
-      10.731068,
-      122.551723, //sarap station
+      // 10.731068,
+      // 122.551723, //sarap station
       // 10.732143, 122.559791, //tabuc suba jollibe
-      // 10.715609,
-      // 122.562715, // ColdZone West
+      10.715609,
+      122.562715, // ColdZone West
       // 10.733472, 122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
@@ -615,154 +616,166 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       }
     }
 
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'MAPAkaon',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-            ),
-            centerTitle: true,
-            backgroundColor: Colors.white,
-            elevation: 4,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-            ),
-          ),
-
-          body: FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter:
-                  _currentLocation ?? const LatLng(10.7202, 122.5621),
-              initialZoom: 14.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              ),
-              // CurrentLocationLayer(
-              //   style: LocationMarkerStyle(
-              //     marker: DefaultLocationMarker(
-              //       child: Icon(Icons.location_pin, color: Colors.blue),
-              //     ),
-              //     markerSize: const Size(35, 35),
-              //     markerDirection: MarkerDirection.heading,
-              //   ),
-              // ),
-              if (_currentLocation != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _currentLocation!,
-                      width: 40,
-                      height: 40,
-                      child: const Icon(
-                        Icons.location_pin,
-                        size: 40,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ],
-                ),
-              //delete the above for debuf only
-              if (_destinationNotifier.value != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      width: 50.0,
-                      height: 50.0,
-                      point: _destinationNotifier.value!,
-                      child: const Icon(
-                        Icons.location_pin,
-                        size: 40,
-                        color: Colors.redAccent,
-                      ),
-                    ),
-                  ],
-                ),
-
-              if (allRoutes.isNotEmpty)
-                PolylineLayer(
-                  polylines:
-                      allRoutes.map((route) {
-                        return Polyline(
-                          points: route.coordinates,
-                          color: _getColorForRoute(
-                            route.routeNumber,
-                          ).withAlpha((0.7 * 255).toInt()), //7 opacity
-                          strokeWidth: 6,
-                        );
-                      }).toList(),
-                ),
-              if (_matchedRoute != null)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _matchedRoute!.coordinates,
-                      color: _getColorForRoute(
-                        _matchedRoute!.routeNumber,
-                      ).withAlpha((0.1 * 255).toInt()), // 20% opacity
-                      strokeWidth: 10,
-                    ),
-                  ],
-                ),
-              // Walking dotted line
-              if (walkingPolylines.isNotEmpty)
-                PolylineLayer(polylines: walkingPolylines),
-              if (_route.isNotEmpty)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _route,
-                      color: Colors.blue, // cropped segment (may bug)
-                      strokeWidth: 4,
-                    ),
-                  ],
-                ),
-            ],
-          ),
-          floatingActionButton: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: FloatingActionButton(
-                  heroTag: 'user-location-fab',
-                  onPressed: _userCurrentLocation,
-                  backgroundColor: Colors.deepOrangeAccent,
-                  child: const Icon(
-                    Icons.my_location,
-                    size: 30,
-                    color: Colors.white,
-                  ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: AppBar(
+              title: const Text(
+                'MAPAkaon',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepOrangeAccent,
                 ),
               ),
-              if (_matchedRoute != null)
-                Positioned(
-                  bottom: 80, // space above the other FAB
-                  right: 16,
-                  child: FloatingActionButton.extended(
-                    label: const Text('Route'),
-                    icon: const Icon(Icons.route),
-                    backgroundColor: Colors.lightGreenAccent,
-                    onPressed: () {
-                      if (!_isModalOpen) {
-                        showRouteModal(context);
-                      }
-                    },
-                  ),
+              centerTitle: true,
+              backgroundColor: const Color.fromRGBO(
+                255,
+                255,
+                255,
+                0.01,
+              ), // semi-transparent
+              elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.login, color: Colors.deepOrangeAccent),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
                 ),
-            ],
+              ],
+            ),
           ),
         ),
-      ],
+      ),
+      body: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
+          initialZoom: 14.0,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          ),
+          // CurrentLocationLayer(
+          //   style: LocationMarkerStyle(
+          //     marker: DefaultLocationMarker(
+          //       child: Icon(Icons.location_pin, color: Colors.blue),
+          //     ),
+          //     markerSize: const Size(35, 35),
+          //     markerDirection: MarkerDirection.heading,
+          //   ),
+          // ),
+          if (_currentLocation != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: _currentLocation!,
+                  width: 40,
+                  height: 40,
+                  child: const Icon(
+                    Icons.location_pin,
+                    size: 40,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          //delete the above for debuf only
+          if (_destinationNotifier.value != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  width: 50.0,
+                  height: 50.0,
+                  point: _destinationNotifier.value!,
+                  child: const Icon(
+                    Icons.location_pin,
+                    size: 40,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ],
+            ),
+          if (allRoutes.isNotEmpty)
+            PolylineLayer(
+              polylines:
+                  allRoutes.map((route) {
+                    return Polyline(
+                      points: route.coordinates,
+                      color: _getColorForRoute(
+                        route.routeNumber,
+                      ).withAlpha((0.7 * 255).toInt()), //7 opacity
+                      strokeWidth: 6,
+                    );
+                  }).toList(),
+            ),
+          if (_matchedRoute != null)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: _matchedRoute!.coordinates,
+                  color: _getColorForRoute(
+                    _matchedRoute!.routeNumber,
+                  ).withAlpha((0.1 * 255).toInt()), // 20% opacity
+                  strokeWidth: 10,
+                ),
+              ],
+            ),
+          // Walking dotted line
+          if (walkingPolylines.isNotEmpty)
+            PolylineLayer(polylines: walkingPolylines),
+          if (_route.isNotEmpty)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: _route,
+                  color: Colors.blue, // cropped segment (may bug)
+                  strokeWidth: 4,
+                ),
+              ],
+            ),
+        ],
+      ),
+      floatingActionButton: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'user-location-fab',
+              onPressed: _userCurrentLocation,
+              backgroundColor: Colors.deepOrangeAccent,
+              child: const Icon(
+                Icons.my_location,
+                size: 30,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          if (_matchedRoute != null)
+            Positioned(
+              bottom: 80, // space above the other FAB
+              right: 16,
+              child: FloatingActionButton.extended(
+                label: const Text('Route'),
+                icon: const Icon(Icons.route),
+                backgroundColor: Colors.lightGreenAccent,
+                onPressed: () {
+                  if (!_isModalOpen) {
+                    showRouteModal(context);
+                  }
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -770,7 +783,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 Color _getColorForRoute(String routeNumber) {
   switch (routeNumber) {
     case '3':
-      return const Color.fromARGB(255, 237, 99, 89);
+      return const Color.fromARGB(255, 241, 41, 41);
     case '10':
       return const Color.fromARGB(255, 31, 118, 34);
     case '11':

@@ -128,7 +128,7 @@ class _SearchModalState extends State<SearchModal> {
                                 return RestaurantCard(
                                   name: resto['name'],
                                   description:
-                                      "Short Description sheshh.......\n\n${resto['address'] ?? 'No address'} •  ${resto['route']}",
+                                      "Short Description .......\n\n example adress: ${resto['address'] ?? 'No address'} • Example Route no.: ${resto['route']}",
                                   photoUrl: resto['photoUrl'] ?? '',
                                   latitude: resto['latitude'] ?? 0.0,
                                   longitude: resto['longitude'] ?? 0.0,

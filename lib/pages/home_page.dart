@@ -6,6 +6,29 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: const Text(
+          "MAPAkaon",
+          style: TextStyle(
+            color: Colors.deepOrangeAccent,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              // Navigator.pushNamed(context, '/login');
+            },
+            icon: const Icon(Icons.login, color: Colors.deepOrangeAccent),
+            label: const Text(
+              "Login",
+              style: TextStyle(color: Colors.deepOrangeAccent),
+            ),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -58,7 +81,6 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () {
-                // Navigate to the map page // may bug pani paki fix lng
                 Navigator.pushNamed(context, "/map");
               },
               icon: const Icon(Icons.map, color: Colors.white),
@@ -79,14 +101,6 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.store),
-
-              label: const Text("Sign In as Resto Owner??"),
-              onPressed: () {
-                Navigator.pushNamed(context, '/vendor-profile');
-              },
-            ), // Extra space at the bottom for scrolling
           ],
         ),
       ),

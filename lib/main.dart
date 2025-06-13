@@ -23,14 +23,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: BottomNavBar(),
-      title: 'MAPAkaon',
-      theme: ThemeData(primarySwatch: Colors.orange),
+
       routes: {
         '/map':
             (context) => OpenstreetmapScreen(
               destinationNotifier: ValueNotifier<LatLng?>(null),
             ),
       },
+
       onGenerateRoute: (settings) {
         if (settings.name == '/vendor-profile') {
           final args = settings.arguments as Map<String, dynamic>;
