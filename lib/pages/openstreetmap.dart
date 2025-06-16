@@ -100,94 +100,94 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         if (newDestination != null && _currentLocation != null) {
           _destination = newDestination;
           loadRouteData();
-          print("Current Location: $_currentLocation");
-          print(
-            "New Destination: $newDestination",
-          ); // uses jeepney route, not OSRM anymore
+          // print("Current Location: $_currentLocation");
+          // print(
+          //   "New Destination: $newDestination",
+          // ); // uses jeepney route, not OSRM anymore
         }
       });
     });
   }
 
   Future<void> _initializeLocation() async {
-    // bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    // if (!serviceEnabled) {
-    //   _showError("Location services are disabled.");
-    //   return;
-    // }
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showError("Location services are disabled.");
+      return;
+    }
 
-    // LocationPermission permission = await Geolocator.checkPermission();
-    // if (permission == LocationPermission.denied) {
-    //   permission = await Geolocator.requestPermission();
-    //   if (permission == LocationPermission.denied) {
-    //     _showError("Location permissions are denied.");
-    //     return;
-    //   }
-    // }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showError("Location permissions are denied.");
+        return;
+      }
+    }
 
-    // if (permission == LocationPermission.deniedForever) {
-    //   _showError("Location permissions are permanently denied.");
-    //   return;
-    // }
+    if (permission == LocationPermission.deniedForever) {
+      _showError("Location permissions are permanently denied.");
+      return;
+    }
 
-    // Position position = await Geolocator.getCurrentPosition();
-    // setState(() {
-    //   _currentLocation = LatLng(position.latitude, position.longitude);
-    //   isLoading = false;
-    // });
-    // loadRouteData();
-
-    // For debugging: Use a fixed location in Iloilo City
-    const LatLng debuggingLocation = LatLng(
-      // 10.732143,
-      // 122.559791, //tabuc suba jollibe
-      // 10.731958,
-      // 122.560223, //sulodlon debug
-      // 10.732178,
-      // 122.559673, //tabuc suba sa piyak
-      // 10.733472,
-      // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
-      // 10.715609,
-      // 122.562715, // ColdZone West
-      // 10.725203,
-      // 122.556715, //Jaro plaza
-      // 10.696694,
-      // 122.545582, //Molo Plazas
-      // 10.694928, 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      // 10.714335,
-      // 122.551852, // Sm City
-      // 10.731993,
-      // 122.549291, //promenade cpu
-    );
-
+    Position position = await Geolocator.getCurrentPosition();
     setState(() {
-      _currentLocation = debuggingLocation;
+      _currentLocation = LatLng(position.latitude, position.longitude);
       isLoading = false;
     });
-    _destinationNotifier.value = const LatLng(
-      // 10.731068,
-      // 122.551723, //sarap station
-      // 10.732143, 122.559791, //tabuc suba jollibe
-      10.715609,
-      122.562715, // ColdZone West
-      // 10.733472, 122.548947, //tubang CPU
-      // 10.696694, 122.545582, //Molo Plazas
-      // 10.694928,
-      // 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      // 10.727482,
-      // 122.558188, // alicias
-      // 10.714335,
-      // 122.551852, // Sm City
-    ); // your test destination
-    _destination = _destinationNotifier.value;
+    loadRouteData();
 
-    loadRouteData(); // Load jeepney routes based on this location
+    // // For debugging: Use a fixed location in Iloilo City
+    // const LatLng debuggingLocation = LatLng(
+    //   // 10.732143,
+    //   // 122.559791, //tabuc suba jollibe
+    //   // 10.731958,
+    //   // 122.560223, //sulodlon debug
+    //   // 10.732178,
+    //   // 122.559673, //tabuc suba sa piyak
+    //   // 10.733472,
+    //   // 122.548947, //tubang CPU
+    //   10.732610,
+    //   122.548220, // mt building
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
+    //   // 10.725203,
+    //   // 122.556715, //Jaro plaza
+    //   // 10.696694,
+    //   // 122.545582, //Molo Plazas
+    //   // 10.694928, 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    //   // 10.731993,
+    //   // 122.549291, //promenade cpu
+    // );
+
+    // setState(() {
+    //   _currentLocation = debuggingLocation;
+    //   isLoading = false;
+    // });
+    // _destinationNotifier.value = const LatLng(
+    //   // 10.731068,
+    //   // 122.551723, //sarap station
+    //   // 10.732143, 122.559791, //tabuc suba jollibe
+    //   10.715609,
+    //   122.562715, // ColdZone West
+    //   // 10.733472, 122.548947, //tubang CPU
+    //   // 10.696694, 122.545582, //Molo Plazas
+    //   // 10.694928,
+    //   // 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.727482,
+    //   // 122.558188, // alicias
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    // ); // your test destination
+    // _destination = _destinationNotifier.value;
+
+    // loadRouteData(); // Load jeepney routes based on this location
   }
 
   void _fitMapToRoute() {
@@ -455,15 +455,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         double dist = Distance().as(LengthUnit.Meter, destination, point);
         if (dist < minDistToDest) minDistToDest = dist;
       }
-      print(
-        "Route ${route.routeNumber} minimum distance to destination: $minDistToDest meters",
-      );
+      // print(
+      //   "Route ${route.routeNumber} minimum distance to destination: $minDistToDest meters",
+      // );
 
-      print(
-        "Checking route ${route.routeNumber}: "
-        "near current? $nearCurrent | "
-        "near destination? $nearDestination",
-      );
+      // print(
+      //   "Checking route ${route.routeNumber}: "
+      //   "near current? $nearCurrent | "
+      //   "near destination? $nearDestination",
+      // );
 
       if (nearCurrent && nearDestination) {
         return route;
@@ -668,9 +668,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           //       child: Icon(Icons.location_pin, color: Colors.blue),
           //     ),
           //     markerSize: const Size(35, 35),
+
           //     markerDirection: MarkerDirection.heading,
           //   ),
           // ),
+
+          // //currentlocation debugger
           if (_currentLocation != null)
             MarkerLayer(
               markers: [
