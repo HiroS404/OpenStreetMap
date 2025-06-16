@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:map_try/pages/vendor_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -17,6 +18,19 @@ class HomePage extends StatelessWidget {
           ),
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => VendorRestaurantPage()),
+              );
+            },
+            label: const Text(
+              "Register your Resto Here",
+              style: TextStyle(color: Colors.deepOrangeAccent),
+            ),
+            icon: const Icon(Icons.restaurant, color: Colors.deepOrangeAccent),
+          ),
           TextButton.icon(
             onPressed: () {
               // Navigator.pushNamed(context, '/login');

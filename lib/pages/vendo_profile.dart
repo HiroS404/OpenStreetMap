@@ -27,7 +27,7 @@ class VendorProfileScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //logo here
+            //logo here resto pic foods
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),

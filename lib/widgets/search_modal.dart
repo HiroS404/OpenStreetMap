@@ -114,7 +114,7 @@ class _SearchModalState extends State<SearchModal> {
                         _results.isEmpty
                             ? const Center(
                               child: Text(
-                                "No results found. \n try adobo, pancit canton, or fried chicken, amu plng na example brtt brtt \n or try type all para sa debugging",
+                                "No results found. \n \nFOR DEMO: try adobo, pancit canton, or fried chicken.....\n or try type 'all' ",
                               ),
                             )
                             : ListView.builder(
@@ -128,7 +128,7 @@ class _SearchModalState extends State<SearchModal> {
                                 return RestaurantCard(
                                   name: resto['name'],
                                   description:
-                                      "Short Description .......\n\n example adress: ${resto['address'] ?? 'No address'} • Example Route no.: ${resto['route']}",
+                                      "Short Descripttion .......\n\n example adress: ${resto['address'] ?? 'No address'} \n Example Route no.: ${resto['route']}",
                                   photoUrl: resto['photoUrl'] ?? '',
                                   latitude: resto['latitude'] ?? 0.0,
                                   longitude: resto['longitude'] ?? 0.0,
