@@ -137,7 +137,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     });
     loadRouteData();
 
-    // // For debugging: Use a fixed location in Iloilo City
+    // For debugging: Use a fixed location in Iloilo City
     // const LatLng debuggingLocation = LatLng(
     //   // 10.732143,
     //   // 122.559791, //tabuc suba jollibe
@@ -172,8 +172,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     //   // 10.731068,
     //   // 122.551723, //sarap station
     //   // 10.732143, 122.559791, //tabuc suba jollibe
-    //   10.715609,
-    //   122.562715, // ColdZone West
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
     //   // 10.733472, 122.548947, //tubang CPU
     //   // 10.696694, 122.545582, //Molo Plazas
     //   // 10.694928,
@@ -182,8 +182,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     //   // 122.538430, //Gt mall
     //   // 10.727482,
     //   // 122.558188, // alicias
-    //   // 10.714335,
-    //   // 122.551852, // Sm City
+    //   10.714335,
+    //   122.551852, // Sm City
     // ); // your test destination
     // _destination = _destinationNotifier.value;
 
@@ -371,15 +371,40 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                                 : "You are already near a jeepney route yey!.",
                           ), // optional
                         ),
+                        const SizedBox(height: 8),
                         ListTile(
                           leading: const Icon(Icons.directions_bus),
-                          title: Text(
-                            "Sakay ka Jeepney Route: \n #${_matchedRoute?.routeNumber ?? ''}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepOrangeAccent,
-                            ),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Sakay ka Jeepney Route: ${_matchedRoute?.routeNumber ?? ''}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepOrangeAccent,
+                                ),
+                              ),
+
+                              Image.asset(
+                                "Assets/route_pics/${_matchedRoute?.routeNumber}.png",
+                                height: 250,
+                                width: 250,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 120,
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ),
+                              ),
+                            ],
                           ),
+
                           subtitle: Text(
                             "Route Direction: ${_matchedRoute?.direction ?? ''}",
                           ),
@@ -388,7 +413,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                         ListTile(
                           leading: const Icon(Icons.timelapse),
                           title: Text(
-                            "From current to Destination resto: ",
+                            "From current to Destination resto:",
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
