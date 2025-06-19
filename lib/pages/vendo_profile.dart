@@ -58,7 +58,7 @@ class VendorProfileScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.location_on),
               title: Text(
-                "resto location on OSM Lat: $latitude, Long: $longtitude",
+                "resto location on OSM \nLat: $latitude, Long: $longtitude",
               ),
             ),
             //operating hours??
@@ -66,14 +66,20 @@ class VendorProfileScreen extends StatelessWidget {
               leading: Icon(Icons.access_time),
               title: Text("Open or close: 10:00 Am - 8:00 pm"),
             ),
-            const SizedBox(height: 24),
-            Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.edit),
-                onPressed: () {},
-                label: const Text("Edit Profile"),
+            const SizedBox(height: 16),
+            const ListTile(
+              leading: Icon(Icons.menu_open_rounded),
+              title: Text(
+                "Menu: (example)\n•	Adobo\n•	Sinigang\n•	Lumpia\n•	Pancit",
               ),
             ),
+            // Center(
+            //   child: ElevatedButton.icon(
+            //     icon: const Icon(Icons.edit),
+            //     onPressed: () {},
+            //     label: const Text("Edit Profile"),
+            //   ),
+            // ),
           ],
         ),
       ),

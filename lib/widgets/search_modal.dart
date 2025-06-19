@@ -53,6 +53,7 @@ class _SearchModalState extends State<SearchModal> {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
+
             image: const DecorationImage(
               image: NetworkImage(
                 "https://png.pngtree.com/png-vector/20240125/ourmid/pngtree-no-food-3d-illustrations-png-image_11495729.png",

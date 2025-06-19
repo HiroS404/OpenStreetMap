@@ -713,7 +713,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                       points: route.coordinates,
                       color: _getColorForRoute(
                         route.routeNumber,
-                      ).withAlpha((0.7 * 255).toInt()), //7 opacity
+                      ).withAlpha((0.5 * 255).toInt()), //7 opacity
                       strokeWidth: 6,
                     );
                   }).toList(),
