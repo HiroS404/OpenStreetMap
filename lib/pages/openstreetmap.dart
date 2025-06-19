@@ -564,6 +564,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     // return routeCoords.sublist(startIndex, endIndex + 1);
   }
 
+  //haversine formulaaaa
   double _calculateDistance(LatLng a, LatLng b) {
     const double earthRadius = 6371;
     double dLat = _degToRad(b.latitude - a.latitude);
