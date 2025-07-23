@@ -605,7 +605,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       total += distance.as(LengthUnit.Meter, segment[i], segment[i + 1]);
     }
 
-    return total; //convert to kilometers
+    return total;
   }
 
   //calculate time for current loc to destination estimated
