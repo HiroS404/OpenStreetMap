@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/vendor_page.dart';
+import 'package:map_try/services/restaurant_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,7 +16,7 @@ class HomePage extends StatefulWidget {
 
 Widget categoryChip(String label, [bool isSelected = false]) {
   return Padding(
-    padding: const EdgeInsets.only(right: 8),
+    padding: const EdgeInsets.only(left: 10),
     child: Chip(
       label: Text(label),
       labelStyle: TextStyle(
@@ -42,17 +44,21 @@ Widget sectionHeader(String title) {
   );
 }
 
-Widget foodCard({required String image, required String title}) {
+Widget restoCard({
+  required String photoUrl,
+  required String name,
+  required String address,
+}) {
   return Container(
     width: 180,
-    margin: const EdgeInsets.only(right: 15),
+    margin: const EdgeInsets.only(right: 10),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(5),
-      image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+      image: DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover),
     ),
     child: Stack(
       children: [
-        // Dark gradient overlay
+        // Gradient Overlay
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(5),
@@ -63,7 +69,8 @@ Widget foodCard({required String image, required String title}) {
             ),
           ),
         ),
-        // Rating Badge
+
+        // Optional: Rating Badge
         Positioned(
           top: 8,
           left: 8,
@@ -85,13 +92,15 @@ Widget foodCard({required String image, required String title}) {
             ),
           ),
         ),
+
         // Favorite Icon
         Positioned(
           top: 8,
           right: 8,
           child: Icon(Icons.favorite_border, color: Colors.white),
         ),
-        // Title & Price
+
+        // Name and Address
         Positioned(
           bottom: 10,
           left: 0,
@@ -102,9 +111,7 @@ Widget foodCard({required String image, required String title}) {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(
-                    1,
-                  ), // Glassy background (15% opacity)
+                  color: Colors.white.withAlpha(1),
                   border: Border.all(
                     color: Colors.white.withAlpha(50),
                     width: 0.5,
@@ -114,18 +121,18 @@ Widget foodCard({required String image, required String title}) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        height: 1.2,
                         fontSize: 13,
+                        height: 1.2,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Jaro Plaza',
-                      style: TextStyle(
+                    Text(
+                      address,
+                      style: const TextStyle(
                         color: Colors.deepOrangeAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -154,7 +161,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
       child: SizedBox(
         height: maxExtent, // ensure exact height match
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(0),
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -184,6 +191,8 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
 class _HomePageState extends State<HomePage> {
   final ScrollController _hotDealsController = ScrollController();
   final ScrollController _mostBoughtController = ScrollController();
+  List<Restaurant> _restaurants = [];
+  bool _isLoading = true;
 
   Timer? _autoScrollTimer;
   bool _userInteracting = false;
@@ -192,6 +201,20 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _startAutoScroll(_hotDealsController);
+    _loadRestaurants();
+  }
+
+  Future<void> _loadRestaurants() async {
+    try {
+      final data = await RestaurantService.fetchRestaurants();
+      setState(() {
+        _restaurants = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching restaurants: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   void _startAutoScroll(ScrollController controller) {
@@ -228,6 +251,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_restaurants.isEmpty) {
+      return const Center(child: Text("No restaurants available."));
+    }
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -556,7 +586,7 @@ class _HomePageState extends State<HomePage> {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+              padding: const EdgeInsets.only(left: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -568,66 +598,49 @@ class _HomePageState extends State<HomePage> {
                     height: 250,
                     child: Listener(
                       onPointerDown: (_) => _onUserInteraction(),
-                      child: ListView(
+                      child: ListView.builder(
                         controller: _hotDealsController,
                         scrollDirection: Axis.horizontal,
-                        children: [
-                          foodCard(
-                            image:
-                                'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                            title: 'Viral stacking cake\nwith honey',
-                          ),
-                          foodCard(
-                            image:
-                                'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                            title: 'Roast beef with\nblack pepper',
-                          ),
-                          foodCard(
-                            image:
-                                'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                            title: 'Grilled BBQ with\nspicy wings',
-                          ),
-                          foodCard(
-                            image:
-                                'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                            title: 'Grilled BBQ with\nspicy wings',
-                          ),
-                        ],
+                        itemCount: _restaurants.length,
+                        itemBuilder: (context, index) {
+                          final resto = _restaurants[index];
+                          return restoCard(
+                            photoUrl: resto.photoUrl,
+                            name: resto.name,
+                            address: resto.address ?? '',
+                          );
+                        },
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
                   // Most Bought Section
                   sectionHeader("Most bought 🔥"),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 250,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        foodCard(
-                          image:
-                              'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                          title: 'Healthy bowl salad\nwith salmon',
-                        ),
-                        foodCard(
-                          image:
-                              'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                          title: 'Grilled BBQ with\nspicy wings',
-                        ),
-                        foodCard(
-                          image:
-                              'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                          title: 'Grilled BBQ with\nspicy wings',
-                        ),
-                        foodCard(
-                          image:
-                              'https://panlasangpinoy.com/wp-content/uploads/2011/10/Batchoy.jpg',
-                          title: 'Grilled BBQ with\nspicy wings',
-                        ),
-                      ],
-                    ),
-                  ),
+                  // SizedBox(
+                  //   height: 250,
+                  //   child: ListView(
+                  //     scrollDirection: Axis.horizontal,
+                  //     children: [
+                  //       restoCard(
+                  //         photoUrl: '',
+                  //         name: 'Ted’s Batchoy',
+                  //         address: 'Jaro Plaza',
+                  //       ),
+                  //       restoCard(
+                  //         photoUrl: '',
+                  //         name: 'Mang Inasal',
+                  //         address: 'Diversion Road',
+                  //       ),
+                  //       restoCard(
+                  //         photoUrl: '',
+                  //         name: 'Deco’s Batchoy',
+                  //         address: 'City Proper',
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ),

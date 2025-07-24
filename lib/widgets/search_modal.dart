@@ -12,8 +12,15 @@ class SearchModal extends StatefulWidget {
 class _SearchModalState extends State<SearchModal> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> _results = [];
+  final Map<String, List<Map<String, dynamic>>> _searchCache = {};
 
   void _searchRestaurants(String query) async {
+    if (_searchCache.containsKey(query)) {
+      setState(() {
+        _results = _searchCache[query]!;
+      });
+      return;
+    }
     final snapshot =
         await FirebaseFirestore.instance
             .collection('restaurants')
@@ -37,6 +44,9 @@ class _SearchModalState extends State<SearchModal> {
             'photoUrl': data['photoUrl'],
           };
         }).toList();
+
+    // Store in cache
+    _searchCache[query] = fetchedResults;
 
     setState(() {
       _results = fetchedResults;

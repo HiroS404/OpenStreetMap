@@ -8,10 +8,16 @@ import 'package:map_try/pages/vendo_profile.dart';
 
 import 'package:map_try/widgets/search_modal.dart';
 import 'package:map_try/pages/settings_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true, // This enables local caching
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
+  );
   runApp(const MyApp());
 }
 
@@ -59,7 +65,7 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
 
   final ValueNotifier<LatLng?> destinationNotifier = ValueNotifier(null);
 
