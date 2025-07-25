@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
@@ -332,15 +334,16 @@ class _HomePageState extends State<HomePage> {
                               color: Colors.white,
                               size: 28,
                             ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => VendorRegistrationPage(),
-                                ),
-                              );
+                            onPressed: () async {
+                              final user = FirebaseAuth.instance.currentUser;
+
+                              if (user == null) {
+                                _showLoginSignupModal(context);
+                              } else {
+                                _saveRestoToFirestoreAndNavigate(user, context);
+                              }
                             },
+
                             tooltip: 'Register your Resto',
                           ),
 
@@ -660,6 +663,101 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+void _showLoginSignupModal(BuildContext context) {
+  showDialog(
+    context: context,
+    builder:
+        (context) => AlertDialog(
+          title: const Text('Login / Sign Up'),
+          content: LoginSignupForm(
+            onSuccess: (User user) {
+              Navigator.of(context).pop(); // Close the modal
+              _saveRestoToFirestoreAndNavigate(user, context);
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => VendorRegistrationPage(user: user),
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+  );
+}
+
+Future<void> _saveRestoToFirestoreAndNavigate(
+  User user,
+  BuildContext context,
+) async {
+  final docRef = FirebaseFirestore.instance
+      .collection('restaurants')
+      .doc(user.uid);
+
+  await docRef.set({
+    'uid': user.uid,
+    'email': user.email,
+
+    'createdAt': FieldValue.serverTimestamp(),
+  });
+}
+
+class LoginSignupForm extends StatefulWidget {
+  final void Function(User user) onSuccess;
+
+  const LoginSignupForm({super.key, required this.onSuccess});
+
+  @override
+  State<LoginSignupForm> createState() => _LoginSignupFormState();
+}
+
+class _LoginSignupFormState extends State<LoginSignupForm> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  Future<void> _submit() async {
+    try {
+      final userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+      final user = userCredential.user;
+      if (user != null) {
+        widget.onSuccess(user); //
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: emailController,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        TextField(
+          controller: passwordController,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'Password'),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: _submit, child: const Text('Continue')),
+      ],
     );
   }
 }
