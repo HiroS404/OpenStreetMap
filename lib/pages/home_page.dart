@@ -207,13 +207,25 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadRestaurants() async {
     try {
       final data = await RestaurantService.fetchRestaurants();
+
+      if (!mounted) return; // Safe to call setState and use context now
+
       setState(() {
         _restaurants = data;
         _isLoading = false;
       });
     } catch (e) {
-      print("Error fetching restaurants: $e");
+      if (!mounted) return;
+
       setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load restaurants. Please try again.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -324,7 +336,8 @@ class _HomePageState extends State<HomePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => VendorRestaurantPage(),
+                                  builder:
+                                      (context) => VendorRegistrationPage(),
                                 ),
                               );
                             },
