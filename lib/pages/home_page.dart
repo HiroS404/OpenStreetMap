@@ -684,6 +684,7 @@ void _showLoginSignupModal(BuildContext context) {
                     builder: (_) => VendorRegistrationPage(user: user),
                   ),
                 );
+                print("Navigating to Vendor Registration Page");
               }
             },
           ),
