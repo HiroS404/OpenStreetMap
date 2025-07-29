@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:map_try/model/restaurant_model.dart';
-import 'package:map_try/pages/vendor_page.dart';
+import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/services/restaurant_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -232,7 +230,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startAutoScroll(ScrollController controller) {
-    const duration = Duration(milliseconds: 50);
+    const duration = Duration(milliseconds: 100);
     const step = 1.0; //scroll step in pixels edit later for easy debug lol
 
     _autoScrollTimer = Timer.periodic(duration, (_) {
@@ -327,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Menu IconButton
+                          // Create Resto IconButton
                           IconButton(
                             icon: const Icon(
                               Icons.restaurant,
@@ -335,13 +333,12 @@ class _HomePageState extends State<HomePage> {
                               size: 28,
                             ),
                             onPressed: () async {
-                              final user = FirebaseAuth.instance.currentUser;
-
-                              if (user == null) {
-                                _showLoginSignupModal(context);
-                              } else {
-                                _saveRestoToFirestoreAndNavigate(user, context);
-                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CreateRestoAccPage(),
+                                ),
+                              );
                             },
 
                             tooltip: 'Register your Resto',
@@ -634,131 +631,35 @@ class _HomePageState extends State<HomePage> {
                   // Most Bought Section
                   sectionHeader("Most bought 🔥"),
                   const SizedBox(height: 8),
-                  // SizedBox(
-                  //   height: 250,
-                  //   child: ListView(
-                  //     scrollDirection: Axis.horizontal,
-                  //     children: [
-                  //       restoCard(
-                  //         photoUrl: '',
-                  //         name: 'Ted’s Batchoy',
-                  //         address: 'Jaro Plaza',
-                  //       ),
-                  //       restoCard(
-                  //         photoUrl: '',
-                  //         name: 'Mang Inasal',
-                  //         address: 'Diversion Road',
-                  //       ),
-                  //       restoCard(
-                  //         photoUrl: '',
-                  //         name: 'Deco’s Batchoy',
-                  //         address: 'City Proper',
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
+                  SizedBox(
+                    height: 250,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        restoCard(
+                          photoUrl: '',
+                          name: 'Ted’s Batchoy',
+                          address: 'Jaro Plaza',
+                        ),
+                        restoCard(
+                          photoUrl: '',
+                          name: 'Mang Inasal',
+                          address: 'Diversion Road',
+                        ),
+                        restoCard(
+                          photoUrl: '',
+                          name: 'Deco’s Batchoy',
+                          address: 'City Proper',
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-void _showLoginSignupModal(BuildContext context) {
-  showDialog(
-    context: context,
-    builder:
-        (context) => AlertDialog(
-          title: const Text('Login / Sign Up'),
-          content: LoginSignupForm(
-            onSuccess: (User user) {
-              Navigator.of(context).pop(); // Close the modal
-              _saveRestoToFirestoreAndNavigate(user, context);
-              if (context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => VendorRegistrationPage(user: user),
-                  ),
-                );
-                print("Navigating to Vendor Registration Page");
-              }
-            },
-          ),
-        ),
-  );
-}
-
-Future<void> _saveRestoToFirestoreAndNavigate(
-  User user,
-  BuildContext context,
-) async {
-  final docRef = FirebaseFirestore.instance
-      .collection('restaurants')
-      .doc(user.uid);
-
-  await docRef.set({
-    'uid': user.uid,
-    'email': user.email,
-
-    'createdAt': FieldValue.serverTimestamp(),
-  });
-}
-
-class LoginSignupForm extends StatefulWidget {
-  final void Function(User user) onSuccess;
-
-  const LoginSignupForm({super.key, required this.onSuccess});
-
-  @override
-  State<LoginSignupForm> createState() => _LoginSignupFormState();
-}
-
-class _LoginSignupFormState extends State<LoginSignupForm> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-
-  Future<void> _submit() async {
-    try {
-      final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-          );
-
-      final user = userCredential.user;
-      if (user != null) {
-        widget.onSuccess(user); //
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextField(
-          controller: emailController,
-          decoration: const InputDecoration(labelText: 'Email'),
-        ),
-        TextField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password'),
-        ),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: _submit, child: const Text('Continue')),
-      ],
     );
   }
 }

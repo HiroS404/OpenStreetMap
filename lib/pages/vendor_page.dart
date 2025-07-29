@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:map_try/pages/vendor_dashboard.dart';
 
 class VendorRegistrationPage extends StatefulWidget {
   final User user;
@@ -84,8 +85,21 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         final fileName =
             'vendors/header_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final ref = FirebaseStorage.instance.ref().child(fileName);
-        final uploadTask = await ref.putFile(File(_headerImage!.path));
-        headerImageUrl = await uploadTask.ref.getDownloadURL();
+        try {
+          final uploadTask = await ref.putFile(File(_headerImage!.path));
+          headerImageUrl = await uploadTask.ref.getDownloadURL();
+        } catch (e) {
+          // Handle upload error
+          if (!mounted) return;
+          // Close loading indicator
+          Navigator.of(context).pop(); // Dismiss loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to upload header image: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
 
       // Upload optional image
@@ -121,6 +135,17 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         const SnackBar(
           content: Text('Vendor info saved successfully!'),
           backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => VendorProfilePage(
+                restaurantData: {},
+                user: FirebaseAuth.instance.currentUser!,
+              ),
         ),
       );
 
