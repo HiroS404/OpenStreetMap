@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:map_try/pages/vendor_dashboard.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class VendorRegistrationPage extends StatefulWidget {
   final User user;
@@ -24,24 +26,42 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   final TextEditingController _menuPriceController = TextEditingController();
   final TextEditingController _menuCategoryController = TextEditingController();
 
+  // For mobile (non-web)
   File? _headerImage;
   XFile? _optionalImage;
+
+  Uint8List? _headerImageBytes;
+  Uint8List? _optionalImageBytes;
 
   Future<void> _pickHeaderImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _headerImage = File(picked.path);
-      });
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _headerImageBytes = bytes;
+        });
+      } else {
+        setState(() {
+          _headerImage = File(picked.path);
+        });
+      }
     }
   }
 
   Future<void> _pickOptionalImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _optionalImage = picked;
-      });
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _optionalImageBytes = bytes;
+        });
+      } else {
+        setState(() {
+          _optionalImage = picked;
+        });
+      }
     }
   }
 
@@ -81,35 +101,75 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
       // Upload header image
       String? headerImageUrl;
-      if (_headerImage != null) {
+      if (_headerImage != null || _headerImageBytes != null) {
         final fileName =
             'vendors/header_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final ref = FirebaseStorage.instance.ref().child(fileName);
         try {
-          final uploadTask = await ref.putFile(File(_headerImage!.path));
-          headerImageUrl = await uploadTask.ref.getDownloadURL();
+          if (kIsWeb) {
+            if (_headerImageBytes != null) {
+              final snapshot = await ref
+                  .putData(
+                    _headerImageBytes!,
+                    SettableMetadata(contentType: 'image/jpeg'),
+                  )
+                  .timeout(const Duration(seconds: 15));
+              headerImageUrl = await snapshot.ref.getDownloadURL();
+            }
+          } else {
+            final snapshot = await ref
+                .putFile(File(_headerImage!.path))
+                .timeout(const Duration(seconds: 15));
+            headerImageUrl = await snapshot.ref.getDownloadURL();
+          }
         } catch (e) {
-          // Handle upload error
           if (!mounted) return;
-          // Close loading indicator
-          Navigator.of(context).pop(); // Dismiss loading
+          Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to upload header image: $e'),
               backgroundColor: Colors.red,
             ),
           );
+          return;
         }
       }
-
       // Upload optional image
       String? optionalImageUrl;
-      if (_optionalImage != null) {
+      if (_optionalImage != null || _optionalImageBytes != null) {
         final fileName =
             'vendors/optional_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final ref = FirebaseStorage.instance.ref().child(fileName);
-        final uploadTask = await ref.putFile(File(_optionalImage!.path));
-        optionalImageUrl = await uploadTask.ref.getDownloadURL();
+
+        try {
+          if (kIsWeb) {
+            if (_optionalImageBytes != null) {
+              final snapshot = await ref
+                  .putData(
+                    _optionalImageBytes!,
+                    SettableMetadata(contentType: 'image/jpeg'),
+                  )
+                  .timeout(const Duration(seconds: 15));
+              optionalImageUrl = await snapshot.ref.getDownloadURL();
+            }
+          } else {
+            final file = File(_optionalImage!.path);
+            final snapshot = await ref
+                .putFile(file)
+                .timeout(const Duration(seconds: 15));
+            optionalImageUrl = await snapshot.ref.getDownloadURL();
+          }
+        } catch (e) {
+          if (!mounted) return;
+          Navigator.of(context).pop(); // Dismiss loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to upload optional image: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
       }
 
       final docRef = FirebaseFirestore.instance
@@ -166,6 +226,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
   }
 
