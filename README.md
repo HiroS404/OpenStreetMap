@@ -1,16 +1,32 @@
-# map_try
+# My own readme for references. Feel free to use or merge in the future - M
 
-A new Flutter project.
+PLans for usage for Obsidian for better markdown options.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+All dart files and descriptions.
 
-A few resources to get you started if this is your first Flutter project:
+<ins>/lib</ins>
+1) [main.dart](#main)
+2) firebase_options
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+<ins> lib/services </ins>
+1) restuarant_service.dart
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<ins>lib/pages</ins>
+1) home_page.dart
+2) openstreetmap.dart
+3) settings_page.dart
+4) vendo_profile.dart
+5) vendor_dashboard.dart
+6) vendor_data_registration.dart
+
+<ins>owner_login</ins>
+1) vendor_create_resto_acc.dart
+2) vendor_login.dart
+
+<ins>lib/models</ins>
+
+<ins>lib/widgets</ins>
+
+## main
