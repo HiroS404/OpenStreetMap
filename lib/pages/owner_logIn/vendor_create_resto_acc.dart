@@ -47,7 +47,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
   @override
   Widget build(BuildContext context) {
      return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F4), // light gray background
+      backgroundColor: const Color.fromARGB(255, 243, 233, 220), // light gray background
       body: Center(
         child: Container(
           width: 1280,
@@ -57,7 +57,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: const Color.fromARGB(255, 217, 111, 50).withOpacity(0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -69,28 +69,56 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
               Expanded(
                 flex: 5,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 60), 
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start, 
+                    crossAxisAlignment: CrossAxisAlignment.start, 
                     children: [
-                      // Logo
+                      // MapaKaon Logo at the top-left
                       const Row(
                         children: [
-                          Icon(Icons.ramen_dining, size: 30),
-                          SizedBox(width: 10),
+                          Icon(Icons.ramen_dining, size: 20), 
+                          SizedBox(width: 5), 
                           Text(
                             "MapaKaon",
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 18, 
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 50),
+                    const SizedBox(height: 50),
 
-                      // Username
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Welcome!",
+                            style: TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 199, 93, 44)
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Register Your Account",
+                            style: TextStyle(
+                              fontSize: 20,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                      // Username TextField
                       TextField(
                         controller: emailController,
                         decoration: InputDecoration(
@@ -112,7 +140,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Password
+                      // Password TextField
                       TextField(
                         controller: passwordController,
                         obscureText: true,
@@ -135,62 +163,71 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      //Create account
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: null,
-                            height: 48,
-                            child: ElevatedButton(
+                      // Create account button and Login button
+                      // Create Account Button
+                      SizedBox(
+                        height: 48,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
                               onPressed: isLoading ? null : _register,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                              ),
-                              child:
-                                  isLoading
-                                      ? const CircularProgressIndicator()
-                                      : const Text('Create Account',
-                                      style: TextStyle(
-                                      color: Colors.white,
-                                      letterSpacing: 1.5,
-                                      ),
-                                    ),   
-                            ),
-                          ),
-                          const SizedBox(height: 20, width: 10),
-                          
-                          // Login Button
-                          SizedBox(
-                            width: 110,
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                 Navigator.push( 
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const VendorLoginPage()),
-                                  );
-                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(40),
                                 ),
                               ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator()
+                                  : const Text(
+                                      'CREATE ACCOUNT',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(
+                        height: 48,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Already have an account? ",
+                              style: TextStyle(
+                                color: Colors.black,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const VendorLoginPage(),
+                                  ),
+                                );
+                              },
                               child: const Text(
                                 "Login",
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
                                   letterSpacing: 1.5,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-
+                      
                       const SizedBox(height: 50),
                       const Text(
                         "©2025 MapaKaon P.O.C.G",
@@ -213,7 +250,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                     bottomRight: Radius.circular(30),
                   ),
                   child: Image.asset(
-                    'Assets/login/loginimage.png', // Your food image
+                    'Assets/login/loginimage.png', 
                     fit: BoxFit.cover,
                     height: double.infinity,
                   ),
