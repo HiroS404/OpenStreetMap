@@ -1,3 +1,5 @@
+WIP
+
 # My own readme for references and current objectives/ issues with the code. Feel free to use or merge in the future - M
 
 Plans for usage for Obsidian for better markdown options.
