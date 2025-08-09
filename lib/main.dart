@@ -58,6 +58,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Refactor this, to create another dart file for the BottomNavBar
+// and BottomNavBarState classes.
+
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
 

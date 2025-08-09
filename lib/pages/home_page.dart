@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/services/restaurant_service.dart';
+import 'package:map_try/widgets/utils/home_page_widgets/homePage_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,140 +15,9 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-Widget categoryChip(String label, [bool isSelected = false]) {
-  return Padding(
-    padding: const EdgeInsets.only(left: 10),
-    child: Chip(
-      label: Text(label),
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black54,
-        fontWeight: FontWeight.w500,
-      ),
-      avatar:
-          isSelected ? const Icon(Icons.fastfood, color: Colors.white) : null,
-      backgroundColor: isSelected ? Colors.deepOrangeAccent : Colors.grey[200],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    ),
-  );
-}
 
-Widget sectionHeader(String title) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      TextButton(onPressed: () {}, child: const Text("See All")),
-    ],
-  );
-}
 
-Widget restoCard({
-  required String photoUrl,
-  required String name,
-  required String description,
-}) {
-  return Container(
-    width: 180,
-    margin: const EdgeInsets.only(right: 10),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(5),
-      image: DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover),
-    ),
-    child: Stack(
-      children: [
-        // Gradient Overlay
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.black.withAlpha(25), Colors.black.withAlpha(128)],
-            ),
-          ),
-        ),
 
-        // Optional: Rating Badge
-        Positioned(
-          top: 8,
-          left: 8,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.deepOrangeAccent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.star, size: 12, color: Colors.white),
-                SizedBox(width: 2),
-                Text(
-                  "4.5",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Favorite Icon
-        Positioned(
-          top: 8,
-          right: 8,
-          child: Icon(Icons.favorite_border, color: Colors.white),
-        ),
-
-        // Name and Address
-        Positioned(
-          bottom: 10,
-          left: 0,
-          right: 0,
-          child: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(1),
-                  border: Border.all(
-                    color: Colors.white.withAlpha(50),
-                    width: 0.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        color: Colors.deepOrangeAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
 
 class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   @override
@@ -188,6 +58,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
       false;
 }
 
+
+
+// To edit and refactor to make the whole _homePageState class more readable and especially dynamic.
+// To seperate the logic from the UI and whatnot - M
 class _HomePageState extends State<HomePage> {
   final ScrollController _hotDealsController = ScrollController();
   final ScrollController _mostBoughtController = ScrollController();
