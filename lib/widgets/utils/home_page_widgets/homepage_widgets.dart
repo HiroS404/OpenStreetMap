@@ -1,8 +1,8 @@
-import 'dart:async';
+// import 'dart:async';
+// import 'package:badges/badges.dart' as badges;
+// Unused imports can be removed to clean up the code, but will stay in the event it will be used later - M
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:badges/badges.dart' as badges;
-
 
 // Category Chip Widget
 /// Don't know which part of the code this widget is used. Dk what a category chip is lmao.

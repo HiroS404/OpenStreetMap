@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
+// import 'dart:ui'; This is unused, so it can be removed. but will stay in the eveent it will be used later - M
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
@@ -7,17 +7,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/services/restaurant_service.dart';
-import 'package:map_try/widgets/utils/home_page_widgets/homePage_widgets.dart';
+import 'package:map_try/widgets/utils/home_page_widgets/homepage_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
-
-
-
 
 class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   @override
