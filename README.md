@@ -79,9 +79,17 @@ Explaination of each API:
 ---
 # services
 ## restaurant_service
+
+- Fetches restaurant data from Firestore, will prefer cached data first and then to server if cache is empty
 ---
 # pages
 ## homepage
+
+>[!IMPORTANT]
+> To touch up on the code, placing widgets in seperate widget dart and/or folder.
+
+
+
 ## openstreetmap
 ## settings_page
 ## vendo_profile
