@@ -3,11 +3,13 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:map_try/model/route_loader.dart';
+import 'package:map_try/services/mapbox_service.dart';
 
 // for walking distance and polylines
 final Distance _distance = Distance();
@@ -694,9 +696,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
           initialZoom: 14.0,
         ),
+
+        // TO CHANGE - M
         children: [
           TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            urlTemplate: 'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
+            tileProvider: CancellableNetworkTileProvider(),
           ),
           //uncomment this for debugging using fix or manual  location
           // CurrentLocationLayer(
