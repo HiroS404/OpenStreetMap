@@ -18,7 +18,7 @@ void main() async {
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled:
-        true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
+        false, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
   runApp(const MyApp());

@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "mapa-kaon"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
