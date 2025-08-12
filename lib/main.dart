@@ -14,13 +14,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled:
-        false, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
+        true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
+
   runApp(const MyApp());
 }
 
