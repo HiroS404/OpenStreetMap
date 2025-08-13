@@ -19,7 +19,9 @@ class AppColors {
 
   // System colors
   static const Color sysAccent = Color(0xFFFFA95D); // FFA95D
-  static const Color sysBg = Color(0xFFFFCC96); // FFCC96 (also used in gradients)
+  static const Color sysBg = Color(
+    0xFFFFCC96,
+  ); // FFCC96 (also used in gradients)
 }
 
 /// Optional shared chip (not used by header but handy if needed elsewhere)
@@ -32,7 +34,8 @@ Widget categoryChip(String label, [bool isSelected = false]) {
         color: isSelected ? Colors.white : Colors.black54,
         fontWeight: FontWeight.w600,
       ),
-      avatar: isSelected ? const Icon(Icons.fastfood, color: Colors.white) : null,
+      avatar:
+          isSelected ? const Icon(Icons.fastfood, color: Colors.white) : null,
       backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
@@ -52,8 +55,10 @@ Widget sectionHeader(String title) {
         style: TextButton.styleFrom(
           backgroundColor: AppColors.button,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 😎,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         child: const Text("See All"),
       ),
@@ -72,11 +77,15 @@ Widget restoCard({
     width: 180,
     margin: const EdgeInsets.only(right: 10),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(😎,
+      borderRadius: BorderRadius.circular(8),
       color: hasImage ? null : Colors.grey[300],
-      image: hasImage
-          ? DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover)
-          : null,
+      image:
+          hasImage
+              ? DecorationImage(
+                image: NetworkImage(photoUrl),
+                fit: BoxFit.cover,
+              )
+              : null,
       boxShadow: [
         BoxShadow(
           color: AppColors.sysAccent.withAlpha(30),
@@ -90,14 +99,11 @@ Widget restoCard({
         // Gradient overlay to improve text contrast
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(😎,
+            borderRadius: BorderRadius.circular(8),
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withAlpha(25),
-                Colors.black.withAlpha(128),
-              ],
+              colors: [Colors.black.withAlpha(25), Colors.black.withAlpha(128)],
             ),
           ),
         ),
@@ -123,7 +129,10 @@ Widget restoCard({
               children: [
                 Icon(Icons.star, size: 12, color: Colors.white),
                 SizedBox(width: 2),
-                Text("4.5", style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text(
+                  "4.5",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -147,7 +156,7 @@ Widget restoCard({
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(😎,
+                  color: Colors.white.withAlpha(8),
                   border: Border.all(
                     color: Colors.white.withAlpha(50),
                     width: 0.5,
@@ -195,14 +204,11 @@ Widget blankCard() {
     width: 180,
     margin: const EdgeInsets.only(right: 10),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(😎,
+      borderRadius: BorderRadius.circular(8),
       gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          AppColors.gradientSoft,
-          AppColors.sysAccent,
-        ],
+        colors: [AppColors.gradientSoft, AppColors.sysAccent],
       ),
       boxShadow: [
         BoxShadow(
@@ -227,10 +233,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context,
-      double shrinkOffset,
-      bool overlapsContent,
-      ) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
@@ -239,7 +245,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
         height: maxExtent,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 😎,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: screenWidth),
             child: Row(
@@ -261,7 +267,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   Widget _buildCategoryChip(String label) {
     final bool isSelected = selectedCategory == label;
     return Padding(
-      padding: const EdgeInsets.only(right: 😎,
+      padding: const EdgeInsets.only(right: 8),
       child: TextButton(
         onPressed: () => onCategorySelected(label),
         style: TextButton.styleFrom(
@@ -293,7 +299,8 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   double get minExtent => 60;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
 }
 
 class HomePage extends StatefulWidget {
@@ -349,9 +356,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_restaurants.isEmpty) {
@@ -373,7 +378,7 @@ class _HomePageState extends State<HomePage> {
             flexibleSpace: LayoutBuilder(
               builder: (context, constraints) {
                 final percent = ((constraints.maxHeight - kToolbarHeight) /
-                    (260 - kToolbarHeight))
+                        (260 - kToolbarHeight))
                     .clamp(0.0, 1.0);
                 return Stack(
                   fit: StackFit.expand,
@@ -385,7 +390,8 @@ class _HomePageState extends State<HomePage> {
                         decoration: const BoxDecoration(
                           image: DecorationImage(
                             image: AssetImage(
-                                'Assets/route_pics/imageiloilo.png'),
+                              'Assets/route_pics/imageiloilo.png',
+                            ),
                             fit: BoxFit.cover,
                           ),
                           borderRadius: BorderRadius.only(
@@ -403,11 +409,12 @@ class _HomePageState extends State<HomePage> {
                           bottomRight: Radius.circular(34),
                         ),
                         gradient: LinearGradient(
-                          colors: const [
-                            Colors.transparent,
-                            AppColors.gradientSoft,
-                            AppColors.secondary,
-                          ].map((c) => c.withAlpha(80)).toList(),
+                          colors:
+                              const [
+                                Colors.transparent,
+                                AppColors.gradientSoft,
+                                AppColors.secondary,
+                              ].map((c) => c.withAlpha(80)).toList(),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -429,13 +436,16 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: IconButton(
                               icon: const Icon(
-                                  Icons.restaurant, color: Colors.white,
-                                  size: 22),
+                                Icons.restaurant,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                               onPressed: () async {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (
-                                      _) => const CreateRestoAccPage()),
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreateRestoAccPage(),
+                                  ),
                                 );
                               },
                               tooltip: 'Register your Resto',
@@ -445,7 +455,9 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               badges.Badge(
                                 position: badges.BadgePosition.topEnd(
-                                    top: -1, end: -1),
+                                  top: -1,
+                                  end: -1,
+                                ),
                                 badgeStyle: const badges.BadgeStyle(
                                   padding: EdgeInsets.all(5),
                                   badgeColor: AppColors.button,
@@ -453,7 +465,9 @@ class _HomePageState extends State<HomePage> {
                                 badgeContent: const Text(
                                   '0',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 10),
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
                                 ),
                                 child: const Icon(
                                   Icons.notifications_none,
@@ -474,8 +488,10 @@ class _HomePageState extends State<HomePage> {
                                   ],
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(Icons.person_outline_rounded,
-                                      color: Colors.white),
+                                  icon: const Icon(
+                                    Icons.person_outline_rounded,
+                                    color: Colors.white,
+                                  ),
                                   onPressed: () {},
                                 ),
                               ),
@@ -499,13 +515,18 @@ class _HomePageState extends State<HomePage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.location_on,
-                                      color: AppColors.primary, size: 20),
+                                  Icon(
+                                    Icons.location_on,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
                                   SizedBox(width: 6),
                                   Text(
                                     'Iloilo City, Philippines',
-                                    style: TextStyle(color: Colors.black,
-                                        fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -514,8 +535,9 @@ class _HomePageState extends State<HomePage> {
                               // Brand title chip with gradient
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                    horizontal: 11 * percent,
-                                    vertical: 4 * percent),
+                                  horizontal: 11 * percent,
+                                  vertical: 4 * percent,
+                                ),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
@@ -527,7 +549,8 @@ class _HomePageState extends State<HomePage> {
                                     end: Alignment.bottomRight,
                                   ),
                                   borderRadius: BorderRadius.circular(
-                                      8 * percent),
+                                    8 * percent,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.secondary.withAlpha(50),
@@ -553,7 +576,9 @@ class _HomePageState extends State<HomePage> {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [
@@ -567,8 +592,9 @@ class _HomePageState extends State<HomePage> {
                                         borderRadius: BorderRadius.circular(30),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: AppColors.primary
-                                                .withOpacity(0.3),
+                                            color: AppColors.primary.withAlpha(
+                                              30,
+                                            ),
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
@@ -591,13 +617,16 @@ class _HomePageState extends State<HomePage> {
                                                     'Way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight
-                                                          .w900,
-                                                      foreground: Paint()
-                                                        ..style = PaintingStyle
-                                                            .stroke
-                                                        ..strokeWidth = 2
-                                                        ..color = Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      foreground:
+                                                          Paint()
+                                                            ..style =
+                                                                PaintingStyle
+                                                                    .stroke
+                                                            ..strokeWidth = 2
+                                                            ..color =
+                                                                Colors.black,
                                                     ),
                                                   ),
                                                   // Fill
@@ -605,8 +634,8 @@ class _HomePageState extends State<HomePage> {
                                                     'Way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight
-                                                          .w900,
+                                                      fontWeight:
+                                                          FontWeight.w900,
                                                       color: Colors.white,
                                                     ),
                                                   ),
@@ -644,7 +673,8 @@ class _HomePageState extends State<HomePage> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border.all(
-                              color: AppColors.sysAccent.withAlpha(70)),
+                            color: AppColors.sysAccent.withAlpha(70),
+                          ),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -684,10 +714,11 @@ class _HomePageState extends State<HomePage> {
                                         fontSize: 24,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
-                                        foreground: Paint()
-                                          ..style = PaintingStyle.stroke
-                                          ..strokeWidth = 2
-                                          ..color = Colors.black,
+                                        foreground:
+                                            Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black,
                                       ),
                                     ),
                                     TextSpan(
@@ -696,10 +727,11 @@ class _HomePageState extends State<HomePage> {
                                         fontSize: 24,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
-                                        foreground: Paint()
-                                          ..style = PaintingStyle.stroke
-                                          ..strokeWidth = 2
-                                          ..color = Colors.black,
+                                        foreground:
+                                            Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black,
                                       ),
                                     ),
                                   ],
@@ -761,7 +793,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   // Hot Deals 🔥 Section
                   sectionHeader("Hot Deals 🔥"),
-                  const SizedBox(height: 😎,
+                  const SizedBox(height: 8),
 
                   SizedBox(
                     height: 250,
@@ -770,8 +802,10 @@ class _HomePageState extends State<HomePage> {
                       physics: const ClampingScrollPhysics(),
                       // manual, no bounce past edges
                       scrollDirection: Axis.horizontal,
-                      itemCount: _selectedCategory == "Meals" ? _restaurants
-                          .length : 6,
+                      itemCount:
+                          _selectedCategory == "Meals"
+                              ? _restaurants.length
+                              : 6,
                       itemBuilder: (context, index) {
                         if (_selectedCategory != "Meals") {
                           return blankCard();
@@ -789,7 +823,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   // Most Bought Section
                   sectionHeader("Most bought 🔥"),
-                  const SizedBox(height: 😎,
+                  const SizedBox(height: 8),
                   SizedBox(
                     height: 250,
                     child: ListView(

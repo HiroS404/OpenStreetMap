@@ -21,9 +21,9 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
     try {
       final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
       final user = userCredential.user;
       if (!mounted) return;
@@ -60,10 +60,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
               SizedBox(width: 5),
               Text(
                 "MapaKaon",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -97,8 +94,10 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
               hintStyle: const TextStyle(fontStyle: FontStyle.italic),
               filled: true,
               fillColor: Colors.grey[100],
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 18,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(40),
                 borderSide: BorderSide.none,
@@ -114,8 +113,10 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
               hintStyle: const TextStyle(fontStyle: FontStyle.italic),
               filled: true,
               fillColor: Colors.grey[100],
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 18,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(40),
                 borderSide: BorderSide.none,
@@ -134,15 +135,16 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                     borderRadius: BorderRadius.circular(40),
                   ),
                 ),
-                child: isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text(
-                        'SIGN IN',
-                        style: TextStyle(
-                          color: Colors.white,
-                          letterSpacing: 1.5,
+                child:
+                    isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text(
+                          'SIGN IN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
                         ),
-                      ),
               ),
             ),
           ),
@@ -158,9 +160,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const VendorLoginPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const VendorLoginPage()),
                   );
                 },
                 child: const Text(
@@ -201,52 +201,60 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        const Color.fromARGB(255, 217, 111, 50).withOpacity(0.4),
+                    color: const Color.fromARGB(
+                      255,
+                      217,
+                      111,
+                      50,
+                    ).withAlpha(102), // 0.4 * 255 = 102
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: isMobile
-                  ? SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(30),
-                              topRight: Radius.circular(30),
+              child:
+                  isMobile
+                      ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(30),
+                                topRight: Radius.circular(30),
+                              ),
+                              child: Image.asset(
+                                'Assets/login/loginimage.png',
+                                fit: BoxFit.cover,
+                                height: 200,
+                                width: double.infinity,
+                              ),
                             ),
-                            child: Image.asset(
-                              'Assets/login/loginimage.png',
-                              fit: BoxFit.cover,
-                              height: 200,
-                              width: double.infinity,
+                            _buildSignInForm(isMobile: true),
+                          ],
+                        ),
+                      )
+                      : Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: _buildSignInForm(isMobile: false),
+                          ),
+                          Expanded(
+                            flex: 5,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(30),
+                                bottomRight: Radius.circular(30),
+                              ),
+                              child: Image.asset(
+                                'Assets/login/loginimage.png',
+                                fit: BoxFit.cover,
+                                height: double.infinity,
+                              ),
                             ),
                           ),
-                          _buildSignInForm(isMobile: true),
                         ],
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Expanded(flex: 5, child: _buildSignInForm(isMobile: false)),
-                        Expanded(
-                          flex: 5,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(30),
-                              bottomRight: Radius.circular(30),
-                            ),
-                            child: Image.asset(
-                              'Assets/login/loginimage.png',
-                              fit: BoxFit.cover,
-                              height: double.infinity,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
             ),
           );
         },

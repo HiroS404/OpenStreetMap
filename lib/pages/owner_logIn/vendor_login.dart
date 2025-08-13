@@ -22,17 +22,18 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
     try {
       final userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
       final user = userCredential.user;
       if (user == null || !mounted) return;
 
-      final doc = await FirebaseFirestore.instance
-          .collection('restaurants')
-          .doc(user.uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('restaurants')
+              .doc(user.uid)
+              .get();
       if (!mounted) return;
 
       if (doc.exists) {
@@ -40,8 +41,8 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                VendorProfilePage(restaurantData: restoData, user: user),
+            builder:
+                (_) => VendorProfilePage(restaurantData: restoData, user: user),
           ),
         );
       } else {
@@ -51,9 +52,9 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Login failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message ?? 'Login failed')));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -75,10 +76,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
               SizedBox(width: 5),
               Text(
                 "MapaKaon",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -112,8 +110,10 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
               hintStyle: const TextStyle(fontStyle: FontStyle.italic),
               filled: true,
               fillColor: Colors.grey[100],
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 18,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(40),
                 borderSide: BorderSide.none,
@@ -129,8 +129,10 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
               hintStyle: const TextStyle(fontStyle: FontStyle.italic),
               filled: true,
               fillColor: Colors.grey[100],
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 18,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(40),
                 borderSide: BorderSide.none,
@@ -149,15 +151,16 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                     borderRadius: BorderRadius.circular(40),
                   ),
                 ),
-                child: isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text(
-                        'LOGIN',
-                        style: TextStyle(
-                          color: Colors.white,
-                          letterSpacing: 1.5,
+                child:
+                    isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text(
+                          'LOGIN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
                         ),
-                      ),
               ),
             ),
           ),
@@ -216,52 +219,60 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        const Color.fromARGB(255, 217, 111, 50).withOpacity(0.4),
+                    color: const Color.fromARGB(
+                      255,
+                      217,
+                      111,
+                      50,
+                    ).withAlpha(102),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: isMobile
-                  ? SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(30),
-                              topRight: Radius.circular(30),
+              child:
+                  isMobile
+                      ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(30),
+                                topRight: Radius.circular(30),
+                              ),
+                              child: Image.asset(
+                                'Assets/login/loginimage.png',
+                                fit: BoxFit.cover,
+                                height: 200,
+                                width: double.infinity,
+                              ),
                             ),
-                            child: Image.asset(
-                              'Assets/login/loginimage.png',
-                              fit: BoxFit.cover,
-                              height: 200,
-                              width: double.infinity,
+                            _buildLoginForm(isMobile: true),
+                          ],
+                        ),
+                      )
+                      : Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: _buildLoginForm(isMobile: false),
+                          ),
+                          Expanded(
+                            flex: 5,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(30),
+                                bottomRight: Radius.circular(30),
+                              ),
+                              child: Image.asset(
+                                'Assets/login/loginimage.png',
+                                fit: BoxFit.cover,
+                                height: double.infinity,
+                              ),
                             ),
                           ),
-                          _buildLoginForm(isMobile: true),
                         ],
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Expanded(flex: 5, child: _buildLoginForm(isMobile: false)),
-                        Expanded(
-                          flex: 5,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(30),
-                              bottomRight: Radius.circular(30),
-                            ),
-                            child: Image.asset(
-                              'Assets/login/loginimage.png',
-                              fit: BoxFit.cover,
-                              height: double.infinity,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
             ),
           );
         },
