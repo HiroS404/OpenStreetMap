@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:map_try/pages/owner_logIn/vendor_login.dart';
-import 'package:map_try/pages/vendor_page.dart';
+import 'package:map_try/pages/vendor_data_registration.dart';
 
 class CreateRestoAccPage extends StatefulWidget {
   const CreateRestoAccPage({super.key});

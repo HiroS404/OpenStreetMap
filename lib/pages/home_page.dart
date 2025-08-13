@@ -47,7 +47,7 @@ Widget sectionHeader(String title) {
 Widget restoCard({
   required String photoUrl,
   required String name,
-  required String address,
+  required String description,
 }) {
   return Container(
     width: 180,
@@ -131,7 +131,7 @@ Widget restoCard({
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      address,
+                      description,
                       style: const TextStyle(
                         color: Colors.deepOrangeAccent,
                         fontWeight: FontWeight.bold,
@@ -620,7 +620,7 @@ class _HomePageState extends State<HomePage> {
                           return restoCard(
                             photoUrl: resto.photoUrl,
                             name: resto.name,
-                            address: resto.address ?? '',
+                            description: resto.description,
                           );
                         },
                       ),
@@ -639,17 +639,17 @@ class _HomePageState extends State<HomePage> {
                         restoCard(
                           photoUrl: '',
                           name: 'Ted’s Batchoy',
-                          address: 'Jaro Plaza',
+                          description: 'Jaro Plaza',
                         ),
                         restoCard(
                           photoUrl: '',
                           name: 'Mang Inasal',
-                          address: 'Diversion Road',
+                          description: 'Diversion Road',
                         ),
                         restoCard(
                           photoUrl: '',
                           name: 'Deco’s Batchoy',
-                          address: 'City Proper',
+                          description: 'City Proper',
                         ),
                       ],
                     ),

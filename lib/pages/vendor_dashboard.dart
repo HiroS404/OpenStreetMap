@@ -23,21 +23,16 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc = await FirebaseFirestore.instance
-        .collection('restaurants')
-        .doc(user.uid)
-        .get();
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(user.uid)
+            .get();
 
-    if (doc.exists) {
-      setState(() {
-        _vendorData = doc.data();
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _vendorData = doc.exists ? doc.data() : null;
+      _isLoading = false;
+    });
   }
 
   Future<void> _deleteVendorData() async {
@@ -71,9 +66,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_vendorData == null) {
@@ -82,238 +75,118 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       );
     }
 
+    List<String?> optionalImages = [
+      _vendorData!['optionalImageUrl'],
+      _vendorData!['optionalImageUrl2'],
+      _vendorData!['optionalImageUrl3'],
+    ];
+
+    // If some images are missing, pad with nulls so total is 3
+    while (optionalImages.length < 3) {
+      optionalImages.add(null);
+    }
+
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
         title: const Text('Your Restaurant Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
+            icon: const Icon(Icons.delete),
             onPressed: _deleteVendorData,
             tooltip: 'Delete Profile',
           ),
         ],
       ),
-      backgroundColor: const Color.fromARGB(255, 243, 233, 220),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(48),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header image with rounded corners
+            // Full-width header image
             if (_vendorData!['headerImageUrl'] != '')
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  _vendorData!['headerImageUrl'],
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+              Image.network(
+                _vendorData!['headerImageUrl'],
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.contain, //bug need to test dif images
               ),
 
-            const SizedBox(height: 20),
-
-            // Name
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  _vendorData!['name'] ?? '',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 42,
-                        color: Colors.redAccent
-                      ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Address & Contact Row with Directions Button
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch, // Make them same height
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Address Card
-                  Expanded(
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.location_on, size: 18, color: Colors.redAccent),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                _vendorData!['address'] ?? '',
-                                style: const TextStyle(fontSize: 14),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.directions, color: Colors.blueAccent),
-                              tooltip: 'Get Directions',
-                              onPressed: () {
-                                final address = Uri.encodeComponent(_vendorData!['address'] ?? '');
-                                final mapsUrl = "https://www.google.com/maps/search/?api=1&query=$address";
-                                // Launch URL here
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
+                  Text(
+                    _vendorData!['name'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(width: 8),
-
-                  // Contact Card
-                  Expanded(
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.phone, size: 18, color: Colors.green),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                _vendorData!['phoneNumber'] ?? '',
-                                style: const TextStyle(fontSize: 14),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  Text(
+                    _vendorData!['address'] ?? '',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _vendorData!['description'] ?? '',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Menu:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  ...(_vendorData!['menu'] as List).map(
+                    (item) => ListTile(
+                      title: Text(item['name']),
+                      subtitle: Text('${item['category']} - ₱${item['price']}'),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            // Build a list of image URLs (only non-empty)
 
-            // Description card
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  _vendorData!['description'] ?? '',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
+            // Display row of 3 cards
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children:
+                    optionalImages.map((imageUrl) {
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child:
+                                imageUrl != null && imageUrl.isNotEmpty
+                                    ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      height: 150,
+                                    )
+                                    : Container(
+                                      height: 150,
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
-
-            const SizedBox(height: 20),
-
-           // Menu section
-            Center(
-              child: Text( 'MENU',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            LayoutBuilder(
-  builder: (context, constraints) {
-    int crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
-    double aspectRatio = constraints.maxWidth > 800 ? 6.5 : 5.5;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: (_vendorData!['menu'] as List).length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: aspectRatio,
-      ),
-      itemBuilder: (context, index) {
-        final item = (_vendorData!['menu'] as List)[index];
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 1,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center, // center all vertically
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Center(
-                    child: Text(
-                      item['name'] ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '|',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Center(
-                    child: Text(
-                      item['category'] ?? '',
-                      style: const TextStyle(color: Colors.grey),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '|',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Center(
-                    child: Text(
-                      '₱${item['price']}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  },
-),
-
-
           ],
         ),
       ),

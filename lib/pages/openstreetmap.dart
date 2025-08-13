@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:map_try/model/route_loader.dart';
 
+// for walking distance and polylines
 final Distance _distance = Distance();
 double walkingDistance = 0.0;
 List<Polyline> walkingPolylines = [];
@@ -36,6 +37,7 @@ LatLng findNearestPointOnAllRoutes(
   return nearestPoint!;
 }
 
+//dotted line for walking distance
 List<Polyline> createDottedLine(LatLng start, LatLng end) {
   final List<Polyline> dotted = [];
   const double segmentLength = 3.0;
@@ -63,6 +65,7 @@ List<Polyline> createDottedLine(LatLng start, LatLng end) {
 
   return dotted;
 }
+//Main OpenStreetMap screen
 
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -103,12 +106,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           // print("Current Location: $_currentLocation");
           // print(
           //   "New Destination: $newDestination",
-          // ); // uses jeepney route, not OSRM anymore
+          // ); // uses jeepney route, not OSRM anymore (route base on jeepney_routes.json)
         }
       });
     });
   }
 
+  //location initialization
   Future<void> _initializeLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -137,7 +141,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     });
     loadRouteData();
 
-    // For debugging: Use a fixed location in Iloilo City
+    // For debugging DO NOT DELETE: Use a fixed location in Iloilo City
     // const LatLng debuggingLocation = LatLng(
     //   // 10.732143,
     //   // 122.559791, //tabuc suba jollibe
@@ -190,6 +194,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     // loadRouteData(); // Load jeepney routes based on this location
   }
 
+  //initial map zoom and center
   void _fitMapToRoute() {
     if (_route.isEmpty) return;
 
@@ -208,6 +213,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     _mapController.move(center, 15.0);
   }
 
+  //getting route and displaying
   Future<void> fetchRoute(LatLng destination) async {
     if (_currentLocation == null) return;
 
@@ -232,6 +238,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     }
   }
 
+  //polyline decoding
   void _decodePolyline(String encodedPolyline) {
     final polylinePoints = PolylinePoints();
     final decodePoints = polylinePoints.decodePolyline(encodedPolyline);
@@ -242,6 +249,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     });
   }
 
+  //displaying user current location
   Future<void> _userCurrentLocation() async {
     if (_currentLocation == null) {
       ScaffoldMessenger.of(
@@ -259,6 +267,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  //loading jeepney routes from jepney_routes.json and matching with user location and destination
   void loadRouteData() async {
     List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
     if (!mounted || _currentLocation == null || _destination == null) return;
@@ -295,13 +304,14 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               content: Text(
                 "No matching jeepney route found from your location to destination.",
               ),
-              duration: Duration(seconds: 5),
+              duration: Duration(seconds: 8),
             ),
           );
       }
     }
   }
 
+  //showing route modal with details (button will be shown if a route is matched)
   void showRouteModal(BuildContext context) {
     _isModalOpen = true;
     final animationController = BottomSheet.createAnimationController(this);
@@ -420,6 +430,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             "Estimated Disttance: ${(segmentDistance / 1000).toStringAsFixed(2)} Km \nEstimated Travel Time: ${estimateJeepneyTime(segmentDistance)} \nDirection: CurrentLocation to Resto Name", //logic here for fetching data from firestore
                           ),
                         ),
+                        //theres bug here still dont know how to fix it or need new logic with the route matching
                         // if (userWalk) ...[
                         //   ListTile(
                         //     leading: const Icon(Icons.directions_walk),
@@ -471,7 +482,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       bool nearCurrent = route.isPointNearRoute(
         current,
         1000,
-      ); // 500, 1000 edit later after debugging
+      ); // 500, 1000 edit later after debugging, distance between user and route
       bool nearDestination = route.isPointNearRoute(destination, 1000);
 
       // DEBUG: print distances to destination for this route
@@ -521,7 +532,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     return scoredRoutes.take(limit).map((e) => e.key).toList();
   }
 
-  //trying matvhing locgic
+  //trying matvhing locgic (route segment from current to destination)
 
   List<LatLng> extractSegment(
     LatLng current,
@@ -556,7 +567,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       return routeCoords.sublist(endIndex, startIndex + 1).reversed.toList();
     }
 
-    // // Ensure segment follows route direction (no reversing)
+    // // Ensure segment follows route direction (no reversing) this will change if theres new impleamentation of routing
     // if (startIndex > endIndex) {
     //   // If destination is behind, return an empty list or just end early
     //   return [];
@@ -564,7 +575,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     // return routeCoords.sublist(startIndex, endIndex + 1);
   }
 
-  //haversine formulaaaa
+  //haversine formulaaaa (for earth radius)
   double _calculateDistance(LatLng a, LatLng b) {
     const double earthRadius = 6371;
     double dLat = _degToRad(b.latitude - a.latitude);
@@ -641,7 +652,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         walkingDistance = 0;
       }
     }
-
+    //main OpenStreetMap widget with layers and controls
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
@@ -688,6 +699,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           ),
+          //uncomment this for debugging using fix or manual  location
           // CurrentLocationLayer(
           //   style: LocationMarkerStyle(
           //     marker: DefaultLocationMarker(
@@ -699,7 +711,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           //   ),
           // ),
 
-          // //currentlocation debugger
+          // //currentlocation debugger for fixed location
           if (_currentLocation != null)
             MarkerLayer(
               markers: [
@@ -715,7 +727,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 ),
               ],
             ),
-          //delete the above for debuf only
+          //delete the above for debuggin only using the fix or manual location
           if (_destinationNotifier.value != null)
             MarkerLayer(
               markers: [
