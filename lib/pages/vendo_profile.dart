@@ -5,7 +5,7 @@ class VendorProfileScreen extends StatelessWidget {
   final String description;
   final String photoUrl;
   final double latitude;
-  final double longtitude;
+  final double longitude;
 
   const VendorProfileScreen({
     super.key,
@@ -13,7 +13,7 @@ class VendorProfileScreen extends StatelessWidget {
     required this.description,
     required this.photoUrl,
     required this.latitude,
-    required this.longtitude,
+    required this.longitude,
   });
   @override
   Widget build(BuildContext context) {
@@ -58,7 +58,7 @@ class VendorProfileScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.location_on),
               title: Text(
-                "resto location on OSM \nLat: $latitude, Long: $longtitude",
+                "resto location on OSM \nLat: $latitude, Long: $longitude",
               ),
             ),
             //operating hours??

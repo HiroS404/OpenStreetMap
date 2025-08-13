@@ -52,7 +52,7 @@ Widget sectionHeader(String title) {
         style: TextButton.styleFrom(
           backgroundColor: AppColors.button,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 😎,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
         child: const Text("See All"),
@@ -72,7 +72,7 @@ Widget restoCard({
     width: 180,
     margin: const EdgeInsets.only(right: 10),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(😎,
       color: hasImage ? null : Colors.grey[300],
       image: hasImage
           ? DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover)
@@ -90,7 +90,7 @@ Widget restoCard({
         // Gradient overlay to improve text contrast
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(😎,
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -147,7 +147,7 @@ Widget restoCard({
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(8),
+                  color: Colors.white.withAlpha(😎,
                   border: Border.all(
                     color: Colors.white.withAlpha(50),
                     width: 0.5,
@@ -195,7 +195,7 @@ Widget blankCard() {
     width: 180,
     margin: const EdgeInsets.only(right: 10),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(😎,
       gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -239,7 +239,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
         height: maxExtent,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 😎,
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: screenWidth),
             child: Row(
@@ -261,7 +261,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   Widget _buildCategoryChip(String label) {
     final bool isSelected = selectedCategory == label;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 😎,
       child: TextButton(
         onPressed: () => onCategorySelected(label),
         style: TextButton.styleFrom(
@@ -741,7 +741,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Category chips with selection + callback
           SliverPersistentHeader(
             pinned: true,
             delegate: CategoryChipsHeader(
@@ -762,9 +761,8 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   // Hot Deals 🔥 Section
                   sectionHeader("Hot Deals 🔥"),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 😎,
 
-                  // Shows real cards for Meals, blank placeholders otherwise
                   SizedBox(
                     height: 250,
                     child: ListView.builder(
@@ -791,7 +789,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   // Most Bought Section
                   sectionHeader("Most bought 🔥"),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 😎,
                   SizedBox(
                     height: 250,
                     child: ListView(

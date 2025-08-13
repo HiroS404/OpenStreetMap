@@ -1,10 +1,15 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:map_try/pages/resto%20AddressMap/pick_address_map.dart';
 import 'package:map_try/pages/vendor_dashboard.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:map_try/services/cloudinary_service.dart';
 
 class VendorRegistrationPage extends StatefulWidget {
   final User user;
@@ -24,24 +29,72 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   final TextEditingController _menuPriceController = TextEditingController();
   final TextEditingController _menuCategoryController = TextEditingController();
 
+  // For mobile (non-web)
   File? _headerImage;
   XFile? _optionalImage;
+
+  Uint8List? _headerImageBytes;
+  Uint8List? _optionalImageBytes;
+  double? selectedLat;
+  double? selectedLng;
+
+  // Helper to compress for Web/Mobile
+  Future<Uint8List> _compressImage(Uint8List data, {int quality = 85}) async {
+    return await FlutterImageCompress.compressWithList(
+      data,
+      quality: quality, // Reduce quality to save bandwidth
+      minWidth: 800, // Resize width
+      minHeight: 800, // Resize height
+    );
+  }
 
   Future<void> _pickHeaderImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _headerImage = File(picked.path);
-      });
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+        final compressed = await _compressImage(bytes);
+        setState(() {
+          _headerImageBytes = compressed;
+        });
+      } else {
+        final file = File(picked.path);
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          file.absolute.path,
+          quality: 85,
+          minWidth: 800,
+          minHeight: 800,
+        );
+        setState(() {
+          _headerImageBytes = compressedBytes; // store compressed
+          _headerImage = file; // keep original if needed
+        });
+      }
     }
   }
 
   Future<void> _pickOptionalImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _optionalImage = picked;
-      });
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+        final compressed = await _compressImage(bytes);
+        setState(() {
+          _optionalImageBytes = compressed;
+        });
+      } else {
+        final file = File(picked.path);
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          file.absolute.path,
+          quality: 85,
+          minWidth: 800,
+          minHeight: 800,
+        );
+        setState(() {
+          _optionalImageBytes = compressedBytes;
+          _optionalImage = picked;
+        });
+      }
     }
   }
 
@@ -58,6 +111,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       );
       return;
     }
+
     try {
       // Check if user is logged in
       final user = FirebaseAuth.instance.currentUser;
@@ -72,46 +126,76 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       }
 
       final userId = user.uid;
-      // Show a loading indicator (optional)
+
+      // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Upload header image
+      // Upload header image to Cloudinary
       String? headerImageUrl;
-      if (_headerImage != null) {
-        final fileName =
-            'vendors/header_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = FirebaseStorage.instance.ref().child(fileName);
-        try {
-          final uploadTask = await ref.putFile(File(_headerImage!.path));
-          headerImageUrl = await uploadTask.ref.getDownloadURL();
-        } catch (e) {
-          // Handle upload error
-          if (!mounted) return;
-          // Close loading indicator
-          Navigator.of(context).pop(); // Dismiss loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to upload header image: $e'),
-              backgroundColor: Colors.red,
-            ),
+      if (_headerImage != null || _headerImageBytes != null) {
+        final filePickerResult =
+            kIsWeb
+                ? FilePickerResult([
+                  PlatformFile(
+                    name: 'header.jpg',
+                    size: _headerImageBytes!.length,
+                    bytes: _headerImageBytes,
+                  ),
+                ])
+                : FilePickerResult([
+                  PlatformFile(
+                    name: 'header.jpg',
+                    path: _headerImage!.path,
+                    size: await File(_headerImage!.path).length(),
+                  ),
+                ]);
+
+        headerImageUrl = await uploadImageToCloudinary(filePickerResult);
+
+        // Use Cloudinary transformation for homepage/search thumbnails
+        if (headerImageUrl != null) {
+          headerImageUrl = headerImageUrl.replaceFirst(
+            '/upload/',
+            '/upload/w_800,q_auto:best,f_auto/', // Limit size & auto-optimize
           );
         }
       }
 
-      // Upload optional image
+      // Upload optional image to Cloudinary
       String? optionalImageUrl;
-      if (_optionalImage != null) {
-        final fileName =
-            'vendors/optional_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = FirebaseStorage.instance.ref().child(fileName);
-        final uploadTask = await ref.putFile(File(_optionalImage!.path));
-        optionalImageUrl = await uploadTask.ref.getDownloadURL();
+      if (_optionalImage != null || _optionalImageBytes != null) {
+        final filePickerResult =
+            kIsWeb
+                ? FilePickerResult([
+                  PlatformFile(
+                    name: 'optional.jpg',
+                    size: _optionalImageBytes!.length,
+                    bytes: _optionalImageBytes,
+                  ),
+                ])
+                : FilePickerResult([
+                  PlatformFile(
+                    name: 'optional.jpg',
+                    path: _optionalImage!.path,
+                    size: await File(_optionalImage!.path).length(),
+                  ),
+                ]);
+
+        optionalImageUrl = await uploadImageToCloudinary(filePickerResult);
+
+        if (optionalImageUrl != null) {
+          optionalImageUrl = optionalImageUrl.replaceFirst(
+            '/upload/',
+            '/upload/w_300,q_auto:best,f_auto/',
+          );
+        }
       }
 
+      // Save vendor data to Firestore
       final docRef = FirebaseFirestore.instance
           .collection('restaurants')
           .doc(userId);
@@ -124,13 +208,19 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         'menu': _menuItems,
         'headerImageUrl': headerImageUrl ?? '',
         'optionalImageUrl': optionalImageUrl ?? '',
+        'location':
+            // ignore: unnecessary_null_comparison
+            selectedLat != null && selectedLng != null
+                ? GeoPoint(selectedLat!, selectedLng!)
+                : null,
+
         'createdAt': FieldValue.serverTimestamp(),
       });
-      if (!mounted) return;
-      // Close loading indicator
-      Navigator.of(context).pop();
 
-      // Show success snackbar
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vendor info saved successfully!'),
@@ -138,6 +228,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         ),
       );
 
+      // Redirect to Vendor Profile
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -149,7 +240,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         ),
       );
 
-      // Optionally clear fields
+      // Reset form
       _nameController.clear();
       _descriptionController.clear();
       _addressController.clear();
@@ -159,7 +250,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         _optionalImage = null;
       });
     } catch (e) {
-      Navigator.of(context).pop(); // Dismiss loading
+      Navigator.of(context).pop(); // Close loading
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to save: $e'),
@@ -310,9 +401,30 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.map),
-                  onPressed: () {
-                    // waka pa uhhhuhuh
+                  icon: const Icon(Icons.map_rounded, color: Colors.deepOrange),
+                  onPressed: () async {
+                    final selectedLocation = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                PickAddressMapScreen(), // the map picker screen
+                      ),
+                    );
+
+                    if (selectedLocation != null) {
+                      setState(() {
+                        _addressController.text = selectedLocation['address'];
+                        // You can also store coordinates for later use
+                        // _selectedLat = selectedLocation['lat'];
+                        // _selectedLng = selectedLocation['lng'];
+                        selectedLat = selectedLocation['lat'];
+                        selectedLng = selectedLocation['lng'];
+                        print(
+                          'Selected Location: ${selectedLocation['lat']}, ${selectedLocation['lng']}',
+                        );
+                      });
+                    }
                   },
                 ),
               ],

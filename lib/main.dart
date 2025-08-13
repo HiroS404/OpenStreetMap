@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_try/firebase_options.dart';
 import 'package:map_try/pages/home_page.dart';
@@ -12,12 +13,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true, // This enables local caching
+    persistenceEnabled:
+        true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
+
   runApp(const MyApp());
 }
 
@@ -47,7 +52,7 @@ class MyApp extends StatelessWidget {
                   description: args['description'],
                   photoUrl: args['photoUrl'],
                   latitude: args['latitude'],
-                  longtitude: args['longitude'],
+                  longitude: args['longitude'],
                 ),
           );
         }
