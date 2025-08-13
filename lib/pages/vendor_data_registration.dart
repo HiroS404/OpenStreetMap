@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:map_try/pages/resto%20AddressMap/pick_address_map.dart';
 import 'package:map_try/pages/vendor_dashboard.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -34,6 +35,8 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
   Uint8List? _headerImageBytes;
   Uint8List? _optionalImageBytes;
+  double? selectedLat;
+  double? selectedLng;
 
   // Helper to compress for Web/Mobile
   Future<Uint8List> _compressImage(Uint8List data, {int quality = 85}) async {
@@ -205,6 +208,12 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         'menu': _menuItems,
         'headerImageUrl': headerImageUrl ?? '',
         'optionalImageUrl': optionalImageUrl ?? '',
+        'location':
+            // ignore: unnecessary_null_comparison
+            selectedLat != null && selectedLng != null
+                ? GeoPoint(selectedLat!, selectedLng!)
+                : null,
+
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -392,9 +401,30 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.map),
-                  onPressed: () {
-                    // waka pa uhhhuhuh
+                  icon: const Icon(Icons.map_rounded, color: Colors.deepOrange),
+                  onPressed: () async {
+                    final selectedLocation = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                PickAddressMapScreen(), // the map picker screen
+                      ),
+                    );
+
+                    if (selectedLocation != null) {
+                      setState(() {
+                        _addressController.text = selectedLocation['address'];
+                        // You can also store coordinates for later use
+                        // _selectedLat = selectedLocation['lat'];
+                        // _selectedLng = selectedLocation['lng'];
+                        selectedLat = selectedLocation['lat'];
+                        selectedLng = selectedLocation['lng'];
+                        print(
+                          'Selected Location: ${selectedLocation['lat']}, ${selectedLocation['lng']}',
+                        );
+                      });
+                    }
                   },
                 ),
               ],
