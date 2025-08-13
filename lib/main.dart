@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
                   description: args['description'],
                   photoUrl: args['photoUrl'],
                   latitude: args['latitude'],
-                  longtitude: args['longitude'],
+                  longitude: args['longitude'],
                 ),
           );
         }

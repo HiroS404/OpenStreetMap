@@ -78,6 +78,7 @@ flutter:
     - .env
     - Assets/jeepney_routes.json
     - Assets/route_pics/
+    - Assets/login/
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
