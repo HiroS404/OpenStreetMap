@@ -5,6 +5,7 @@ import 'package:badges/badges.dart' as badges;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
+import 'package:map_try/pages/resto_detail_screen.dart';
 import 'package:map_try/services/restaurant_service.dart';
 
 /// ---- Brand Color System ----
@@ -68,11 +69,11 @@ Widget sectionHeader(String title) {
 
 /// Safe resto card (handles empty photoUrl)
 Widget restoCard({
-  required String photoUrl,
+  required String headerImageUrl,
   required String name,
   required String address,
 }) {
-  final bool hasImage = photoUrl.isNotEmpty;
+  final bool hasImage = headerImageUrl.isNotEmpty;
   return Container(
     width: 180,
     margin: const EdgeInsets.only(right: 10),
@@ -82,7 +83,7 @@ Widget restoCard({
       image:
           hasImage
               ? DecorationImage(
-                image: NetworkImage(photoUrl),
+                image: NetworkImage(headerImageUrl),
                 fit: BoxFit.cover,
               )
               : null,
@@ -800,7 +801,6 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.builder(
                       controller: _hotDealsController,
                       physics: const ClampingScrollPhysics(),
-                      // manual, no bounce past edges
                       scrollDirection: Axis.horizontal,
                       itemCount:
                           _selectedCategory == "Meals"
@@ -810,11 +810,25 @@ class _HomePageState extends State<HomePage> {
                         if (_selectedCategory != "Meals") {
                           return blankCard();
                         }
+
                         final resto = _restaurants[index];
-                        return restoCard(
-                          photoUrl: resto.photoUrl,
-                          name: resto.name,
-                          address: resto.address ?? '',
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        RestoDetailScreen(restoId: resto.id),
+                              ),
+                            );
+                          },
+                          child: restoCard(
+                            headerImageUrl: resto.headerImageUrl,
+                            name: resto.name,
+                            address: resto.address ?? '',
+                          ),
                         );
                       },
                     ),
@@ -830,17 +844,17 @@ class _HomePageState extends State<HomePage> {
                       scrollDirection: Axis.horizontal,
                       children: [
                         restoCard(
-                          photoUrl: '',
+                          headerImageUrl: '',
                           name: 'Ted’s Batchoy',
                           address: 'Jaro Plaza',
                         ),
                         restoCard(
-                          photoUrl: '',
+                          headerImageUrl: '',
                           name: 'Mang Inasal',
                           address: 'Diversion Road',
                         ),
                         restoCard(
-                          photoUrl: '',
+                          headerImageUrl: '',
                           name: 'Deco’s Batchoy',
                           address: 'City Proper',
                         ),
