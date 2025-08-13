@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
@@ -23,7 +22,7 @@ class AppColors {
   static const Color sysBg = Color(0xFFFFCC96); // FFCC96 (also used in gradients)
 }
 
-/// Category chip shared widget (unused by header but kept if you need it elsewhere)
+/// Optional shared chip (not used by header but handy if needed elsewhere)
 Widget categoryChip(String label, [bool isSelected = false]) {
   return Padding(
     padding: const EdgeInsets.only(left: 10),
@@ -216,6 +215,7 @@ Widget blankCard() {
   );
 }
 
+/// Category chips header (pinned)
 class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   final String selectedCategory;
   final ValueChanged<String> onCategorySelected;
@@ -305,11 +305,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _hotDealsController = ScrollController();
   final ScrollController _mostBoughtController = ScrollController();
+
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
-
-  Timer? _autoScrollTimer;
-  bool _userInteracting = false;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
   String _selectedCategory = "Nearby";
@@ -317,7 +315,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _startAutoScroll(_hotDealsController);
     _loadRestaurants();
   }
 
@@ -342,32 +339,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _startAutoScroll(ScrollController controller) {
-    const duration = Duration(milliseconds: 100);
-    const step = 1.0; // scroll step in pixels
-    _autoScrollTimer = Timer.periodic(duration, (_) {
-      if (!_userInteracting && controller.hasClients) {
-        if (controller.offset < controller.position.maxScrollExtent) {
-          controller.jumpTo(controller.offset + step);
-        } else {
-          controller.jumpTo(0); // restart
-        }
-      }
-    });
-  }
-
-  void _onUserInteraction() {
-    _userInteracting = true;
-    _autoScrollTimer?.cancel();
-    Future.delayed(const Duration(seconds: 3), () {
-      _userInteracting = false;
-      _startAutoScroll(_hotDealsController);
-    });
-  }
-
   @override
   void dispose() {
-    _autoScrollTimer?.cancel();
     _hotDealsController.dispose();
     _mostBoughtController.dispose();
     super.dispose();
@@ -375,11 +348,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_restaurants.isEmpty) return const Center(child: Text("No restaurants available."));
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_restaurants.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text("No restaurants available.")),
+      );
+    }
 
     return Scaffold(
-      backgroundColor: Colors.white, // keep content surfaces crisp
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -390,7 +372,9 @@ class _HomePageState extends State<HomePage> {
             elevation: 0,
             flexibleSpace: LayoutBuilder(
               builder: (context, constraints) {
-                final percent = ((constraints.maxHeight - kToolbarHeight) / (260 - kToolbarHeight)).clamp(0.0, 1.0);
+                final percent = ((constraints.maxHeight - kToolbarHeight) /
+                    (260 - kToolbarHeight))
+                    .clamp(0.0, 1.0);
                 return Stack(
                   fit: StackFit.expand,
                   children: [
@@ -400,7 +384,8 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         decoration: const BoxDecoration(
                           image: DecorationImage(
-                            image: AssetImage('Assets/route_pics/imageiloilo.png'),
+                            image: AssetImage(
+                                'Assets/route_pics/imageiloilo.png'),
                             fit: BoxFit.cover,
                           ),
                           borderRadius: BorderRadius.only(
@@ -418,11 +403,11 @@ class _HomePageState extends State<HomePage> {
                           bottomRight: Radius.circular(34),
                         ),
                         gradient: LinearGradient(
-                          colors: [
+                          colors: const [
                             Colors.transparent,
-                            AppColors.gradientSoft.withAlpha(60),
-                            AppColors.secondary.withAlpha(60),
-                          ],
+                            AppColors.gradientSoft,
+                            AppColors.secondary,
+                          ].map((c) => c.withAlpha(80)).toList(),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -443,32 +428,36 @@ class _HomePageState extends State<HomePage> {
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.restaurant, color: Colors.white, size: 22),
+                              icon: const Icon(
+                                  Icons.restaurant, color: Colors.white,
+                                  size: 22),
                               onPressed: () async {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const CreateRestoAccPage()),
+                                  MaterialPageRoute(builder: (
+                                      _) => const CreateRestoAccPage()),
                                 );
                               },
                               tooltip: 'Register your Resto',
                             ),
                           ),
-
                           Row(
                             children: [
                               badges.Badge(
-                                position: badges.BadgePosition.topEnd(top: -1, end: -1),
+                                position: badges.BadgePosition.topEnd(
+                                    top: -1, end: -1),
                                 badgeStyle: const badges.BadgeStyle(
                                   padding: EdgeInsets.all(5),
                                   badgeColor: AppColors.button,
                                 ),
                                 badgeContent: const Text(
                                   '0',
-                                  style: TextStyle(color: Colors.white, fontSize: 10),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 10),
                                 ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.notifications_none, color: Colors.white),
-                                  onPressed: () {},
+                                child: const Icon(
+                                  Icons.notifications_none,
+                                  color: Colors.white,
                                 ),
                               ),
                               const SizedBox(width: 6),
@@ -485,7 +474,8 @@ class _HomePageState extends State<HomePage> {
                                   ],
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(Icons.person_outline_rounded, color: Colors.white),
+                                  icon: const Icon(Icons.person_outline_rounded,
+                                      color: Colors.white),
                                   onPressed: () {},
                                 ),
                               ),
@@ -509,11 +499,13 @@ class _HomePageState extends State<HomePage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.location_on, color: AppColors.primary, size: 20),
+                                  Icon(Icons.location_on,
+                                      color: AppColors.primary, size: 20),
                                   SizedBox(width: 6),
                                   Text(
                                     'Iloilo City, Philippines',
-                                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                                    style: TextStyle(color: Colors.black,
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
@@ -521,7 +513,9 @@ class _HomePageState extends State<HomePage> {
 
                               // Brand title chip with gradient
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 11 * percent, vertical: 4 * percent),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 11 * percent,
+                                    vertical: 4 * percent),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
@@ -532,7 +526,8 @@ class _HomePageState extends State<HomePage> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
-                                  borderRadius: BorderRadius.circular(8 * percent),
+                                  borderRadius: BorderRadius.circular(
+                                      8 * percent),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.secondary.withAlpha(50),
@@ -557,7 +552,8 @@ class _HomePageState extends State<HomePage> {
                                 Column(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [
@@ -571,7 +567,8 @@ class _HomePageState extends State<HomePage> {
                                         borderRadius: BorderRadius.circular(30),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: AppColors.primary.withOpacity(0.3),
+                                            color: AppColors.primary
+                                                .withOpacity(0.3),
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
@@ -594,9 +591,11 @@ class _HomePageState extends State<HomePage> {
                                                     'Way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight.w900,
+                                                      fontWeight: FontWeight
+                                                          .w900,
                                                       foreground: Paint()
-                                                        ..style = PaintingStyle.stroke
+                                                        ..style = PaintingStyle
+                                                            .stroke
                                                         ..strokeWidth = 2
                                                         ..color = Colors.black,
                                                     ),
@@ -606,7 +605,8 @@ class _HomePageState extends State<HomePage> {
                                                     'Way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight.w900,
+                                                      fontWeight: FontWeight
+                                                          .w900,
                                                       color: Colors.white,
                                                     ),
                                                   ),
@@ -638,12 +638,13 @@ class _HomePageState extends State<HomePage> {
                     Positioned(
                       left: 16,
                       right: 16,
-                      bottom:12,
+                      bottom: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: AppColors.sysAccent.withAlpha(70)),
+                          border: Border.all(
+                              color: AppColors.sysAccent.withAlpha(70)),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -751,6 +752,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
+          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
@@ -765,24 +767,24 @@ class _HomePageState extends State<HomePage> {
                   // Shows real cards for Meals, blank placeholders otherwise
                   SizedBox(
                     height: 250,
-                    child: Listener(
-                      onPointerDown: (_) => _onUserInteraction(),
-                      child: ListView.builder(
-                        controller: _hotDealsController,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _selectedCategory == "Meals" ? _restaurants.length : 6,
-                        itemBuilder: (context, index) {
-                          if (_selectedCategory != "Meals") {
-                            return blankCard();
-                          }
-                          final resto = _restaurants[index];
-                          return restoCard(
-                            photoUrl: resto.photoUrl,
-                            name: resto.name,
-                            address: resto.address ?? '',
-                          );
-                        },
-                      ),
+                    child: ListView.builder(
+                      controller: _hotDealsController,
+                      physics: const ClampingScrollPhysics(),
+                      // manual, no bounce past edges
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _selectedCategory == "Meals" ? _restaurants
+                          .length : 6,
+                      itemBuilder: (context, index) {
+                        if (_selectedCategory != "Meals") {
+                          return blankCard();
+                        }
+                        final resto = _restaurants[index];
+                        return restoCard(
+                          photoUrl: resto.photoUrl,
+                          name: resto.name,
+                          address: resto.address ?? '',
+                        );
+                      },
                     ),
                   ),
 
