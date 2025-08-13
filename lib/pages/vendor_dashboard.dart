@@ -19,20 +19,211 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   Map<String, dynamic>? _vendorData;
   bool _isLoading = true;
 
+  /// Small, subtle edit button style with new palette color
+  Widget _smallEditButton(VoidCallback onPressed) {
+    return IconButton(
+      icon: const Icon(Icons.edit, size: 16, color: Color(0xFFE85205)),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+      onPressed: onPressed,
+      tooltip: 'Edit',
+    );
+  }
+
   Future<void> _fetchVendorData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc =
-        await FirebaseFirestore.instance
-            .collection('restaurants')
-            .doc(user.uid)
-            .get();
+    final doc = await FirebaseFirestore.instance
+        .collection('restaurants')
+        .doc(user.uid)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        _vendorData = doc.data();
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateField(String field, dynamic value) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    await FirebaseFirestore.instance
+        .collection('restaurants')
+        .doc(user.uid)
+        .update({field: value});
 
     setState(() {
-      _vendorData = doc.exists ? doc.data() : null;
-      _isLoading = false;
+      _vendorData![field] = value;
     });
+  }
+
+  Future<void> _updateMenu(List<dynamic> menu) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    await FirebaseFirestore.instance
+        .collection('restaurants')
+        .doc(user.uid)
+        .update({'menu': menu});
+
+    setState(() {
+      _vendorData!['menu'] = menu;
+    });
+  }
+
+  void _editField(String field, String label) {
+    final controller = TextEditingController(text: _vendorData![field] ?? '');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFfcfcfc),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text('Edit $label',
+            style: const TextStyle(color: Color(0xFFE85205))),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: label,
+            focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFFE85205)),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE85205),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                _updateField(field, controller.text.trim());
+                Navigator.pop(context);
+              },
+              child: const Text('Save'))
+        ],
+      ),
+    );
+  }
+
+  void _editMenuItem(int index) {
+    final item = List<Map<String, dynamic>>.from(_vendorData!['menu'])[index];
+    final nameController = TextEditingController(text: item['name']);
+    final categoryController = TextEditingController(text: item['category']);
+    final priceController =
+        TextEditingController(text: item['price'].toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFfcfcfc),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Edit Menu Item',
+            style: TextStyle(color: Color(0xFFE85205))),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _styledTextField(nameController, 'Name'),
+              const SizedBox(height: 8),
+              _styledTextField(categoryController, 'Category'),
+              const SizedBox(height: 8),
+              _styledTextField(priceController, 'Price',
+                  keyboardType: TextInputType.number),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE85205),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final updatedMenu =
+                  List<Map<String, dynamic>>.from(_vendorData!['menu']);
+              updatedMenu[index] = {
+                'name': nameController.text.trim(),
+                'category': categoryController.text.trim(),
+                'price': double.tryParse(priceController.text.trim()) ?? 0,
+              };
+              _updateMenu(updatedMenu);
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(context);
+              _confirmDeleteMenuItem(index);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _styledTextField(TextEditingController controller, String label,
+      {TextInputType keyboardType = TextInputType.text}) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE85205)),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteMenuItem(int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFfcfcfc),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Delete Menu Item',
+            style: TextStyle(color: Color(0xFFE85205))),
+        content: const Text('Are you sure you want to delete this item?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              final updatedMenu =
+                  List<Map<String, dynamic>>.from(_vendorData!['menu']);
+              updatedMenu.removeAt(index);
+              _updateMenu(updatedMenu);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _deleteVendorData() async {
@@ -66,125 +257,197 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
-
     if (_vendorData == null) {
       return const Scaffold(
         body: Center(child: Text('No vendor profile found.')),
       );
     }
 
-    List<String?> optionalImages = [
-      _vendorData!['optionalImageUrl'],
-      _vendorData!['optionalImageUrl2'],
-      _vendorData!['optionalImageUrl3'],
-    ];
-
-    // If some images are missing, pad with nulls so total is 3
-    while (optionalImages.length < 3) {
-      optionalImages.add(null);
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Restaurant Profile'),
+        elevation: 0,
+        backgroundColor: const Color(0xFFE85205),
+        title: const Text('Your Restaurant Profile',
+            style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, color: Colors.white),
             onPressed: _deleteVendorData,
             tooltip: 'Delete Profile',
           ),
         ],
       ),
+      backgroundColor: const Color(0xFFfcfcfc),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Full-width header image
             if (_vendorData!['headerImageUrl'] != '')
-              Image.network(
-                _vendorData!['headerImageUrl'],
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.contain, //bug need to test dif images
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+                child: Image.network(
+                  _vendorData!['headerImageUrl'],
+                  width: double.infinity,
+                  height: 250,
+                  fit: BoxFit.cover,
+                ),
               ),
-
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _vendorData!['name'] ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 36,
+                                  color: const Color(0xFFE85205)),
+                        ),
+                      ),
+                      _smallEditButton(() => _editField('name', 'Name')),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    _vendorData!['name'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                    _vendorData!['tags'] ?? 'Bar • Brewery • Gastropub',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF8c8c8c)),
+                  ),
+                  const SizedBox(height: 14),
+                  _expandableInfoRow(Icons.phone, _vendorData!['phoneNumber'] ?? '', 'phoneNumber'), 
+                  _expandableInfoRow(Icons.location_on, _vendorData!['address'] ?? '', 'address'),
+                  _expandableInfoRow(Icons.access_time, _vendorData!['hours'] ?? '12:00 PM – 12:00 AM', 'hours'),
+                  const SizedBox(height: 18),
+
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFE85205)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(Icons.directions,
+                          color: Color(0xFFE85205)),
+                      label: const Text('Go to directions',
+                          style: TextStyle(color: Color(0xFFE85205))),
+                      onPressed: () {},
                     ),
                   ),
-                  Text(
-                    _vendorData!['address'] ?? '',
-                    style: const TextStyle(fontSize: 16),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Text('About',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      _smallEditButton(
+                          () => _editField('description', 'Description')),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
+                  ExpandableText(
                     _vendorData!['description'] ?? '',
-                    style: const TextStyle(fontSize: 16),
+                    trimLength: 120, // adjust cutoff length if needed
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Menu:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ...(_vendorData!['menu'] as List).map(
-                    (item) => ListTile(
-                      title: Text(item['name']),
-                      subtitle: Text('${item['category']} - ₱${item['price']}'),
-                    ),
+
+                  const SizedBox(height: 20),
+                  const Text('Menu',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount =
+                          constraints.maxWidth > 800 ? 2 : 1;
+                      double aspectRatio =
+                          constraints.maxWidth > 800 ? 6.5 : 5.5;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: (_vendorData!['menu'] as List).length,
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: aspectRatio,
+                        ),
+                        itemBuilder: (context, index) {
+                          final item =
+                              (_vendorData!['menu'] as List)[index];
+                          return GestureDetector(
+                            onTap: () => _editMenuItem(index),
+                            child: Card(
+                              color: const Color(0xFFecc39e),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                        flex: 4,
+                                        child: Text(item['name'] ?? '',
+                                            style: const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.bold),
+                                            overflow:
+                                                TextOverflow.ellipsis)),
+                                    const SizedBox(width: 4),
+                                    Center(
+                                        child: Text('|',
+                                            style: TextStyle(
+                                                color:
+                                                    Colors.grey[700]))),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                        flex: 3,
+                                        child: Text(item['category'] ?? '',
+                                            style: const TextStyle(
+                                                color: Color(0xFF8c8c8c)),
+                                            overflow:
+                                                TextOverflow.ellipsis)),
+                                    const SizedBox(width: 4),
+                                    Center(
+                                        child: Text('|',
+                                            style: TextStyle(
+                                                color:
+                                                    Colors.grey[700]))),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('₱${item['price']}',
+                                            style: const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.bold,
+                                                color: Color(0xFFE85205)))),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
-              ),
-            ),
-
-            // Build a list of image URLs (only non-empty)
-
-            // Display row of 3 cards
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children:
-                    optionalImages.map((imageUrl) {
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child:
-                                imageUrl != null && imageUrl.isNotEmpty
-                                    ? Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.cover,
-                                      height: 150,
-                                    )
-                                    : Container(
-                                      height: 150,
-                                      color: Colors.grey[200],
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.image_not_supported,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
               ),
             ),
           ],
@@ -192,4 +455,101 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       ),
     );
   }
+
+
+
+  // Add this helper widget for expandable text
+Widget _expandableInfoRow(IconData icon, String text, String fieldKey) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8), // spacing between rows
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFFE85205), size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ExpandableText(
+            text,
+            trimLength: 50, // adjust cutoff for expansion
+            style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
+          ),
+        ),
+        const SizedBox(width: 6),
+        _smallEditButton(() => _editField(fieldKey, _getFieldLabel(fieldKey))),
+      ],
+    ),
+  );
 }
+
+
+}
+class ExpandableText extends StatefulWidget {
+  final String text;
+  final int trimLength;
+  final TextStyle? style;
+
+  const ExpandableText(
+    this.text, {
+    super.key,
+    this.trimLength = 100,
+    this.style,
+  });
+
+  @override
+  State<ExpandableText> createState() => _ExpandableTextState();
+}
+
+class _ExpandableTextState extends State<ExpandableText> {
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool shouldTrim = widget.text.length > widget.trimLength;
+    final String displayText = shouldTrim && !isExpanded
+        ? '${widget.text.substring(0, widget.trimLength)}...'
+        : widget.text;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          displayText,
+          style: widget.style ??
+              const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF8C8C8C),
+              ),
+        ),
+        if (shouldTrim)
+          GestureDetector(
+            onTap: () => setState(() => isExpanded = !isExpanded),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                isExpanded ? 'See less' : 'See more',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFFE85205),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+String _getFieldLabel(String key) {
+  switch (key) {
+    case 'phoneNumber':
+      return 'Phone Number';
+    case 'address':
+      return 'Address';
+    case 'hours':
+      return 'Business Hours';
+    default:
+      return 'Field';
+  }
+}
+
