@@ -32,9 +32,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   // For mobile (non-web)
   File? _headerImage;
   XFile? _optionalImage;
+  XFile? _optionalImage2;
+  XFile? _optionalImage3;
 
   Uint8List? _headerImageBytes;
   Uint8List? _optionalImageBytes;
+  Uint8List? _optionalImage2Bytes;
+  Uint8List? _optionalImage3Bytes;
   double? selectedLat;
   double? selectedLng;
 
@@ -73,29 +77,86 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
     }
   }
 
-  Future<void> _pickOptionalImage() async {
+  Future<void> _pickOptionalImage(int index) async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       if (kIsWeb) {
+        // Works for both desktop web and mobile web
         final bytes = await picked.readAsBytes();
-        final compressed = await _compressImage(bytes);
         setState(() {
-          _optionalImageBytes = compressed;
+          if (index == 1) {
+            _optionalImage = picked;
+            _optionalImageBytes = bytes;
+          } else if (index == 2) {
+            _optionalImage2 = picked;
+            _optionalImage2Bytes = bytes;
+          } else if (index == 3) {
+            _optionalImage3 = picked;
+            _optionalImage3Bytes = bytes;
+          }
         });
       } else {
-        final file = File(picked.path);
-        final compressedBytes = await FlutterImageCompress.compressWithFile(
-          file.absolute.path,
-          quality: 85,
-          minWidth: 800,
-          minHeight: 800,
-        );
+        // Native mobile (Android/iOS)
         setState(() {
-          _optionalImageBytes = compressedBytes;
-          _optionalImage = picked;
+          if (index == 1) _optionalImage = picked;
+          if (index == 2) _optionalImage2 = picked;
+          if (index == 3) _optionalImage3 = picked;
         });
       }
     }
+  }
+
+  Widget buildOptionalImagePicker({
+    required int index,
+    XFile? imageFile,
+    Uint8List? imageBytes,
+  }) {
+    return GestureDetector(
+      onTap: () => _pickOptionalImage(index),
+      child: Container(
+        height: 150,
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+          image:
+              (imageBytes != null || (imageFile != null && !kIsWeb))
+                  ? DecorationImage(
+                    image:
+                        kIsWeb
+                            ? MemoryImage(imageBytes!)
+                            : FileImage(File(imageFile!.path)) as ImageProvider,
+                    fit: BoxFit.cover,
+                  )
+                  : null,
+        ),
+        child:
+            (imageBytes == null && (imageFile == null || kIsWeb))
+                ? const Center(
+                  child: Icon(Icons.add_photo_alternate_outlined, size: 40),
+                )
+                : Container(
+                  alignment: Alignment.center,
+                  color: Colors.black45, // overlay
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        "Change Image",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.edit, color: Colors.white, size: 15),
+                    ],
+                  ),
+                ),
+      ),
+    );
   }
 
   Future<void> _saveToFirebase() async {
@@ -165,30 +226,90 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         }
       }
 
-      // Upload optional image to Cloudinary
-      String? optionalImageUrl;
+      // Upload optional image 1
+      String? optionalImageUrl1;
       if (_optionalImage != null || _optionalImageBytes != null) {
         final filePickerResult =
             kIsWeb
                 ? FilePickerResult([
                   PlatformFile(
-                    name: 'optional.jpg',
+                    name: 'optional1.jpg',
                     size: _optionalImageBytes!.length,
                     bytes: _optionalImageBytes,
                   ),
                 ])
                 : FilePickerResult([
                   PlatformFile(
-                    name: 'optional.jpg',
+                    name: 'optional1.jpg',
                     path: _optionalImage!.path,
                     size: await File(_optionalImage!.path).length(),
                   ),
                 ]);
 
-        optionalImageUrl = await uploadImageToCloudinary(filePickerResult);
+        optionalImageUrl1 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl != null) {
-          optionalImageUrl = optionalImageUrl.replaceFirst(
+        if (optionalImageUrl1 != null) {
+          optionalImageUrl1 = optionalImageUrl1.replaceFirst(
+            '/upload/',
+            '/upload/w_300,q_auto:best,f_auto/',
+          );
+        }
+      }
+
+      // Upload optional image 2
+      String? optionalImageUrl2;
+      if (_optionalImage2 != null || _optionalImage2Bytes != null) {
+        final filePickerResult =
+            kIsWeb
+                ? FilePickerResult([
+                  PlatformFile(
+                    name: 'optional2.jpg',
+                    size: _optionalImage2Bytes!.length,
+                    bytes: _optionalImage2Bytes,
+                  ),
+                ])
+                : FilePickerResult([
+                  PlatformFile(
+                    name: 'optional2.jpg',
+                    path: _optionalImage2!.path,
+                    size: await File(_optionalImage2!.path).length(),
+                  ),
+                ]);
+
+        optionalImageUrl2 = await uploadImageToCloudinary(filePickerResult);
+
+        if (optionalImageUrl2 != null) {
+          optionalImageUrl2 = optionalImageUrl2.replaceFirst(
+            '/upload/',
+            '/upload/w_300,q_auto:best,f_auto/',
+          );
+        }
+      }
+
+      // Upload optional image 3
+      String? optionalImageUrl3;
+      if (_optionalImage3 != null || _optionalImage3Bytes != null) {
+        final filePickerResult =
+            kIsWeb
+                ? FilePickerResult([
+                  PlatformFile(
+                    name: 'optional3.jpg',
+                    size: _optionalImage3Bytes!.length,
+                    bytes: _optionalImage3Bytes,
+                  ),
+                ])
+                : FilePickerResult([
+                  PlatformFile(
+                    name: 'optional3.jpg',
+                    path: _optionalImage3!.path,
+                    size: await File(_optionalImage3!.path).length(),
+                  ),
+                ]);
+
+        optionalImageUrl3 = await uploadImageToCloudinary(filePickerResult);
+
+        if (optionalImageUrl3 != null) {
+          optionalImageUrl3 = optionalImageUrl3.replaceFirst(
             '/upload/',
             '/upload/w_300,q_auto:best,f_auto/',
           );
@@ -207,13 +328,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         'address': _addressController.text.trim(),
         'menu': _menuItems,
         'headerImageUrl': headerImageUrl ?? '',
-        'optionalImageUrl': optionalImageUrl ?? '',
+        'optionalImageUrl1': optionalImageUrl1 ?? '',
+        'optionalImageUrl2': optionalImageUrl2 ?? '',
+        'optionalImageUrl3': optionalImageUrl3 ?? '',
         'location':
-            // ignore: unnecessary_null_comparison
             selectedLat != null && selectedLng != null
                 ? GeoPoint(selectedLat!, selectedLng!)
                 : null,
-
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -303,28 +424,67 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Header Image with upload icon
             Stack(
               children: [
+                // Background container with image preview
                 Container(
                   height: 180,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     image:
-                        _headerImage != null
+                        _headerImageBytes != null
                             ? DecorationImage(
-                              image: FileImage(_headerImage!),
+                              image: MemoryImage(
+                                _headerImageBytes!,
+                              ), // Web preview
+                              fit: BoxFit.cover,
+                            )
+                            : _headerImage != null
+                            ? DecorationImage(
+                              image: FileImage(_headerImage!), // Mobile preview
                               fit: BoxFit.cover,
                             )
                             : null,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
-                      _headerImage == null
+                      _headerImage == null && _headerImageBytes == null
                           ? const Center(child: Text("Tap + to add image"))
                           : null,
                 ),
+
+                // Fade overlay when preview exists
+                if (_headerImageBytes != null || _headerImage != null)
+                  Container(
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(76), //
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+
+                // "Change Image" text overlay
+                if (_headerImageBytes != null || _headerImage != null)
+                  const Center(
+                    child: Text(
+                      "Change Image",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black54,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Pick image button
                 Positioned(
                   bottom: 8,
                   right: 8,
@@ -338,6 +498,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
 
             // Name Field
@@ -542,35 +703,35 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
               height: 20,
               child: Text("Upload Images (Optional):"),
             ),
-            GestureDetector(
-              onTap: _pickOptionalImage,
-              child: Container(
-                height: 150,
-                width: 180,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                  image:
-                      _optionalImage != null
-                          ? DecorationImage(
-                            image: FileImage(File(_optionalImage!.path)),
-                            fit: BoxFit.cover,
-                          )
-                          : null,
+
+            Row(
+              children: [
+                Expanded(
+                  child: buildOptionalImagePicker(
+                    index: 1,
+                    imageFile: _optionalImage,
+                    imageBytes: _optionalImageBytes,
+                  ),
                 ),
-                child:
-                    _optionalImage == null
-                        ? const Center(
-                          child: Icon(
-                            Icons.add_photo_alternate_outlined,
-                            size: 40,
-                          ),
-                        )
-                        : null,
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: buildOptionalImagePicker(
+                    index: 2,
+                    imageFile: _optionalImage2,
+                    imageBytes: _optionalImage2Bytes,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: buildOptionalImagePicker(
+                    index: 3,
+                    imageFile: _optionalImage3,
+                    imageBytes: _optionalImage3Bytes,
+                  ),
+                ),
+              ],
             ),
+
             // Save Button
             ElevatedButton.icon(
               onPressed: _saveToFirebase,
