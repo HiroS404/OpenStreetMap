@@ -318,7 +318,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
-  String _selectedCategory = "Nearby";
+  String _selectedCategory = "Meals";
 
   @override
   void initState() {
