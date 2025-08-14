@@ -421,7 +421,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    // Top Row (menu, icons)
+                    // Top Row (registration, icons)
                     Positioned(
                       top: 10 + 10 * percent,
                       left: 16,
@@ -431,15 +431,17 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           // Create Resto (CTA style icon chip)
                           Container(
+                            width: 38,
+                            height: 38,
                             decoration: const BoxDecoration(
-                              color: AppColors.button,
+                              color: Colors.deepOrange,
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
                               icon: const Icon(
                                 Icons.restaurant,
                                 color: Colors.white,
-                                size: 22,
+                                size: 20,
                               ),
                               onPressed: () async {
                                 Navigator.push(
@@ -477,9 +479,12 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(width: 6),
                               Container(
+                                width: 38,
+                                height: 38,
                                 decoration: BoxDecoration(
-                                  color: AppColors.sysAccent,
+                                  color: Colors.deepOrange,
                                   shape: BoxShape.circle,
+
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.sysAccent.withAlpha(40),
@@ -492,6 +497,7 @@ class _HomePageState extends State<HomePage> {
                                   icon: const Icon(
                                     Icons.person_outline_rounded,
                                     color: Colors.white,
+                                    size: 25,
                                   ),
                                   onPressed: () {},
                                 ),
@@ -590,7 +596,7 @@ class _HomePageState extends State<HomePage> {
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                         ),
-                                        borderRadius: BorderRadius.circular(30),
+                                        borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
                                             color: AppColors.primary.withAlpha(
@@ -606,7 +612,7 @@ class _HomePageState extends State<HomePage> {
                                           text: 'Hungry? We’ll lead the ',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 24,
+                                            fontSize: 20,
                                             fontWeight: FontWeight.bold,
                                           ),
                                           children: [
@@ -617,7 +623,7 @@ class _HomePageState extends State<HomePage> {
                                                   Text(
                                                     'Way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 24,
+                                                      fontSize: 20,
                                                       fontWeight:
                                                           FontWeight.w900,
                                                       foreground:
@@ -634,7 +640,7 @@ class _HomePageState extends State<HomePage> {
                                                   Text(
                                                     'Way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 24,
+                                                      fontSize: 20,
                                                       fontWeight:
                                                           FontWeight.w900,
                                                       color: Colors.white,
@@ -648,14 +654,6 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    const Text(
-                                      'Mapanamkon nga pagkaon, makita mo dayon!',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               SizedBox(height: 16 * percent),
