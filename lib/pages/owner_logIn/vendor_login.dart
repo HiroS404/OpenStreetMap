@@ -89,7 +89,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                   style: TextStyle(
                     fontSize: isMobile ? 28 : 40,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 199, 93, 44),
+                    color: Colors.deepOrange,
                   ),
                   textAlign: TextAlign.center,
                 ),

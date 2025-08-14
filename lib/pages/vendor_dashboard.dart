@@ -34,10 +34,11 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc = await FirebaseFirestore.instance
-        .collection('restaurants')
-        .doc(user.uid)
-        .get();
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(user.uid)
+            .get();
 
     if (doc.exists) {
       setState(() {
@@ -83,39 +84,46 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final controller = TextEditingController(text: _vendorData![field] ?? '');
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFfcfcfc),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text('Edit $label',
-            style: const TextStyle(color: Color(0xFFE85205))),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: label,
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFFE85205)),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFFfcfcfc),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+            title: Text(
+              'Edit $label',
+              style: const TextStyle(color: Color(0xFFE85205)),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE85205),
-                foregroundColor: Colors.white,
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: label,
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFE85205)),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              onPressed: () {
-                _updateField(field, controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: const Text('Save'))
-        ],
-      ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE85205),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  _updateField(field, controller.text.trim());
+                  Navigator.pop(context);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -123,65 +131,146 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     final item = List<Map<String, dynamic>>.from(_vendorData!['menu'])[index];
     final nameController = TextEditingController(text: item['name']);
     final categoryController = TextEditingController(text: item['category']);
-    final priceController =
-        TextEditingController(text: item['price'].toString());
+    final priceController = TextEditingController(
+      text: item['price'].toString(),
+    );
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFfcfcfc),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Edit Menu Item',
-            style: TextStyle(color: Color(0xFFE85205))),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              _styledTextField(nameController, 'Name'),
-              const SizedBox(height: 8),
-              _styledTextField(categoryController, 'Category'),
-              const SizedBox(height: 8),
-              _styledTextField(priceController, 'Price',
-                  keyboardType: TextInputType.number),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFFfcfcfc),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              'Edit Menu Item',
+              style: TextStyle(color: Color(0xFFE85205)),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _styledTextField(nameController, 'Name'),
+                  const SizedBox(height: 8),
+                  _styledTextField(categoryController, 'Category'),
+                  const SizedBox(height: 8),
+                  _styledTextField(
+                    priceController,
+                    'Price',
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE85205),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  final updatedMenu = List<Map<String, dynamic>>.from(
+                    _vendorData!['menu'],
+                  );
+                  updatedMenu[index] = {
+                    'name': nameController.text.trim(),
+                    'category': categoryController.text.trim(),
+                    'price': double.tryParse(priceController.text.trim()) ?? 0,
+                  };
+                  _updateMenu(updatedMenu);
+                  Navigator.pop(context);
+                },
+                child: const Text('Save'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _confirmDeleteMenuItem(index);
+                },
+                child: const Text('Delete'),
+              ),
             ],
           ),
+    );
+  }
+
+  //optional image card
+  Widget buildOptionalImagesRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: _buildImageCard(_vendorData?['optionalImageUrl1'])),
+        const SizedBox(width: 8),
+        Expanded(child: _buildImageCard(_vendorData?['optionalImageUrl2'])),
+        const SizedBox(width: 8),
+        Expanded(child: _buildImageCard(_vendorData?['optionalImageUrl3'])),
+      ],
+    );
+  }
+
+  Widget _buildImageCard(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          height: 120,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[200],
+          ),
+          child: const Icon(Icons.image, size: 40, color: Colors.grey),
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE85205),
-              foregroundColor: Colors.white,
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => Scaffold(
+                  backgroundColor: Colors.black,
+                  body: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Center(
+                      child: InteractiveViewer(child: Image.network(imageUrl)),
+                    ),
+                  ),
+                ),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            image: DecorationImage(
+              image: NetworkImage(imageUrl),
+              fit: BoxFit.cover,
             ),
-            onPressed: () {
-              final updatedMenu =
-                  List<Map<String, dynamic>>.from(_vendorData!['menu']);
-              updatedMenu[index] = {
-                'name': nameController.text.trim(),
-                'category': categoryController.text.trim(),
-                'price': double.tryParse(priceController.text.trim()) ?? 0,
-              };
-              _updateMenu(updatedMenu);
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              _confirmDeleteMenuItem(index);
-            },
-            child: const Text('Delete'),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _styledTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget _styledTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -190,9 +279,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
         focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Color(0xFFE85205)),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -200,36 +287,69 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   void _confirmDeleteMenuItem(int index) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFfcfcfc),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Delete Menu Item',
-            style: TextStyle(color: Color(0xFFE85205))),
-        content: const Text('Are you sure you want to delete this item?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              final updatedMenu =
-                  List<Map<String, dynamic>>.from(_vendorData!['menu']);
-              updatedMenu.removeAt(index);
-              _updateMenu(updatedMenu);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFFfcfcfc),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              'Delete Menu Item',
+              style: TextStyle(color: Color(0xFFE85205)),
+            ),
+            content: const Text('Are you sure you want to delete this item?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  final updatedMenu = List<Map<String, dynamic>>.from(
+                    _vendorData!['menu'],
+                  );
+                  updatedMenu.removeAt(index);
+                  _updateMenu(updatedMenu);
+                  Navigator.pop(context);
+                },
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  Future<void> _deleteVendorData() async {
+  Future<void> _confirmAndDeleteVendorData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("Confirm Deletion"),
+            content: const Text(
+              "Are you sure you want to permanently delete your profile? "
+              "This action cannot be undone.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text("Delete"),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return; // User cancelled
+
+    // Proceed with deletion
     await FirebaseFirestore.instance
         .collection('restaurants')
         .doc(user.uid)
@@ -257,9 +377,7 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_vendorData == null) {
       return const Scaffold(
@@ -271,12 +389,14 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFFE85205),
-        title: const Text('Your Restaurant Profile',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Your Restaurant Profile',
+          style: TextStyle(color: Colors.white, fontSize: 15),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.white),
-            onPressed: _deleteVendorData,
+            onPressed: _confirmAndDeleteVendorData,
             tooltip: 'Delete Profile',
           ),
         ],
@@ -288,8 +408,10 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           children: [
             if (_vendorData!['headerImageUrl'] != '')
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
                 child: Image.network(
                   _vendorData!['headerImageUrl'],
                   width: double.infinity,
@@ -307,13 +429,13 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                       Expanded(
                         child: Text(
                           _vendorData!['name'] ?? '',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 36,
-                                  color: const Color(0xFFE85205)),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                            color: const Color(0xFFE85205),
+                          ),
                         ),
                       ),
                       _smallEditButton(() => _editField('name', 'Name')),
@@ -321,14 +443,53 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _vendorData!['tags'] ?? 'Bar • Brewery • Gastropub',
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF8c8c8c)),
+                    _vendorData!['tags'] ??
+                        'Bar • Brewery • Gastropub', // placeholder lng ni, wala kita tags sa firebase (pafinalize)
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF8c8c8c),
+                    ),
                   ),
+                  Row(
+                    children: [
+                      const Text(
+                        'About',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      _smallEditButton(
+                        () => _editField('description', 'Description'),
+                      ),
+                    ],
+                  ),
+                  ExpandableText(
+                    _vendorData!['description'] ?? '',
+                    trimLength: 120, // adjust cutoff length if needed
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF8C8C8C),
+                    ),
+                  ),
+
                   const SizedBox(height: 14),
-                  _expandableInfoRow(Icons.phone, _vendorData!['phoneNumber'] ?? '', 'phoneNumber'), 
-                  _expandableInfoRow(Icons.location_on, _vendorData!['address'] ?? '', 'address'),
-                  _expandableInfoRow(Icons.access_time, _vendorData!['hours'] ?? '12:00 PM – 12:00 AM', 'hours'),
-                  const SizedBox(height: 18),
+                  _expandableInfoRow(
+                    Icons.phone,
+                    _vendorData!['phoneNumber'] ??
+                        '', // ang ari mn wala mn ta actually contact pero nami mn nga idea ahh, finalize lng
+                    'phoneNumber',
+                  ),
+                  _expandableInfoRow(
+                    Icons.location_on,
+                    _vendorData!['address'] ?? '',
+                    'address',
+                  ),
+                  _expandableInfoRow(
+                    Icons.access_time,
+                    _vendorData!['hours'] ?? '12:00 PM – 12:00 AM',
+                    'hours',
+                  ),
 
                   const SizedBox(height: 18),
                   SizedBox(
@@ -340,104 +501,107 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      icon: const Icon(Icons.directions,
-                          color: Color(0xFFE85205)),
-                      label: const Text('Go to directions',
-                          style: TextStyle(color: Color(0xFFE85205))),
+                      icon: const Icon(
+                        Icons.directions,
+                        color: Color(0xFFE85205),
+                      ),
+                      label: const Text(
+                        'Go to directions',
+                        style: TextStyle(color: Color(0xFFE85205)),
+                      ),
                       onPressed: () {},
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const Text('About',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      _smallEditButton(
-                          () => _editField('description', 'Description')),
-                    ],
-                  ),
-                  ExpandableText(
-                    _vendorData!['description'] ?? '',
-                    trimLength: 120, // adjust cutoff length if needed
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
-                  ),
 
-                  const SizedBox(height: 20),
-                  const Text('Menu',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text(
+                    'Menu',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      int crossAxisCount =
-                          constraints.maxWidth > 800 ? 2 : 1;
+                      int crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
                       double aspectRatio =
                           constraints.maxWidth > 800 ? 6.5 : 5.5;
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: (_vendorData!['menu'] as List).length,
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                           childAspectRatio: aspectRatio,
                         ),
                         itemBuilder: (context, index) {
-                          final item =
-                              (_vendorData!['menu'] as List)[index];
+                          final item = (_vendorData!['menu'] as List)[index];
                           return GestureDetector(
                             onTap: () => _editMenuItem(index),
                             child: Card(
                               color: const Color(0xFFecc39e),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               elevation: 2,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 8, horizontal: 12),
+                                  vertical: 8,
+                                  horizontal: 12,
+                                ),
                                 child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Expanded(
-                                        flex: 4,
-                                        child: Text(item['name'] ?? '',
-                                            style: const TextStyle(
-                                                fontWeight:
-                                                    FontWeight.bold),
-                                            overflow:
-                                                TextOverflow.ellipsis)),
+                                      flex: 4,
+                                      child: Text(
+                                        item['name'] ?? '',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
                                     Center(
-                                        child: Text('|',
-                                            style: TextStyle(
-                                                color:
-                                                    Colors.grey[700]))),
+                                      child: Text(
+                                        '|',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
                                     Expanded(
-                                        flex: 3,
-                                        child: Text(item['category'] ?? '',
-                                            style: const TextStyle(
-                                                color: Color(0xFF8c8c8c)),
-                                            overflow:
-                                                TextOverflow.ellipsis)),
+                                      flex: 3,
+                                      child: Text(
+                                        item['category'] ?? '',
+                                        style: const TextStyle(
+                                          color: Color(0xFF8c8c8c),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
                                     Center(
-                                        child: Text('|',
-                                            style: TextStyle(
-                                                color:
-                                                    Colors.grey[700]))),
+                                      child: Text(
+                                        '|',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
                                     Expanded(
-                                        flex: 2,
-                                        child: Text('₱${item['price']}',
-                                            style: const TextStyle(
-                                                fontWeight:
-                                                    FontWeight.bold,
-                                                color: Color(0xFFE85205)))),
+                                      flex: 2,
+                                      child: Text(
+                                        '₱${item['price']}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFFE85205),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -450,39 +614,42 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+            //optional image card
+            buildOptionalImagesRow(),
+            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
 
-
-
   // Add this helper widget for expandable text
-Widget _expandableInfoRow(IconData icon, String text, String fieldKey) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8), // spacing between rows
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: const Color(0xFFE85205), size: 20),
-        const SizedBox(width: 10),
-        Expanded(
-          child: ExpandableText(
-            text,
-            trimLength: 50, // adjust cutoff for expansion
-            style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
+  Widget _expandableInfoRow(IconData icon, String text, String fieldKey) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8), // spacing between rows
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: const Color(0xFFE85205), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ExpandableText(
+              text,
+              trimLength: 50, // adjust cutoff for expansion
+              style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
+            ),
           ),
-        ),
-        const SizedBox(width: 6),
-        _smallEditButton(() => _editField(fieldKey, _getFieldLabel(fieldKey))),
-      ],
-    ),
-  );
+          const SizedBox(width: 6),
+          _smallEditButton(
+            () => _editField(fieldKey, _getFieldLabel(fieldKey)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-
-}
 class ExpandableText extends StatefulWidget {
   final String text;
   final int trimLength;
@@ -505,20 +672,19 @@ class _ExpandableTextState extends State<ExpandableText> {
   @override
   Widget build(BuildContext context) {
     final bool shouldTrim = widget.text.length > widget.trimLength;
-    final String displayText = shouldTrim && !isExpanded
-        ? '${widget.text.substring(0, widget.trimLength)}...'
-        : widget.text;
+    final String displayText =
+        shouldTrim && !isExpanded
+            ? '${widget.text.substring(0, widget.trimLength)}...'
+            : widget.text;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           displayText,
-          style: widget.style ??
-              const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF8C8C8C),
-              ),
+          style:
+              widget.style ??
+              const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
         ),
         if (shouldTrim)
           GestureDetector(
@@ -552,4 +718,3 @@ String _getFieldLabel(String key) {
       return 'Field';
   }
 }
-

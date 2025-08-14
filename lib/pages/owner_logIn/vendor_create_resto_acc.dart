@@ -73,13 +73,13 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                   style: TextStyle(
                     fontSize: isMobile ? 28 : 40,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 199, 93, 44),
+                    color: Colors.deepOrange,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Register Your Account",
+                  "Register Your Restaurant Account",
                   style: TextStyle(fontSize: isMobile ? 16 : 20),
                   textAlign: TextAlign.center,
                 ),
