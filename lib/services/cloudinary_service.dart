@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -13,8 +12,8 @@ Future<String?> uploadImageToCloudinary(
     return null;
   }
 
-  String cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-  String uploadPreset = dotenv.env['CLOUDINARY_PRESET_NAME'] ?? '';
+  const String cloudName = "dl6d48nzy";
+  const String uploadPreset = "mapakaon_usigned";
 
   var uri = Uri.parse(
     'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
