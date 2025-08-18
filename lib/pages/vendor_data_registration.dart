@@ -30,7 +30,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   final TextEditingController _menuCategoryController = TextEditingController();
 
   // For mobile (non-web)
-  File? _headerImage;
+  XFile? _headerImage;
   XFile? _optionalImage;
   XFile? _optionalImage2;
   XFile? _optionalImage3;
@@ -60,6 +60,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         final compressed = await _compressImage(bytes);
         setState(() {
           _headerImageBytes = compressed;
+          _headerImage = picked; // ✅ keep XFile, no casting
         });
       } else {
         final file = File(picked.path);
@@ -70,8 +71,8 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
           minHeight: 800,
         );
         setState(() {
-          _headerImageBytes = compressedBytes; // store compressed
-          _headerImage = file; // keep original if needed
+          _headerImageBytes = compressedBytes;
+          _headerImage = picked; // ✅ still keep XFile
         });
       }
     }
@@ -198,18 +199,20 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       // Upload header image to Cloudinary
       String? headerImageUrl;
       if (_headerImage != null || _headerImageBytes != null) {
+        final headerUniqueName =
+            'header_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch}.jpg';
         final filePickerResult =
             kIsWeb
                 ? FilePickerResult([
                   PlatformFile(
-                    name: 'header.jpg',
+                    name: headerUniqueName,
                     size: _headerImageBytes!.length,
                     bytes: _headerImageBytes,
                   ),
                 ])
                 : FilePickerResult([
                   PlatformFile(
-                    name: 'header.jpg',
+                    name: headerUniqueName,
                     path: _headerImage!.path,
                     size: await File(_headerImage!.path).length(),
                   ),
@@ -218,10 +221,10 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         headerImageUrl = await uploadImageToCloudinary(filePickerResult);
 
         // Use Cloudinary transformation for homepage/search thumbnails
-        if (headerImageUrl != null) {
+        if (headerImageUrl != null && headerImageUrl.isNotEmpty) {
           headerImageUrl = headerImageUrl.replaceFirst(
             '/upload/',
-            '/upload/w_800,q_auto:best,f_auto/', // Limit size & auto-optimize
+            '/upload/w_800,q_auto:best,f_auto/',
           );
         }
       }
@@ -229,18 +232,20 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       // Upload optional image 1
       String? optionalImageUrl1;
       if (_optionalImage != null || _optionalImageBytes != null) {
+        final optionalUniqueName1 =
+            'optional1_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch}.jpg';
         final filePickerResult =
             kIsWeb
                 ? FilePickerResult([
                   PlatformFile(
-                    name: 'optional1.jpg',
+                    name: optionalUniqueName1,
                     size: _optionalImageBytes!.length,
                     bytes: _optionalImageBytes,
                   ),
                 ])
                 : FilePickerResult([
                   PlatformFile(
-                    name: 'optional1.jpg',
+                    name: optionalUniqueName1,
                     path: _optionalImage!.path,
                     size: await File(_optionalImage!.path).length(),
                   ),
@@ -248,7 +253,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl1 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl1 != null) {
+        if (optionalImageUrl1 != null && optionalImageUrl1.isNotEmpty) {
           optionalImageUrl1 = optionalImageUrl1.replaceFirst(
             '/upload/',
             '/upload/w_300,q_auto:best,f_auto/',
@@ -259,18 +264,20 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       // Upload optional image 2
       String? optionalImageUrl2;
       if (_optionalImage2 != null || _optionalImage2Bytes != null) {
+        final optionalUniqueName2 =
+            'optional2_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch}.jpg';
         final filePickerResult =
             kIsWeb
                 ? FilePickerResult([
                   PlatformFile(
-                    name: 'optional2.jpg',
+                    name: optionalUniqueName2,
                     size: _optionalImage2Bytes!.length,
                     bytes: _optionalImage2Bytes,
                   ),
                 ])
                 : FilePickerResult([
                   PlatformFile(
-                    name: 'optional2.jpg',
+                    name: optionalUniqueName2,
                     path: _optionalImage2!.path,
                     size: await File(_optionalImage2!.path).length(),
                   ),
@@ -278,7 +285,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl2 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl2 != null) {
+        if (optionalImageUrl2 != null && optionalImageUrl2.isNotEmpty) {
           optionalImageUrl2 = optionalImageUrl2.replaceFirst(
             '/upload/',
             '/upload/w_300,q_auto:best,f_auto/',
@@ -289,18 +296,20 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       // Upload optional image 3
       String? optionalImageUrl3;
       if (_optionalImage3 != null || _optionalImage3Bytes != null) {
+        final optionalUniqueName3 =
+            'optional3_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch}.jpg';
         final filePickerResult =
             kIsWeb
                 ? FilePickerResult([
                   PlatformFile(
-                    name: 'optional3.jpg',
+                    name: optionalUniqueName3,
                     size: _optionalImage3Bytes!.length,
                     bytes: _optionalImage3Bytes,
                   ),
                 ])
                 : FilePickerResult([
                   PlatformFile(
-                    name: 'optional3.jpg',
+                    name: optionalUniqueName3,
                     path: _optionalImage3!.path,
                     size: await File(_optionalImage3!.path).length(),
                   ),
@@ -308,7 +317,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl3 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl3 != null) {
+        if (optionalImageUrl3 != null && optionalImageUrl3.isNotEmpty) {
           optionalImageUrl3 = optionalImageUrl3.replaceFirst(
             '/upload/',
             '/upload/w_300,q_auto:best,f_auto/',
@@ -350,7 +359,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       );
 
       // Redirect to Vendor Profile
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder:
@@ -368,7 +377,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       _menuItems.clear();
       setState(() {
         _headerImage = null;
+        _headerImageBytes = null;
         _optionalImage = null;
+        _optionalImageBytes = null;
+        _optionalImage2 = null;
+        _optionalImage2Bytes = null;
+        _optionalImage3 = null;
+        _optionalImage3Bytes = null;
       });
     } catch (e) {
       Navigator.of(context).pop(); // Close loading
@@ -437,12 +452,14 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                             ? DecorationImage(
                               image: MemoryImage(
                                 _headerImageBytes!,
-                              ), // Web preview
+                              ), // Web & compressed preview
                               fit: BoxFit.cover,
                             )
-                            : _headerImage != null
+                            : _headerImage != null && !kIsWeb
                             ? DecorationImage(
-                              image: FileImage(_headerImage!), // Mobile preview
+                              image: FileImage(
+                                File(_headerImage!.path),
+                              ), // Mobile preview
                               fit: BoxFit.cover,
                             )
                             : null,
