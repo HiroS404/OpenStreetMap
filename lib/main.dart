@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -22,8 +24,19 @@ void main() async {
         true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
-
-  runApp(const MyApp());
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details); // prints the full stack trace
+  };
+  // Catch any errors outside Flutter (e.g. async, platform channels)
+  runZonedGuarded(
+    () {
+      runApp(const MyApp());
+    },
+    (error, stack) {
+      debugPrint('❌ Caught by runZonedGuarded: $error');
+      debugPrintStack(stackTrace: stack);
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {

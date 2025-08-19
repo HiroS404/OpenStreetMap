@@ -54,15 +54,18 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
   Future<void> _pickHeaderImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+
     if (picked != null) {
       if (kIsWeb) {
+        // ✅ Web: only bytes, no File()
         final bytes = await picked.readAsBytes();
         final compressed = await _compressImage(bytes);
         setState(() {
-          _headerImageBytes = compressed;
-          _headerImage = picked; // ✅ keep XFile, no casting
+          _headerImage = picked; // keep XFile for upload later
+          _headerImageBytes = compressed; // for preview
         });
       } else {
+        // ✅ Mobile/Desktop: can use File for compression
         final file = File(picked.path);
         final compressedBytes = await FlutterImageCompress.compressWithFile(
           file.absolute.path,
@@ -71,8 +74,8 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
           minHeight: 800,
         );
         setState(() {
-          _headerImageBytes = compressedBytes;
-          _headerImage = picked; // ✅ still keep XFile
+          _headerImage = picked; // keep XFile
+          _headerImageBytes = compressedBytes; // for preview
         });
       }
     }
@@ -80,30 +83,63 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
   Future<void> _pickOptionalImage(int index) async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+
     if (picked != null) {
+      Uint8List fileBytes;
+
       if (kIsWeb) {
-        // Works for both desktop web and mobile web
-        final bytes = await picked.readAsBytes();
+        // ✅ WEB: Read bytes & compress
+        fileBytes = await picked.readAsBytes();
+        final compressedBytes = await FlutterImageCompress.compressWithList(
+          fileBytes,
+          minWidth: 800,
+          minHeight: 600,
+          quality: 75,
+        );
+        fileBytes = Uint8List.fromList(compressedBytes);
+
         setState(() {
           if (index == 1) {
             _optionalImage = picked;
-            _optionalImageBytes = bytes;
+            _optionalImageBytes = fileBytes;
           } else if (index == 2) {
             _optionalImage2 = picked;
-            _optionalImage2Bytes = bytes;
+            _optionalImage2Bytes = fileBytes;
           } else if (index == 3) {
             _optionalImage3 = picked;
-            _optionalImage3Bytes = bytes;
+            _optionalImage3Bytes = fileBytes;
           }
         });
       } else {
-        // Native mobile (Android/iOS)
+        // ✅ MOBILE/PC: Compress with file path
+        File file = File(picked.path);
+        final compressedFile = await FlutterImageCompress.compressWithFile(
+          file.absolute.path,
+          minWidth: 800,
+          minHeight: 600,
+          quality: 75,
+        );
+
+        fileBytes = compressedFile ?? await file.readAsBytes();
+
         setState(() {
-          if (index == 1) _optionalImage = picked;
-          if (index == 2) _optionalImage2 = picked;
-          if (index == 3) _optionalImage3 = picked;
+          if (index == 1) {
+            _optionalImage = picked;
+            _optionalImageBytes = fileBytes;
+          } else if (index == 2) {
+            _optionalImage2 = picked;
+            _optionalImage2Bytes = fileBytes;
+          } else if (index == 3) {
+            _optionalImage3 = picked;
+            _optionalImage3Bytes = fileBytes;
+          }
         });
       }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No image selected")));
     }
   }
 
@@ -452,21 +488,14 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                             ? DecorationImage(
                               image: MemoryImage(
                                 _headerImageBytes!,
-                              ), // Web & compressed preview
-                              fit: BoxFit.cover,
-                            )
-                            : _headerImage != null && !kIsWeb
-                            ? DecorationImage(
-                              image: FileImage(
-                                File(_headerImage!.path),
-                              ), // Mobile preview
+                              ), // ✅ Always from bytes
                               fit: BoxFit.cover,
                             )
                             : null,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
-                      _headerImage == null && _headerImageBytes == null
+                      _headerImageBytes == null
                           ? const Center(child: Text("Tap + to add image"))
                           : null,
                 ),
@@ -598,9 +627,9 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                         // _selectedLng = selectedLocation['lng'];
                         selectedLat = selectedLocation['lat'];
                         selectedLng = selectedLocation['lng'];
-                        print(
-                          'Selected Location: ${selectedLocation['lat']}, ${selectedLocation['lng']}',
-                        );
+                        // print(
+                        //   'Selected Location: ${selectedLocation['lat']}, ${selectedLocation['lng']}',
+                        // );
                       });
                     }
                   },
