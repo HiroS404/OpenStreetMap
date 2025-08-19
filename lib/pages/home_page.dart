@@ -621,7 +621,7 @@ class _HomePageState extends State<HomePage> {
                                                 children: [
                                                   // Outline
                                                   Text(
-                                                    'Way',
+                                                    'way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 20,
                                                       fontWeight:
@@ -638,7 +638,7 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   // Fill
                                                   Text(
-                                                    'Way',
+                                                    'way',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 20,
                                                       fontWeight:

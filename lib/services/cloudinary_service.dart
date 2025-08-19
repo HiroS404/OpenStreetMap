@@ -12,7 +12,7 @@ Future<String?> uploadImageToCloudinary(
   }
 
   const String cloudName = "dl6d48nzy";
-  const String uploadPreset = "mapakaon_unsigned";
+  const String uploadPreset = "mapakaon-preset";
 
   try {
     final uri = Uri.parse(

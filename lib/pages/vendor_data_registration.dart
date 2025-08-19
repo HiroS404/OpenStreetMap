@@ -44,40 +44,30 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
   // Helper to compress for Web/Mobile
   Future<Uint8List> _compressImage(Uint8List data, {int quality = 85}) async {
-    return await FlutterImageCompress.compressWithList(
-      data,
-      quality: quality, // Reduce quality to save bandwidth
-      minWidth: 800, // Resize width
-      minHeight: 800, // Resize height
-    );
+    if (kIsWeb) {
+      // Web: return original bytes
+      return data;
+    } else {
+      // Mobile/Desktop: compress normally
+      return await FlutterImageCompress.compressWithList(
+        data,
+        quality: quality,
+        minWidth: 800,
+        minHeight: 800,
+      );
+    }
   }
 
   Future<void> _pickHeaderImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (picked != null) {
-      if (kIsWeb) {
-        // ✅ Web: only bytes, no File()
-        final bytes = await picked.readAsBytes();
-        final compressed = await _compressImage(bytes);
-        setState(() {
-          _headerImage = picked; // keep XFile for upload later
-          _headerImageBytes = compressed; // for preview
-        });
-      } else {
-        // ✅ Mobile/Desktop: can use File for compression
-        final file = File(picked.path);
-        final compressedBytes = await FlutterImageCompress.compressWithFile(
-          file.absolute.path,
-          quality: 85,
-          minWidth: 800,
-          minHeight: 800,
-        );
-        setState(() {
-          _headerImage = picked; // keep XFile
-          _headerImageBytes = compressedBytes; // for preview
-        });
-      }
+      final bytes = await picked.readAsBytes();
+      final compressed = await _compressImage(bytes); // safe for web now
+      setState(() {
+        _headerImage = picked;
+        _headerImageBytes = compressed;
+      });
     }
   }
 
@@ -88,30 +78,10 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       Uint8List fileBytes;
 
       if (kIsWeb) {
-        // ✅ WEB: Read bytes & compress
+        // ✅ Web: just read bytes, skip flutter_image_compress
         fileBytes = await picked.readAsBytes();
-        final compressedBytes = await FlutterImageCompress.compressWithList(
-          fileBytes,
-          minWidth: 800,
-          minHeight: 600,
-          quality: 75,
-        );
-        fileBytes = Uint8List.fromList(compressedBytes);
-
-        setState(() {
-          if (index == 1) {
-            _optionalImage = picked;
-            _optionalImageBytes = fileBytes;
-          } else if (index == 2) {
-            _optionalImage2 = picked;
-            _optionalImage2Bytes = fileBytes;
-          } else if (index == 3) {
-            _optionalImage3 = picked;
-            _optionalImage3Bytes = fileBytes;
-          }
-        });
       } else {
-        // ✅ MOBILE/PC: Compress with file path
+        // ✅ Mobile/Desktop: compress with FlutterImageCompress
         File file = File(picked.path);
         final compressedFile = await FlutterImageCompress.compressWithFile(
           file.absolute.path,
@@ -119,22 +89,21 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
           minHeight: 600,
           quality: 75,
         );
-
         fileBytes = compressedFile ?? await file.readAsBytes();
-
-        setState(() {
-          if (index == 1) {
-            _optionalImage = picked;
-            _optionalImageBytes = fileBytes;
-          } else if (index == 2) {
-            _optionalImage2 = picked;
-            _optionalImage2Bytes = fileBytes;
-          } else if (index == 3) {
-            _optionalImage3 = picked;
-            _optionalImage3Bytes = fileBytes;
-          }
-        });
       }
+
+      setState(() {
+        if (index == 1) {
+          _optionalImage = picked;
+          _optionalImageBytes = fileBytes;
+        } else if (index == 2) {
+          _optionalImage2 = picked;
+          _optionalImage2Bytes = fileBytes;
+        } else if (index == 3) {
+          _optionalImage3 = picked;
+          _optionalImage3Bytes = fileBytes;
+        }
+      });
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(
