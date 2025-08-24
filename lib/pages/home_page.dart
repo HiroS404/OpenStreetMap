@@ -1,12 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/pages/resto_detail_screen.dart';
 import 'package:map_try/services/restaurant_service.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 /// ---- Brand Color System ----
 class AppColors {
@@ -226,10 +227,12 @@ Widget blankCard() {
 class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   final String selectedCategory;
   final ValueChanged<String> onCategorySelected;
+  final Future<void> Function(String category) onFetchCategory; // 👈 add this
 
   CategoryChipsHeader({
     required this.selectedCategory,
     required this.onCategorySelected,
+    required this.onFetchCategory,
   });
 
   @override
@@ -253,7 +256,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCategoryChip("Nearby"),
-                _buildCategoryChip("Meals"),
+                _buildCategoryChip("Meals") ,
                 _buildCategoryChip("Drinks"),
                 _buildCategoryChip("Fast Food"),
                 _buildCategoryChip("Snacks"),
@@ -270,7 +273,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: TextButton(
-        onPressed: () => onCategorySelected(label),
+        onPressed: () {
+          onFetchCategory(label);
+          onCategorySelected(label);
+        },
         style: TextButton.styleFrom(
           backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
           foregroundColor: isSelected ? Colors.white : Colors.black87,
@@ -311,20 +317,28 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final PageController _hotDealsPageController = PageController();
   final ScrollController _hotDealsController = ScrollController();
   final ScrollController _mostBoughtController = ScrollController();
+  final PageController _mostBoughtPageController = PageController();
+
 
   List<Restaurant> _restaurants = [];
+  List<Map<String, dynamic>> drinks = [];
+
+
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
   String _selectedCategory = "Meals";
+
 
   @override
   void initState() {
     super.initState();
     _loadRestaurants();
   }
+  
 
   Future<void> _loadRestaurants() async {
     try {
@@ -332,6 +346,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() {
         _restaurants = data;
+
         _isLoading = false;
       });
     } catch (e) {
@@ -346,6 +361,26 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
+  Future<void> fetchDrinks() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .where('category', isEqualTo: 'drinks')
+          .get();
+
+      setState(() {
+        drinks = snapshot.docs.map((doc) => doc.data()).toList();
+      });
+
+      print("✅ Drinks loaded: ${drinks.length}");
+      for (var d in drinks) {
+        print("Drink: ${d['name']} - ${d['price']}");
+      }
+    } catch (e) {
+      print("❌ Error fetching drinks: $e");
+    }
+  }
+
 
   @override
   void dispose() {
@@ -576,7 +611,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 7 * percent),
+                              SizedBox(height: 8 * percent),
 
                               if (percent > 0.5)
                                 Column(
@@ -607,14 +642,19 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         ],
                                       ),
+
                                       child: Text.rich(
                                         TextSpan(
                                           text: 'Hungry? We’ll lead the ',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 20,
+                                              fontWeight:
+                                              FontWeight.w800,
+                                              color: Colors.white,
                                           ),
+
+
+
                                           children: [
                                             WidgetSpan(
                                               child: Stack(
@@ -656,7 +696,7 @@ class _HomePageState extends State<HomePage> {
                                     const SizedBox(height: 4),
                                   ],
                                 ),
-                              SizedBox(height: 16 * percent),
+                              SizedBox(height: 18 * percent),
                             ],
                           ),
                         ),
@@ -779,6 +819,12 @@ class _HomePageState extends State<HomePage> {
               onCategorySelected: (category) {
                 setState(() => _selectedCategory = category);
               },
+              onFetchCategory: (category) async {
+                if (category == "Drinks") {
+                  await fetchDrinks();
+                }
+                // Later you can extend for Fast Food, Snacks, etc.
+              },
             ),
           ),
 
@@ -794,70 +840,168 @@ class _HomePageState extends State<HomePage> {
                   sectionHeader("Hot Deals 🔥"),
                   const SizedBox(height: 8),
 
-                  SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      controller: _hotDealsController,
-                      physics: const ClampingScrollPhysics(),
-                      scrollDirection: Axis.horizontal,
-                      itemCount:
-                          _selectedCategory == "Meals"
-                              ? _restaurants.length
-                              : 6,
-                      itemBuilder: (context, index) {
-                        if (_selectedCategory != "Meals") {
-                          return blankCard();
-                        }
-
-                        final resto = _restaurants[index];
-
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        RestoDetailScreen(restoId: resto.id),
-                              ),
-                            );
-                          },
-                          child: restoCard(
-                            headerImageUrl: resto.headerImageUrl,
-                            name: resto.name,
-                            address: resto.address ?? '',
+                  Column(
+                    children: [
+                      // 🔹 Cards
+                      SizedBox(
+                        height: 250,
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(
+                            dragDevices: {
+                              PointerDeviceKind.touch,
+                              PointerDeviceKind.mouse, // allow mouse drag/scroll
+                            },
                           ),
-                        );
-                      },
-                    ),
+                          child: PageView.builder(
+                            controller: _hotDealsPageController,
+                            itemCount: _selectedCategory == "Meals"
+                                ? (_restaurants.isNotEmpty ? _restaurants.length : 1)
+                                : _selectedCategory == "Drinks"
+                                    ? (drinks.isNotEmpty ? drinks.length : 1)
+                                    : 1,
+                            itemBuilder: (context, index) {
+                              if (_selectedCategory == "Meals" && _restaurants.isNotEmpty) {
+                                final resto = _restaurants[index];
+                                return restoCard(
+                                  headerImageUrl: resto.headerImageUrl,
+                                  name: resto.name,
+                                  address: resto.address ?? '',
+                                );
+                              } else if (_selectedCategory == "Drinks" && drinks.isNotEmpty) {
+                                final drink = drinks[index];
+                                return restoCard(
+                                  headerImageUrl: "",
+                                  name: drink['name'] ?? 'Unnamed',
+                                  address: "${drink['price'] ?? ''} PHP",
+                                );
+                              } else {
+                                return blankCard();
+                              }
+
+
+
+                              final resto = _restaurants[index];
+
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          RestoDetailScreen(restoId: resto.id),
+                                    ),
+                                  );
+                                },
+                                child: restoCard(
+                                  headerImageUrl: resto.headerImageUrl,
+                                  name: resto.name,
+                                  address: resto.address ?? '',
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // 🔹 Dots indicator with click support
+                      SmoothPageIndicator(
+                        controller: _hotDealsPageController,
+                        count: _selectedCategory == "Meals"
+                            ? (_restaurants.isNotEmpty ? _restaurants.length : 1)
+                            : _selectedCategory == "Drinks"
+                                ? (drinks.isNotEmpty ? drinks.length : 1)
+                                : 1,
+                        effect: ExpandingDotsEffect(
+                          activeDotColor: Colors.redAccent,
+                          dotColor: Colors.grey.shade400,
+                          dotHeight: 8,
+                          dotWidth: 8,
+                          spacing: 6,
+                        ),
+                        onDotClicked: (index) {
+                          _hotDealsPageController.animateToPage(
+                            index,
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                    ],
                   ),
 
+
+
                   const SizedBox(height: 16),
-                  // Most Bought Section
+
+                  // Most Bought 🔥 Section
                   sectionHeader("Most bought 🔥"),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 250,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Ted’s Batchoy',
-                          address: 'Jaro Plaza',
+
+                  Column(
+                    children: [
+                      SizedBox(
+                        height: 250,
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(
+                            dragDevices: {
+                              PointerDeviceKind.touch,
+                              PointerDeviceKind.mouse, // allow desktop drag
+                            },
+                          ),
+                          child: PageView.builder(
+                            controller: _mostBoughtPageController,
+                            itemCount: 3, // for now fixed, can be dynamic
+                            itemBuilder: (context, index) {
+                              final items = [
+                                {
+                                  "name": "Ted’s Batchoy",
+                                  "address": "Jaro Plaza",
+                                },
+                                {
+                                  "name": "Mang Inasal",
+                                  "address": "Diversion Road",
+                                },
+                                {
+                                  "name": "Deco’s Batchoy",
+                                  "address": "City Proper",
+                                },
+                              ];
+
+                              final item = items[index];
+
+                              return restoCard(
+                                headerImageUrl: '',
+                                name: item["name"]!,
+                                address: item["address"]!,
+                              );
+                            },
+                          ),
                         ),
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Mang Inasal',
-                          address: 'Diversion Road',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      SmoothPageIndicator(
+                        controller: _mostBoughtPageController,
+                        count: 3,
+                        effect: ExpandingDotsEffect(
+                          activeDotColor: Colors.redAccent,
+                          dotColor: Colors.grey.shade400,
+                          dotHeight: 8,
+                          dotWidth: 8,
+                          spacing: 6,
                         ),
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Deco’s Batchoy',
-                          address: 'City Proper',
-                        ),
-                      ],
-                    ),
+                        onDotClicked: (index) {
+                          _mostBoughtPageController.animateToPage(
+                            index,
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                          },
+                      ),
+                    ],
                   ),
                 ],
               ),
