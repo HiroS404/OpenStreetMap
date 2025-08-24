@@ -51,7 +51,7 @@ class VendorProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            //descriptiin
+            //description
             Text(description, style: const TextStyle(fontSize: 16)),
             //location
             const SizedBox(height: 16),

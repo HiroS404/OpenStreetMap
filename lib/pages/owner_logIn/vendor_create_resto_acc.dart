@@ -192,70 +192,102 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
         builder: (context, constraints) {
           final isMobile = constraints.maxWidth < 800;
 
-          return Center(
-            child: Container(
-              width: isMobile ? double.infinity : 1280,
-              height: isMobile ? null : 700,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color.fromARGB(
-                      255,
-                      217,
-                      111,
-                      50,
-                    ).withAlpha(102), // 0.4 * 255 = 102
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child:
-                  isMobile
-                      ? SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(30),
-                                topRight: Radius.circular(30),
-                              ),
-                              child: Image.asset(
-                                'Assets/login/loginimage.png',
-                                fit: BoxFit.cover,
-                                height: 200,
-                                width: double.infinity,
-                              ),
-                            ),
-                            _buildSignInForm(isMobile: true),
-                          ],
-                        ),
-                      )
-                      : Row(
-                        children: [
-                          Expanded(
-                            flex: 5,
-                            child: _buildSignInForm(isMobile: false),
-                          ),
-                          Expanded(
-                            flex: 5,
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(30),
-                                bottomRight: Radius.circular(30),
-                              ),
-                              child: Image.asset(
-                                'Assets/login/loginimage.png',
-                                fit: BoxFit.cover,
-                                height: double.infinity,
-                              ),
-                            ),
-                          ),
-                        ],
+          return Stack(
+            children: [
+              Center(
+                child: Container(
+                  width: isMobile ? double.infinity : 1280,
+                  height: isMobile ? null : 700,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromARGB(
+                          255,
+                          217,
+                          111,
+                          50,
+                        ).withAlpha(102), // 0.4 * 255 = 102
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
-            ),
+                    ],
+                  ),
+                  child:
+                      isMobile
+                          ? SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(30),
+                                    topRight: Radius.circular(30),
+                                  ),
+                                  child: Image.asset(
+                                    'Assets/login/loginimage.png',
+                                    fit: BoxFit.cover,
+                                    height: 200,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                                _buildSignInForm(isMobile: true),
+                              ],
+                            ),
+                          )
+                          : Row(
+                            children: [
+                              Expanded(
+                                flex: 5,
+                                child: _buildSignInForm(isMobile: false),
+                              ),
+                              Expanded(
+                                flex: 5,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(30),
+                                    bottomRight: Radius.circular(30),
+                                  ),
+                                  child: Image.asset(
+                                    'Assets/login/loginimage.png',
+                                    fit: BoxFit.cover,
+                                    height: double.infinity,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                ),
+              ),
+              // Back Button positioned at top left
+              Positioned(
+                top: isMobile ? 40 : 50,
+                left: isMobile ? 16 : 24,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(85),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.black87,
+                      size: isMobile ? 20 : 24,
+                    ),
+                    iconSize: isMobile ? 20 : 24,
+                    padding: EdgeInsets.all(isMobile ? 8 : 12),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
