@@ -3,12 +3,13 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:map_try/model/route_loader.dart';
+import 'package:map_try/services/mapbox_service.dart';
 
 // for walking distance and polylines
 final Distance _distance = Distance();
@@ -697,7 +698,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         ),
         children: [
           TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            urlTemplate: 'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
+            tileProvider: CancellableNetworkTileProvider(),
           ),
           //uncomment this for debugging using fix or manual  location
           // CurrentLocationLayer(
@@ -711,6 +713,20 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           //   ),
           // ),
 
+          // Walking dotted line
+          if (walkingPolylines.isNotEmpty)
+            PolylineLayer(polylines: walkingPolylines),
+          if (_route.isNotEmpty)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: _route,
+                  color: const Color.fromARGB(255, 255, 143, 0), // cropped segment (may bug)
+                  strokeWidth: 4,
+                ),
+              ],
+            ),
+            
           // //currentlocation debugger for fixed location
           if (_currentLocation != null)
             MarkerLayer(
@@ -720,9 +736,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                   width: 40,
                   height: 40,
                   child: const Icon(
-                    Icons.location_pin,
+                    Icons.person_pin_circle_outlined,
                     size: 40,
-                    color: Colors.blue,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -743,44 +759,35 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 ),
               ],
             ),
-          if (allRoutes.isNotEmpty)
-            PolylineLayer(
-              polylines:
-                  allRoutes.map((route) {
-                    return Polyline(
-                      points: route.coordinates,
-                      color: _getColorForRoute(
-                        route.routeNumber,
-                      ).withAlpha((0.5 * 255).toInt()), //7 opacity
-                      strokeWidth: 6,
-                    );
-                  }).toList(),
-            ),
-          if (_matchedRoute != null)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _matchedRoute!.coordinates,
-                  color: _getColorForRoute(
-                    _matchedRoute!.routeNumber,
-                  ).withAlpha((0.1 * 255).toInt()), // 20% opacity
-                  strokeWidth: 10,
-                ),
-              ],
-            ),
-          // Walking dotted line
-          if (walkingPolylines.isNotEmpty)
-            PolylineLayer(polylines: walkingPolylines),
-          if (_route.isNotEmpty)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _route,
-                  color: Colors.blue, // cropped segment (may bug)
-                  strokeWidth: 4,
-                ),
-              ],
-            ),
+
+          // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
+          // if (allRoutes.isNotEmpty)
+          //   PolylineLayer(
+          //     polylines:
+          //         allRoutes.map((route) {
+          //           return Polyline(
+          //             points: route.coordinates,
+          //             color: _getColorForRoute(
+          //               route.routeNumber,
+          //             ).withAlpha((0.5 * 255).toInt()), //7 opacity
+          //             strokeWidth: 6,
+          //           );
+          //         }).toList(),
+          //   ),
+          // if (_matchedRoute != null)
+          //   PolylineLayer(
+          //     polylines: [
+          //       Polyline(
+          //         points: _matchedRoute!.coordinates,
+          //         color: _getColorForRoute(
+          //           _matchedRoute!.routeNumber,
+          //         ).withAlpha((0.1 * 255).toInt()), // 20% opacity
+          //         strokeWidth: 10,
+          //       ),
+          //     ],
+          //   ),
+          // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
+            
         ],
       ),
       floatingActionButton: Stack(

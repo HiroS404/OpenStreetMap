@@ -1,0 +1,2 @@
+final String mapboxAccess = 'pk.eyJ1IjoibXVjaGNhdWxpZmxvd2VyIiwiYSI6ImNtYzIyenhxbDA0dXYyanNmZWtjNG1vN2UifQ.dr4Uu98pOhbQaPt3MbYzIw';
+final String styleId = 'muchcauliflower/cmc23zji700b001sobb7y3d0y';

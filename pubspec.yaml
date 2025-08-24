@@ -45,6 +45,7 @@ dependencies:
   latlong2: ^0.9.1
   flutter_map: ^7.0.2
   flutter_map_location_marker: ^9.1.1
+  flutter_map_cancellable_tile_provider: ^3.0.0
   location: ^7.0.1
   http: ^1.5.0
   flutter_polyline_points: ^2.1.0
