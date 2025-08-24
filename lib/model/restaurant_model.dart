@@ -7,7 +7,8 @@ class Restaurant {
   final String optionalImageUrl;
   final String? address;
   final String? description;
-  final List<String>? menu;
+  final List<Map<String, dynamic>> menu;
+  final List<String> categories;
 
   Restaurant({
     required this.id, //
@@ -16,7 +17,8 @@ class Restaurant {
     required this.optionalImageUrl,
     this.address,
     this.description,
-    this.menu,
+    required this.menu,
+    required this.categories,
   });
 
   // Build from a Firestore document
@@ -28,8 +30,25 @@ class Restaurant {
       headerImageUrl: data['headerImageUrl'] ?? '',
       address: data['address'],
       description: data['description'],
-      menu: (data['menu'] as List?)?.cast<String>(),
+      menu:
+          ((data['menu'] as List<dynamic>?)?.map((item) {
+                    if (item is String) {
+                      return {
+                            "category": "Uncategorized",
+                            "name": item,
+                            "price": 0,
+                          }
+                          as Map<String, dynamic>;
+                    } else if (item is Map<String, dynamic>) {
+                      return Map<String, dynamic>.from(item);
+                    }
+                    return {} as Map<String, dynamic>;
+                  }).toList() ??
+                  [])
+              .cast<Map<String, dynamic>>(),
+
       optionalImageUrl: data['optionalImageUrl'] ?? '',
+      categories: (data['category'] as List?)?.cast<String>() ?? [],
     );
   }
 
