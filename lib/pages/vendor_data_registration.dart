@@ -668,155 +668,154 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
             const SizedBox(height: 16),
 
             //to edit // Menu List Field
-            // Menu List Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Add Menu Item",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
+            // Menu List Field (TO BE REMOVE GD MN NI SYA COMMENT KO LNG)
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.start,
+            //   children: [
+            //     const Text(
+            //       "Add Menu Item",
+            //       style: TextStyle(fontWeight: FontWeight.bold),
+            //     ),
+            //     const SizedBox(height: 8),
 
-                // ✅ Category dropdown first
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  items: [
-                    ..._categories.map(
-                      (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
-                    ),
-                    const DropdownMenuItem(
-                      value: 'add_new',
-                      child: Row(
-                        children: [
-                          Icon(Icons.add, color: Colors.deepOrangeAccent),
-                          SizedBox(width: 8),
-                          Text("Add New Category"),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == 'add_new') {
-                      _showAddCategoryDialog(); // dialog to enter new category
-                    } else {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    }
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.category),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.deepOrangeAccent,
-                        width: 2.0,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.deepOrangeAccent,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+            //     // ✅ Category dropdown first
+            //     DropdownButtonFormField<String>(
+            //       value: _selectedCategory,
+            //       items: [
+            //         ..._categories.map(
+            //           (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+            //         ),
+            //         const DropdownMenuItem(
+            //           value: 'add_new',
+            //           child: Row(
+            //             children: [
+            //               Icon(Icons.add, color: Colors.deepOrangeAccent),
+            //               SizedBox(width: 8),
+            //               Text("Add New Category"),
+            //             ],
+            //           ),
+            //         ),
+            //       ],
+            //       onChanged: (value) {
+            //         if (value == 'add_new') {
+            //           _showAddCategoryDialog(); // dialog to enter new category
+            //         } else {
+            //           setState(() {
+            //             _selectedCategory = value;
+            //           });
+            //         }
+            //       },
+            //       decoration: const InputDecoration(
+            //         labelText: 'Category',
+            //         prefixIcon: Icon(Icons.category),
+            //         border: OutlineInputBorder(),
+            //         focusedBorder: OutlineInputBorder(
+            //           borderSide: BorderSide(
+            //             color: Colors.deepOrangeAccent,
+            //             width: 2.0,
+            //           ),
+            //         ),
+            //         floatingLabelStyle: TextStyle(
+            //           color: Colors.deepOrangeAccent,
+            //         ),
+            //       ),
+            //     ),
+            //     const SizedBox(height: 8),
 
-                // Name field
-                TextField(
-                  controller: _menuNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Menu Name',
-                    prefixIcon: Icon(Icons.fastfood),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.deepOrangeAccent,
-                        width: 2.0,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.deepOrangeAccent,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+            //     // Name field
+            //     TextField(
+            //       controller: _menuNameController,
+            //       decoration: const InputDecoration(
+            //         labelText: 'Menu Name',
+            //         prefixIcon: Icon(Icons.fastfood),
+            //         border: OutlineInputBorder(),
+            //         focusedBorder: OutlineInputBorder(
+            //           borderSide: BorderSide(
+            //             color: Colors.deepOrangeAccent,
+            //             width: 2.0,
+            //           ),
+            //         ),
+            //         floatingLabelStyle: TextStyle(
+            //           color: Colors.deepOrangeAccent,
+            //         ),
+            //       ),
+            //     ),
+            //     const SizedBox(height: 8),
 
-                // Price field
-                TextField(
-                  controller: _menuPriceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Price',
-                    prefixIcon: Icon(Icons.attach_money),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.deepOrangeAccent,
-                        width: 2.0,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.deepOrangeAccent,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+            //     // Price field
+            //     TextField(
+            //       controller: _menuPriceController,
+            //       keyboardType: TextInputType.number,
+            //       decoration: const InputDecoration(
+            //         labelText: 'Price',
+            //         prefixIcon: Icon(Icons.attach_money),
+            //         border: OutlineInputBorder(),
+            //         focusedBorder: OutlineInputBorder(
+            //           borderSide: BorderSide(
+            //             color: Colors.deepOrangeAccent,
+            //             width: 2.0,
+            //           ),
+            //         ),
+            //         floatingLabelStyle: TextStyle(
+            //           color: Colors.deepOrangeAccent,
+            //         ),
+            //       ),
+            //     ),
+            //     const SizedBox(height: 8),
 
-                // Add button
-                ElevatedButton.icon(
-                  onPressed: _addMenuItem,
-                  label: const Text("Add Menu List"),
-                  icon: const Icon(Icons.add),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrangeAccent,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                ),
+            //     // Add button
+            //     ElevatedButton.icon(
+            //       onPressed: _addMenuItem,
+            //       label: const Text("Add Menu List"),
+            //       icon: const Icon(Icons.add),
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor: Colors.deepOrangeAccent,
+            //         minimumSize: const Size.fromHeight(50),
+            //       ),
+            //     ),
 
-                const SizedBox(height: 16),
+            //     const SizedBox(height: 16),
 
-                // Show added menu items
-                const Text(
-                  "Current Menu: Added Menu Items",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Column(
-                  children:
-                      _menuByCategory.entries.map((entry) {
-                        final category = entry.key;
-                        final items = entry.value;
+            //     // Show added menu items
+            //     const Text(
+            //       "Current Menu: Added Menu Items",
+            //       style: TextStyle(fontWeight: FontWeight.bold),
+            //     ),
+            //     Column(
+            //       children:
+            //           _menuByCategory.entries.map((entry) {
+            //             final category = entry.key;
+            //             final items = entry.value;
 
-                        return ExpansionTile(
-                          title: Text(
-                            category,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          children:
-                              items.asMap().entries.map((e) {
-                                final index = e.key;
-                                final item = e.value;
-                                return ListTile(
-                                  leading: const Icon(Icons.restaurant_menu),
-                                  title: Text(
-                                    '${item['name']} - ₱${item['price']}',
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed:
-                                        () => _removeMenuItem(category, index),
-                                  ),
-                                );
-                              }).toList(),
-                        );
-                      }).toList(),
-                ),
-              ],
-            ),
-
+            //             return ExpansionTile(
+            //               title: Text(
+            //                 category,
+            //                 style: const TextStyle(fontWeight: FontWeight.bold),
+            //               ),
+            //               children:
+            //                   items.asMap().entries.map((e) {
+            //                     final index = e.key;
+            //                     final item = e.value;
+            //                     return ListTile(
+            //                       leading: const Icon(Icons.restaurant_menu),
+            //                       title: Text(
+            //                         '${item['name']} - ₱${item['price']}',
+            //                       ),
+            //                       trailing: IconButton(
+            //                         icon: const Icon(
+            //                           Icons.delete,
+            //                           color: Colors.red,
+            //                         ),
+            //                         onPressed:
+            //                             () => _removeMenuItem(category, index),
+            //                       ),
+            //                     );
+            //                   }).toList(),
+            //             );
+            //           }).toList(),
+            //     ),
+            //   ],
+            // ),
             const SizedBox(height: 20),
             const SizedBox(
               height: 20,
