@@ -251,13 +251,14 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         headerImageUrl = await uploadImageToCloudinary(filePickerResult);
 
+        // HAVING ISSUES. HAVING Errors. Decided to comment it
         // Use Cloudinary transformation for homepage/search thumbnails
-        if (headerImageUrl != null && headerImageUrl.isNotEmpty) {
-          headerImageUrl = headerImageUrl.replaceFirst(
-            '/upload/',
-            '/upload/w_800,q_auto:best,f_auto/',
-          );
-        }
+        // if (headerImageUrl.isNotEmpty) {
+        //   headerImageUrl = headerImageUrl.replaceFirst(
+        //     '/upload/',
+        //     '/upload/w_800,q_auto:best,f_auto/',
+        //   );
+        // }
       }
 
       // Upload optional image 1
@@ -284,12 +285,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl1 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl1 != null && optionalImageUrl1.isNotEmpty) {
-          optionalImageUrl1 = optionalImageUrl1.replaceFirst(
-            '/upload/',
-            '/upload/w_300,q_auto:best,f_auto/',
-          );
-        }
+        // HAVING ISSUES. HAVING Errors. Decided to comment it
+        // if (optionalImageUrl1.isNotEmpty) {
+        //   optionalImageUrl1 = optionalImageUrl1.replaceFirst(
+        //     '/upload/',
+        //     '/upload/w_300,q_auto:best,f_auto/',
+        //   );
+        // }
       }
 
       // Upload optional image 2
@@ -316,12 +318,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl2 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl2 != null && optionalImageUrl2.isNotEmpty) {
-          optionalImageUrl2 = optionalImageUrl2.replaceFirst(
-            '/upload/',
-            '/upload/w_300,q_auto:best,f_auto/',
-          );
-        }
+        // HAVING ISSUES. HAVING Errors. Decided to comment it
+        // if (optionalImageUrl2.isNotEmpty) {
+        //   optionalImageUrl2 = optionalImageUrl2.replaceFirst(
+        //     '/upload/',
+        //     '/upload/w_300,q_auto:best,f_auto/',
+        //   );
+        // }
       }
 
       // Upload optional image 3
@@ -348,12 +351,13 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
         optionalImageUrl3 = await uploadImageToCloudinary(filePickerResult);
 
-        if (optionalImageUrl3 != null && optionalImageUrl3.isNotEmpty) {
-          optionalImageUrl3 = optionalImageUrl3.replaceFirst(
-            '/upload/',
-            '/upload/w_300,q_auto:best,f_auto/',
-          );
-        }
+        // HAVING ISSUES. HAVING Errors. Decided to comment it
+        // if (optionalImageUrl3.isNotEmpty) {
+        //   optionalImageUrl3 = optionalImageUrl3.replaceFirst(
+        //     '/upload/',
+        //     '/upload/w_300,q_auto:best,f_auto/',
+        //   );
+        // }
       }
 
       // Save vendor data to Firestore
@@ -675,7 +679,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
                 // ✅ Category dropdown first
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   items: [
                     ..._categories.map(
                       (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
