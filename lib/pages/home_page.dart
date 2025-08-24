@@ -7,6 +7,7 @@ import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/pages/resto_detail_screen.dart';
 import 'package:map_try/services/restaurant_service.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 /// ---- Brand Color System ----
 class AppColors {
@@ -252,7 +253,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildCategoryChip("Nearby"),
+                _buildCategoryChip("All"),
                 _buildCategoryChip("Meals"),
                 _buildCategoryChip("Drinks"),
                 _buildCategoryChip("Fast Food"),
@@ -311,14 +312,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final ScrollController _hotDealsController = ScrollController();
-  final ScrollController _mostBoughtController = ScrollController();
+  final PageController _hotDealsPageController = PageController(
+      viewportFraction: 1);
+  final PageController _mostBoughtPageController = PageController(
+      viewportFraction: 1);
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
-  String _selectedCategory = "Meals";
+  String _selectedCategory = "All";
 
   @override
   void initState() {
@@ -349,8 +352,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _hotDealsController.dispose();
-    _mostBoughtController.dispose();
+    _hotDealsPageController.dispose();
+    _mostBoughtPageController.dispose();
     super.dispose();
   }
 
@@ -379,7 +382,7 @@ class _HomePageState extends State<HomePage> {
             flexibleSpace: LayoutBuilder(
               builder: (context, constraints) {
                 final percent = ((constraints.maxHeight - kToolbarHeight) /
-                        (260 - kToolbarHeight))
+                    (260 - kToolbarHeight))
                     .clamp(0.0, 1.0);
                 return Stack(
                   fit: StackFit.expand,
@@ -411,11 +414,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                         gradient: LinearGradient(
                           colors:
-                              const [
-                                Colors.transparent,
-                                AppColors.gradientSoft,
-                                AppColors.secondary,
-                              ].map((c) => c.withAlpha(80)).toList(),
+                          const [
+                            Colors.transparent,
+                            AppColors.gradientSoft,
+                            AppColors.secondary,
+                          ].map((c) => c.withAlpha(80)).toList(),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -482,9 +485,8 @@ class _HomePageState extends State<HomePage> {
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: Colors.deepOrange,
+                                //  color: Colors.deepOrange,
                                   shape: BoxShape.circle,
-
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.sysAccent.withAlpha(40),
@@ -493,14 +495,15 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ],
                                 ),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.person_outline_rounded,
-                                    color: Colors.white,
-                                    size: 25,
-                                  ),
-                                  onPressed: () {},
-                                ),
+                                // Remove this IconButton entirely:
+                                // child: IconButton(
+                                //   icon: const Icon(
+                                //     Icons.person_outline_rounded,
+                                //     color: Colors.white,
+                                //     size: 25,
+                                //   ),
+                                //   onPressed: () {},
+                                // ),
                               ),
                             ],
                           ),
@@ -610,39 +613,36 @@ class _HomePageState extends State<HomePage> {
                                       child: Text.rich(
                                         TextSpan(
                                           text: 'Hungry? We’ll lead the ',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18,
+                                            fontWeight:
+                                            FontWeight.w700,
+                                            color: Colors.black,
                                           ),
                                           children: [
                                             WidgetSpan(
+                                              alignment: PlaceholderAlignment.baseline, // align to text baseline
+                                              baseline: TextBaseline.alphabetic,
                                               child: Stack(
                                                 children: [
                                                   // Outline
                                                   Text(
                                                     'way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 20,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      foreground:
-                                                          Paint()
-                                                            ..style =
-                                                                PaintingStyle
-                                                                    .stroke
-                                                            ..strokeWidth = 2
-                                                            ..color =
-                                                                Colors.black,
+                                                      fontSize: 18, // match main text
+                                                      fontWeight: FontWeight.w900,
+                                                      foreground: Paint()
+                                                        ..style = PaintingStyle.stroke
+                                                        ..strokeWidth = 2
+                                                        ..color = Colors.black,
                                                     ),
                                                   ),
                                                   // Fill
                                                   Text(
                                                     'way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 20,
-                                                      fontWeight:
-                                                          FontWeight.w900,
+                                                      fontSize: 18, // match main text
+                                                      fontWeight: FontWeight.w900,
                                                       color: Colors.white,
                                                     ),
                                                   ),
@@ -714,10 +714,10 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
                                         foreground:
-                                            Paint()
-                                              ..style = PaintingStyle.stroke
-                                              ..strokeWidth = 2
-                                              ..color = Colors.black,
+                                        Paint()
+                                          ..style = PaintingStyle.stroke
+                                          ..strokeWidth = 2
+                                          ..color = Colors.black,
                                       ),
                                     ),
                                     TextSpan(
@@ -727,10 +727,10 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
                                         foreground:
-                                            Paint()
-                                              ..style = PaintingStyle.stroke
-                                              ..strokeWidth = 2
-                                              ..color = Colors.black,
+                                        Paint()
+                                          ..style = PaintingStyle.stroke
+                                          ..strokeWidth = 2
+                                          ..color = Colors.black,
                                       ),
                                     ),
                                   ],
@@ -790,71 +790,150 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  // Hot Deals 🔥 Section
+
+                  // Hot Deals Carousel
                   sectionHeader("Hot Deals 🔥"),
                   const SizedBox(height: 8),
-
                   SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      controller: _hotDealsController,
-                      physics: const ClampingScrollPhysics(),
-                      scrollDirection: Axis.horizontal,
-                      itemCount:
-                          _selectedCategory == "Meals"
-                              ? _restaurants.length
-                              : 6,
-                      itemBuilder: (context, index) {
-                        if (_selectedCategory != "Meals") {
-                          return blankCard();
+                    height: 280,
+                    child: Builder(
+                      builder: (context) {
+                        final filteredRestaurants = _selectedCategory == "All"
+                            ? _restaurants
+                            : _restaurants.where((resto) {
+                          return resto.menu.any((item) =>
+                          (item['category'] as String)
+                              .toLowerCase() ==
+                              _selectedCategory.toLowerCase());
+                        }).toList();
+
+                        if (filteredRestaurants.isEmpty) {
+                          return const Center(
+                            child: Text(
+                                "No restaurants found in this category."),
+                          );
                         }
 
-                        final resto = _restaurants[index];
-
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        RestoDetailScreen(restoId: resto.id),
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: ScrollConfiguration(
+                                behavior: const MaterialScrollBehavior()
+                                    .copyWith(
+                                  dragDevices: {
+                                    PointerDeviceKind.touch,
+                                    PointerDeviceKind.mouse,
+                                  },
+                                ),
+                                child: PageView.builder(
+                                  controller: _hotDealsPageController,
+                                  itemCount: filteredRestaurants.length,
+                                  padEnds: false,
+                                  physics: const BouncingScrollPhysics(),
+                                  itemBuilder: (context, index) {
+                                    final resto = filteredRestaurants[index];
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                RestoDetailScreen(
+                                                    restoId: resto.id),
+                                          ),
+                                        );
+                                      },
+                                      child: restoCard(
+                                        headerImageUrl: resto.headerImageUrl,
+                                        name: resto.name,
+                                        address: resto.address ?? '',
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            );
-                          },
-                          child: restoCard(
-                            headerImageUrl: resto.headerImageUrl,
-                            name: resto.name,
-                            address: resto.address ?? '',
-                          ),
+                            ),
+                            const SizedBox(height: 8),
+                            SmoothPageIndicator(
+                              controller: _hotDealsPageController,
+                              count: filteredRestaurants.length,
+                              effect: WormEffect(
+                                  activeDotColor: AppColors.button,
+                                  dotColor: Colors.grey,
+                                  dotHeight: 10,
+                                  dotWidth: 10,
+                                  spacing: 8),
+                              onDotClicked: (index) {
+                                _hotDealsPageController.animateToPage(
+                                    index,
+                                    duration:
+                                    const Duration(milliseconds: 400),
+                                    curve: Curves.easeInOut);
+                              },
+                            ),
+                          ],
                         );
                       },
                     ),
                   ),
 
                   const SizedBox(height: 16),
-                  // Most Bought Section
-                  sectionHeader("Most bought 🔥"),
+
+                  // Most Bought Carousel
+                  sectionHeader("Most Bought 🔥"),
                   const SizedBox(height: 8),
                   SizedBox(
-                    height: 250,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
+                    height: 280,
+                    child: Column(
                       children: [
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Ted’s Batchoy',
-                          address: 'Jaro Plaza',
+                        Expanded(
+                          child: ScrollConfiguration(
+                            behavior: const MaterialScrollBehavior().copyWith(
+                              dragDevices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              },
+                            ),
+                            child: PageView(
+                              controller: _mostBoughtPageController,
+                              padEnds: false,
+                              physics: const BouncingScrollPhysics(),
+                              children: [
+                                restoCard(
+                                  headerImageUrl: '',
+                                  name: '1) Ted’s Batchoy',
+                                  address: 'Jaro Plaza',
+                                ),
+                                restoCard(
+                                  headerImageUrl: '',
+                                  name: '2) Mang Inasal',
+                                  address: 'Diversion Road',
+                                ),
+                                restoCard(
+                                  headerImageUrl: '',
+                                  name: '3) Deco’s Batchoy',
+                                  address: 'City Proper',
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Mang Inasal',
-                          address: 'Diversion Road',
-                        ),
-                        restoCard(
-                          headerImageUrl: '',
-                          name: 'Deco’s Batchoy',
-                          address: 'City Proper',
+                        const SizedBox(height: 8),
+                        SmoothPageIndicator(
+                          controller: _mostBoughtPageController,
+                          count: 3,
+                          effect: WormEffect(
+                              activeDotColor: AppColors.button,
+                              dotColor: Colors.grey,
+                              dotHeight: 10,
+                              dotWidth: 10,
+                              spacing: 8),
+                          onDotClicked: (index) {
+                            _mostBoughtPageController.animateToPage(
+                                index,
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeInOut);
+                          },
                         ),
                       ],
                     ),
@@ -868,3 +947,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+

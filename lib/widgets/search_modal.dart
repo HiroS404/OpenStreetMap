@@ -25,6 +25,7 @@ class _SearchModalState extends State<SearchModal> {
         await FirebaseFirestore.instance
             .collection('restaurants')
             .where('menu', arrayContains: query.toLowerCase())
+            .where('drinks', arrayContains: query.toLowerCase())
             .get();
 
     final List<Map<String, dynamic>> fetchedResults =
