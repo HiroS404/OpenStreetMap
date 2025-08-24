@@ -66,7 +66,7 @@ class RestoDetailScreen extends StatelessWidget {
                   .toString(),
             ];
           }
-          // Ensure exactly 3 slots
+          //  3 slots
           while (optionalUrls.length < 3) {
             optionalUrls.add('');
           }
@@ -160,7 +160,7 @@ class RestoDetailScreen extends StatelessWidget {
                             'Go to directions',
                             style: TextStyle(color: _brand),
                           ),
-                          onPressed: () {}, // read-only layout
+                          onPressed: () {}, // todo
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -176,111 +176,7 @@ class RestoDetailScreen extends StatelessWidget {
                       const SizedBox(height: 8),
 
                       // Menu Grid in the same visual style as owner dashboard
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 800;
-                          final crossAxisCount = isWide ? 2 : 1;
-                          final aspectRatio = isWide ? 6.5 : 5.5;
-
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: menuList.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: aspectRatio,
-                                ),
-                            itemBuilder: (context, index) {
-                              final item = menuList[index];
-                              final itemName =
-                                  (item is Map && item['name'] != null)
-                                      ? item['name'].toString()
-                                      : (item?.toString() ?? '');
-                              final category =
-                                  (item is Map && item['category'] != null)
-                                      ? item['category'].toString()
-                                      : '';
-                              final price =
-                                  (item is Map && item['price'] != null)
-                                      ? item['price'].toString()
-                                      : '';
-
-                              return Card(
-                                color: const Color(0xFFecc39e),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child: Text(
-                                          itemName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Center(
-                                        child: Text(
-                                          '|',
-                                          style: TextStyle(
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Text(
-                                          category,
-                                          style: const TextStyle(
-                                            color: Color(0xFF8c8c8c),
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Center(
-                                        child: Text(
-                                          '|',
-                                          style: TextStyle(
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          price.isEmpty ? '' : '₱$price',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: _brand,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                      buildMenuList(menuList),
                     ],
                   ),
                 ),
@@ -313,6 +209,95 @@ class RestoDetailScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget buildMenuList(List menuList) {
+    final groupedMenu = groupMenuByCategory(menuList);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          groupedMenu.entries.map((entry) {
+            final category = entry.key;
+            final items = entry.value;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category title
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    category,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // Horizontal gallery of items
+                SizedBox(
+                  height: 160, // adjust card height
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: items.length,
+                    separatorBuilder: (context, _) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final itemName = (item['name'] ?? '').toString();
+                      final price = (item['price'] ?? '').toString();
+
+                      return Container(
+                        width: 140, // card width
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(20),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Item name
+                            Text(
+                              itemName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const Spacer(),
+                            // Price
+                            Text(
+                              price.isEmpty ? '' : '₱$price',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: _brand,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
     );
   }
 
@@ -385,6 +370,27 @@ class RestoDetailScreen extends StatelessWidget {
             ),
       ),
     );
+  }
+
+  /// Groups the menu list by category.
+  /// Each key = category name, value = list of menu items under that category.
+  Map<String, List<Map<String, dynamic>>> groupMenuByCategory(
+    List<dynamic> menuList,
+  ) {
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+
+    for (var item in menuList) {
+      if (item is Map<String, dynamic>) {
+        final category = (item['category'] ?? 'Uncategorized').toString();
+
+        if (!grouped.containsKey(category)) {
+          grouped[category] = [];
+        }
+        grouped[category]!.add(item);
+      }
+    }
+
+    return grouped;
   }
 }
 
