@@ -1,4 +1,4 @@
-import 'dart:async';
+// import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -28,15 +28,15 @@ void main() async {
     FlutterError.dumpErrorToConsole(details); // prints the full stack trace
   };
   // Catch any errors outside Flutter (e.g. async, platform channels)
-  runZonedGuarded(
-    () {
-      runApp(const MyApp());
-    },
-    (error, stack) {
-      debugPrint('❌ Caught by runZonedGuarded: $error');
-      debugPrintStack(stackTrace: stack);
-    },
-  );
+  runApp(const MyApp());
+  // runZonedGuarded(
+  //   () {
+  //     runApp(const MyApp());
+  //   },
+  //   (error, stack) {
+  //     debugPrint('❌ Caught by runZonedGuarded: $error');
+  //     debugPrintStack(stackTrace: stack);
+  //   },
 }
 
 class MyApp extends StatelessWidget {

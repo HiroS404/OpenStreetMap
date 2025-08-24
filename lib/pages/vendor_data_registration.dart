@@ -637,6 +637,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.map_rounded, color: Colors.deepOrange),
+
                   onPressed: () async {
                     final selectedLocation = await Navigator.push(
                       context,
@@ -666,7 +667,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
             ),
             const SizedBox(height: 16),
 
-           //to edit // Menu List Field
+            //to edit // Menu List Field
             // Menu List Field
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,7 +680,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
                 // ✅ Category dropdown first
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
+                  value: _selectedCategory,
                   items: [
                     ..._categories.map(
                       (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
