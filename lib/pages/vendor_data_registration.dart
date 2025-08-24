@@ -23,11 +23,37 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _addressController = TextEditingController();
-  final List<Map<String, dynamic>> _menuItems = [];
 
+  /// Group menu items by category (e.g. { "Soup": [{name, price}], "Dessert": [...] })
+  final Map<String, List<Map<String, dynamic>>> _menuByCategory = {};
+
+  /// Fields for adding an item
   final TextEditingController _menuNameController = TextEditingController();
   final TextEditingController _menuPriceController = TextEditingController();
-  final TextEditingController _menuCategoryController = TextEditingController();
+
+  /// Dropdown state
+  final List<String> _categories = []; // will hold existing categories
+  String? _selectedCategory; // currently chosen category
+
+  /// Used when the user picks "Add new category" in the dropdown
+  final TextEditingController _newCategoryController = TextEditingController();
+
+  void _ensureCategory(String cat) {
+    if (!_menuByCategory.containsKey(cat)) {
+      _menuByCategory[cat] = [];
+    }
+    if (!_categories.contains(cat)) {
+      _categories.add(cat);
+    }
+  }
+
+  @override
+  void dispose() {
+    _menuNameController.dispose();
+    _menuPriceController.dispose();
+    _newCategoryController.dispose();
+    super.dispose();
+  }
 
   // For mobile (non-web)
   XFile? _headerImage;
@@ -340,7 +366,19 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'address': _addressController.text.trim(),
-        'menu': _menuItems,
+        'menu':
+            _menuByCategory.entries
+                .expand(
+                  (entry) => entry.value.map(
+                    (item) => {
+                      'category': entry.key,
+                      'name': item['name'],
+                      'price': item['price'],
+                    },
+                  ),
+                )
+                .toList(),
+
         'headerImageUrl': headerImageUrl ?? '',
         'optionalImageUrl1': optionalImageUrl1 ?? '',
         'optionalImageUrl2': optionalImageUrl2 ?? '',
@@ -379,7 +417,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
       _nameController.clear();
       _descriptionController.clear();
       _addressController.clear();
-      _menuItems.clear();
+      _menuByCategory.clear();
       setState(() {
         _headerImage = null;
         _headerImageBytes = null;
@@ -404,9 +442,14 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
   void _addMenuItem() {
     final name = _menuNameController.text.trim();
     final priceText = _menuPriceController.text.trim();
-    final category = _menuCategoryController.text.trim();
 
-    if (name.isEmpty || priceText.isEmpty || category.isEmpty) {
+    // If user chose dropdown or new category
+    final category = _selectedCategory?.trim();
+
+    if (name.isEmpty ||
+        priceText.isEmpty ||
+        category == null ||
+        category.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please complete all menu fields')),
       );
@@ -422,17 +465,29 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
     }
 
     setState(() {
-      _menuItems.add({'name': name, 'price': price, 'category': category});
+      // make sure the category exists
+      _ensureCategory(category);
+
+      // add menu item under that category
+      _menuByCategory[category]!.add({'name': name, 'price': price});
     });
 
+    // clear inputs (but keep the selected category so they can add more quickly)
     _menuNameController.clear();
     _menuPriceController.clear();
-    _menuCategoryController.clear();
   }
 
-  void _removeMenuItem(int index) {
+  void _removeMenuItem(String category, int index) {
     setState(() {
-      _menuItems.removeAt(index);
+      _menuByCategory[category]?.removeAt(index);
+      // optional: if category becomes empty, remove it entirely
+      if (_menuByCategory[category]?.isEmpty ?? false) {
+        _menuByCategory.remove(category);
+        _categories.remove(category);
+        if (_selectedCategory == category) {
+          _selectedCategory = null;
+        }
+      }
     });
   }
 
@@ -608,6 +663,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
             const SizedBox(height: 16),
 
             // Menu List Field
+            // Menu List Field
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -616,6 +672,52 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
+
+                // ✅ Category dropdown first
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  items: [
+                    ..._categories.map(
+                      (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'add_new',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add, color: Colors.deepOrangeAccent),
+                          SizedBox(width: 8),
+                          Text("Add New Category"),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == 'add_new') {
+                      _showAddCategoryDialog(); // dialog to enter new category
+                    } else {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    prefixIcon: Icon(Icons.category),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.deepOrangeAccent,
+                        width: 2.0,
+                      ),
+                    ),
+                    floatingLabelStyle: TextStyle(
+                      color: Colors.deepOrangeAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Name field
                 TextField(
                   controller: _menuNameController,
                   decoration: const InputDecoration(
@@ -635,7 +737,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
                 const SizedBox(height: 8),
 
-                //price field
+                // Price field
                 TextField(
                   controller: _menuPriceController,
                   keyboardType: TextInputType.number,
@@ -656,28 +758,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
                 const SizedBox(height: 8),
 
-                // Category field
-                TextField(
-                  controller: _menuCategoryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.category),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.deepOrangeAccent,
-                        width: 2.0,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.deepOrangeAccent,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                //add button
+                // Add button
                 ElevatedButton.icon(
                   onPressed: _addMenuItem,
                   label: const Text("Add Menu List"),
@@ -689,26 +770,44 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                 ),
 
                 const SizedBox(height: 16),
-                //show added menu items
+
+                // Show added menu items
                 const Text(
                   "Current Menu: Added Menu Items",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _menuItems.length,
-                  itemBuilder: (context, index) {
-                    final item = _menuItems[index];
-                    return ListTile(
-                      leading: const Icon(Icons.restaurant_menu),
-                      title: Text('${item['name']} - \$${item['price']}'),
-                      subtitle: Text('${item['category']} '),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _removeMenuItem(index),
-                      ),
-                    );
-                  },
+                Column(
+                  children:
+                      _menuByCategory.entries.map((entry) {
+                        final category = entry.key;
+                        final items = entry.value;
+
+                        return ExpansionTile(
+                          title: Text(
+                            category,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          children:
+                              items.asMap().entries.map((e) {
+                                final index = e.key;
+                                final item = e.value;
+                                return ListTile(
+                                  leading: const Icon(Icons.restaurant_menu),
+                                  title: Text(
+                                    '${item['name']} - ₱${item['price']}',
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed:
+                                        () => _removeMenuItem(category, index),
+                                  ),
+                                );
+                              }).toList(),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -764,6 +863,48 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddCategoryDialog() {
+    final TextEditingController newCategoryController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Add New Category"),
+          content: TextField(
+            controller: newCategoryController,
+            decoration: const InputDecoration(
+              labelText: "Category Name",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // cancel
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newCategory = newCategoryController.text.trim();
+                if (newCategory.isNotEmpty) {
+                  setState(() {
+                    _categories.add(newCategory); // ✅ add to category list
+                    _selectedCategory = newCategory; // ✅ auto-select new one
+                  });
+                }
+                Navigator.pop(context); // close dialog
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrangeAccent,
+              ),
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
     );
   }
 }
