@@ -252,7 +252,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildCategoryChip("Nearby"),
+                _buildCategoryChip("All"),
                 _buildCategoryChip("Meals"),
                 _buildCategoryChip("Drinks"),
                 _buildCategoryChip("Fast Food"),
@@ -318,7 +318,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
-  String _selectedCategory = "Meals";
+  String _selectedCategory = "All";
 
   @override
   void initState() {
@@ -796,37 +796,55 @@ class _HomePageState extends State<HomePage> {
 
                   SizedBox(
                     height: 250,
-                    child: ListView.builder(
-                      controller: _hotDealsController,
-                      physics: const ClampingScrollPhysics(),
-                      scrollDirection: Axis.horizontal,
-                      itemCount:
-                          _selectedCategory == "Meals"
-                              ? _restaurants.length
-                              : 6,
-                      itemBuilder: (context, index) {
-                        if (_selectedCategory != "Meals") {
-                          return blankCard();
+                    child: Builder(
+                      builder: (context) {
+                        final filteredRestaurants =
+                            _selectedCategory == "All"
+                                ? _restaurants
+                                : _restaurants.where((resto) {
+                                  return resto.menu.any(
+                                    (item) =>
+                                        (item['category'] as String)
+                                            .toLowerCase() ==
+                                        _selectedCategory.toLowerCase(),
+                                  );
+                                }).toList();
+
+                        if (filteredRestaurants.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              "No restaurants found in this category.",
+                            ),
+                          );
                         }
 
-                        final resto = _restaurants[index];
+                        return ListView.builder(
+                          controller: _hotDealsController,
+                          physics: const ClampingScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: filteredRestaurants.length,
+                          itemBuilder: (context, index) {
+                            final resto = filteredRestaurants[index];
 
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        RestoDetailScreen(restoId: resto.id),
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => RestoDetailScreen(
+                                          restoId: resto.id,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: restoCard(
+                                headerImageUrl: resto.headerImageUrl,
+                                name: resto.name,
+                                address: resto.address ?? '',
                               ),
                             );
                           },
-                          child: restoCard(
-                            headerImageUrl: resto.headerImageUrl,
-                            name: resto.name,
-                            address: resto.address ?? '',
-                          ),
                         );
                       },
                     ),
