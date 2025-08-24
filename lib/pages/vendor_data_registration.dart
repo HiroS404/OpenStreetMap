@@ -662,7 +662,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
             ),
             const SizedBox(height: 16),
 
-            // Menu List Field
+           //to edit // Menu List Field
             // Menu List Field
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,7 +851,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
               onPressed: _saveToFirebase,
               icon: const Icon(Icons.save),
               label: const Text(
-                "Save to Firebase",
+                "Save Items",
                 style: TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
