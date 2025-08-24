@@ -19,10 +19,10 @@ class MenuManagementPage extends StatefulWidget {
 class _MenuManagementPageState extends State<MenuManagementPage> {
   final TextEditingController _menuNameController = TextEditingController();
   final TextEditingController _menuPriceController = TextEditingController();
-  
+
   final List<String> _categories = [];
   String? _selectedCategory;
-  
+
   // Group menu items by category
   final Map<String, List<Map<String, dynamic>>> _menuByCategory = {};
 
@@ -33,8 +33,10 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
   }
 
   void _initializeMenu() {
-    final currentMenu = List<Map<String, dynamic>>.from(widget.vendorData['menu'] ?? []);
-    
+    final currentMenu = List<Map<String, dynamic>>.from(
+      widget.vendorData['menu'] ?? [],
+    );
+
     // Group existing menu items by category
     for (var item in currentMenu) {
       final category = item['category'] ?? 'Uncategorized';
@@ -46,7 +48,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
       }
       _menuByCategory[category]!.add(item);
     }
-    
+
     // Set default category if none selected
     if (_selectedCategory == null && _categories.isNotEmpty) {
       _selectedCategory = _categories.first;
@@ -54,8 +56,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
   }
 
   void _addMenuItem() {
-    if (_menuNameController.text.isEmpty || 
-        _menuPriceController.text.isEmpty || 
+    if (_menuNameController.text.isEmpty ||
+        _menuPriceController.text.isEmpty ||
         _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -140,7 +142,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
             ElevatedButton(
               onPressed: () {
                 final newCategory = newCategoryController.text.trim();
-                if (newCategory.isNotEmpty && !_categories.contains(newCategory)) {
+                if (newCategory.isNotEmpty &&
+                    !_categories.contains(newCategory)) {
                   setState(() {
                     _categories.add(newCategory);
                     _selectedCategory = newCategory;
@@ -185,7 +188,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
           backgroundColor: Colors.green,
         ),
       );
-      
+
       Navigator.pop(context); // Return to profile page
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -210,10 +213,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFFE85205),
-        title: const Text(
-          'Manage Menu',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Manage Menu', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       backgroundColor: const Color(0xFFfcfcfc),
@@ -248,7 +248,8 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                       value: _selectedCategory,
                       items: [
                         ..._categories.map(
-                          (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+                          (cat) =>
+                              DropdownMenuItem(value: cat, child: Text(cat)),
                         ),
                         const DropdownMenuItem(
                           value: 'add_new',
@@ -280,9 +281,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                             width: 2.0,
                           ),
                         ),
-                        floatingLabelStyle: TextStyle(
-                          color: Color(0xFFE85205),
-                        ),
+                        floatingLabelStyle: TextStyle(color: Color(0xFFE85205)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -300,9 +299,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                             width: 2.0,
                           ),
                         ),
-                        floatingLabelStyle: TextStyle(
-                          color: Color(0xFFE85205),
-                        ),
+                        floatingLabelStyle: TextStyle(color: Color(0xFFE85205)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -321,9 +318,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                             width: 2.0,
                           ),
                         ),
-                        floatingLabelStyle: TextStyle(
-                          color: Color(0xFFE85205),
-                        ),
+                        floatingLabelStyle: TextStyle(color: Color(0xFFE85205)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -359,17 +354,12 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
 
             // Menu items grouped by category
             if (_menuByCategory.isEmpty)
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Text(
-                      'No menu items yet. Add your first item above!',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                    ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text(
+                    'No menu items yet. Add your first item above!',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ),
               )
@@ -378,50 +368,60 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                 final category = entry.key;
                 final items = entry.value;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ExpansionTile(
-                    title: Text(
-                      category,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFE85205),
+                final showAsDropdown = items.length > 3;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.restaurant_menu,
+                            color: Color(0xFFE85205),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            category,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color(0xFFE85205),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    leading: const Icon(
-                      Icons.restaurant_menu,
-                      color: Color(0xFFE85205),
-                    ),
-                    children: items.asMap().entries.map((e) {
-                      final index = e.key;
-                      final item = e.value;
-                      return ListTile(
-  title: Text(
-    item['name'] ?? '',
-    style: const TextStyle(fontWeight: FontWeight.w500),
-  ),
-  subtitle: Text('₱${item['price']}'),
-  trailing: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      IconButton(
-        icon: const Icon(Icons.edit, color: Colors.blue),
-        onPressed: () => _showEditDialog(category, index, item),
-      ),
-      IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red),
-        onPressed: () => _removeMenuItem(category, index),
-      ),
-    ],
-  ),
-);
 
-                    }).toList(),
-                  ),
+                    // ✅ If more than 3 items → ExpansionTile
+                    if (showAsDropdown)
+                      ExpansionTile(
+                        tilePadding: const EdgeInsets.only(left: 8.0),
+                        title: const Text(
+                          "Tap to View items",
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        children:
+                            items.asMap().entries.map((e) {
+                              final index = e.key;
+                              final item = e.value;
+
+                              return _buildMenuRow(category, index, item);
+                            }).toList(),
+                      )
+                    else
+                      // ✅ Otherwise show items directly
+                      ...items.asMap().entries.map((e) {
+                        final index = e.key;
+                        final item = e.value;
+
+                        return _buildMenuRow(category, index, item);
+                      }),
+
+                    const Divider(), // divider between categories
+                  ],
                 );
               }),
 
@@ -446,69 +446,116 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
       ),
     );
   }
-  void _showEditDialog(String category, int index, Map<String, dynamic> item) {
-  final TextEditingController nameController = TextEditingController(text: item['name']);
-  final TextEditingController priceController = TextEditingController(text: item['price'].toString());
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Edit Menu Item'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Menu Name'),
+  void _showEditDialog(String category, int index, Map<String, dynamic> item) {
+    final TextEditingController nameController = TextEditingController(
+      text: item['name'],
+    );
+    final TextEditingController priceController = TextEditingController(
+      text: item['price'].toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Menu Item'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Menu Name'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Price'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: priceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Price'),
+            ElevatedButton(
+              onPressed: () {
+                final updatedName = nameController.text.trim();
+                final updatedPrice =
+                    double.tryParse(priceController.text.trim()) ?? 0.0;
+
+                if (updatedName.isEmpty) return;
+
+                setState(() {
+                  _menuByCategory[category]![index] = {
+                    'name': updatedName,
+                    'price': updatedPrice,
+                    'category': category,
+                  };
+                });
+
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Menu item updated successfully!'),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final updatedName = nameController.text.trim();
-              final updatedPrice = double.tryParse(priceController.text.trim()) ?? 0.0;
+        );
+      },
+    );
+  }
 
-              if (updatedName.isEmpty) return;
-
-              setState(() {
-                _menuByCategory[category]![index] = {
-                  'name': updatedName,
-                  'price': updatedPrice,
-                  'category': category,
-                };
-              });
-
-              Navigator.pop(context);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Menu item updated successfully!'),
-                  backgroundColor: Colors.blue,
+  Widget _buildMenuRow(String category, int index, Map<String, dynamic> item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Name + Price
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item['name'] ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save'),
+              ),
+              Text(
+                '₱${item['price']}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+
+          // Edit + Delete buttons
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () => _showEditDialog(category, index, item),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _removeMenuItem(category, index),
+              ),
+            ],
           ),
         ],
-      );
-    },
-  );
-}
-
+      ),
+    );
+  }
 }
