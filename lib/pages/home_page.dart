@@ -313,7 +313,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final PageController _hotDealsPageController = PageController(
-      viewportFraction: 1);
+      viewportFraction: 1 );
   final PageController _mostBoughtPageController = PageController(
       viewportFraction: 1);
 
@@ -465,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                                   end: -1,
                                 ),
                                 badgeStyle: const badges.BadgeStyle(
-                                  padding: EdgeInsets.all(5),
+                                  padding: EdgeInsets.all(0),
                                   badgeColor: AppColors.button,
                                 ),
                                 badgeContent: const Text(
@@ -785,16 +785,19 @@ class _HomePageState extends State<HomePage> {
           // Content
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
+              padding: const EdgeInsets.only(left: 12, right: 1, bottom: 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
 
                   // Hot Deals Carousel
-                  sectionHeader("Hot Deals 🔥"),
+                  sectionHeader(
+                    _selectedCategory == "All" ? "Hot Deals 🔥" : _selectedCategory + "🔥",
+                  ),
                   const SizedBox(height: 8),
                   SizedBox(
+
                     height: 280,
                     child: Builder(
                       builder: (context) {
@@ -805,6 +808,7 @@ class _HomePageState extends State<HomePage> {
                           (item['category'] as String)
                               .toLowerCase() ==
                               _selectedCategory.toLowerCase());
+
                         }).toList();
 
                         if (filteredRestaurants.isEmpty) {
