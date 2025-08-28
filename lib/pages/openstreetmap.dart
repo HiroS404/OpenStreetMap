@@ -608,9 +608,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       );
 
       if (segment != null) {
-        // Score based on total walking distance
-        double score = segment.startWalkDistance + segment.endWalkDistance;
-
+        double score = segment.totalCost; // ✅ use total cost
         if (score < bestScore) {
           bestScore = score;
           bestSegment = segment;
@@ -618,7 +616,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         }
 
         // print(
-        //   "Route ${route.routeNumber}: startIndex=${segment.startIndex}, endIndex=${segment.endIndex}, walkDistStart=${segment.startWalkDistance.toStringAsFixed(0)}m, walkDistEnd=${segment.endWalkDistance.toStringAsFixed(0)}m",
+        //   "Route ${route.routeNumber}: "
+        //   "startIndex=${segment.startIndex}, "
+        //   "endIndex=${segment.endIndex}, "
+        //   "walkStart=${segment.startWalkDistance.toStringAsFixed(0)}m, "
+        //   "ride=${segment.rideDistance.toStringAsFixed(0)}m, "
+        //   "walkEnd=${segment.endWalkDistance.toStringAsFixed(0)}m, "
+        //   "totalCost=${segment.totalCost.toStringAsFixed(0)}",
         // );
       }
     }
@@ -630,54 +634,11 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     return bestRoute;
   }
 
-  JeepneyRoute? getMatchingRoute(
-    LatLng current,
-    LatLng destination,
-    List<JeepneyRoute> routes,
-  ) {
-    RouteSegment? bestSegment;
-    JeepneyRoute? bestRoute;
-    double bestScore = double.infinity;
-
-    for (final route in routes) {
-      final segment = findBestRouteSegment(
-        current,
-        destination,
-        route.coordinates,
-      );
-
-      if (segment != null) {
-        double score = segment.totalCost; // ✅ use total cost
-        if (score < bestScore) {
-          bestScore = score;
-          bestSegment = segment;
-          bestRoute = route;
-        }
-
-        print(
-          "Route ${route.routeNumber}: "
-          "startIndex=${segment.startIndex}, "
-          "endIndex=${segment.endIndex}, "
-          "walkStart=${segment.startWalkDistance.toStringAsFixed(0)}m, "
-          "ride=${segment.rideDistance.toStringAsFixed(0)}m, "
-          "walkEnd=${segment.endWalkDistance.toStringAsFixed(0)}m, "
-          "totalCost=${segment.totalCost.toStringAsFixed(0)}",
-        );
-      }
-    }
-
-    if (bestRoute != null && bestSegment != null) {
-      print("Best route selected: ${bestRoute.routeNumber}");
-    }
-
-    return bestRoute;
-  }
-
   List<JeepneyRoute> getTopNearbyRoutes(
     LatLng current,
     LatLng destination,
     List<JeepneyRoute> routes, {
-    int limit = 1, // routes debugger colorerd
+    int limit = 999, // routes debugger colorerd
   }) {
     List<MapEntry<JeepneyRoute, double>> scoredRoutes = [];
 
