@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -143,56 +144,56 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     loadRouteData();
 
     // For debugging DO NOT DELETE: Use a fixed location in Iloilo City
-    // const LatLng debuggingLocation = LatLng(
-    //   // 10.732143,
-    //   // 122.559791, //tabuc suba jollibe
-    //   // 10.731958,
-    //   // 122.560223, //sulodlon debug
-    //   // 10.732178,
-    //   // 122.559673, //tabuc suba sa piyak
-    //   // 10.733472,
-    //   // 122.548947, //tubang CPU
-    //   10.732610,
-    //   122.548220, // mt building
-    //   // 10.715609,
-    //   // 122.562715, // ColdZone West
-    //   // 10.725203,
-    //   // 122.556715, //Jaro plaza
-    //   // 10.696694,
-    //   // 122.545582, //Molo Plazas
-    //   // 10.694928, 122.564686, //Rob Main
-    //   // 10.753623,
-    //   // 122.538430, //Gt mall
-    //   // 10.714335,
-    //   // 122.551852, // Sm City
-    //   // 10.731993,
-    //   // 122.549291, //promenade cpu
-    // );
+    const LatLng debuggingLocation = LatLng(
+      // 10.732143,
+      // 122.559791, //tabuc suba jollibe
+      // 10.731958,
+      // 122.560223, //sulodlon debug
+      // 10.732178,
+      // 122.559673, //tabuc suba sa piyak
+      // 10.733472,
+      // 122.548947, //tubang CPU
+      10.732610,
+      122.548220, // mt building
+      // 10.715609,
+      // 122.562715, // ColdZone West
+      // 10.725203,
+      // 122.556715, //Jaro plaza
+      // 10.696694,
+      // 122.545582, //Molo Plazas
+      // 10.694928, 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+      // 10.714335,
+      // 122.551852, // Sm City
+      // 10.731993,
+      // 122.549291, //promenade cpu
+    );
 
-    // setState(() {
-    //   _currentLocation = debuggingLocation;
-    //   isLoading = false;
-    // });
-    // _destinationNotifier.value = const LatLng(
-    //   // 10.731068,
-    //   // 122.551723, //sarap station
-    //   // 10.732143, 122.559791, //tabuc suba jollibe
-    //   // 10.715609,
-    //   // 122.562715, // ColdZone West
-    //   // 10.733472, 122.548947, //tubang CPU
-    //   // 10.696694, 122.545582, //Molo Plazas
-    //   // 10.694928,
-    //   // 122.564686, //Rob Main
-    //   // 10.753623,
-    //   // 122.538430, //Gt mall
-    //   // 10.727482,
-    //   // 122.558188, // alicias
-    //   10.714335,
-    //   122.551852, // Sm City
-    // ); // your test destination
-    // _destination = _destinationNotifier.value;
+    setState(() {
+      _currentLocation = debuggingLocation;
+      isLoading = false;
+    });
+    _destinationNotifier.value = const LatLng(
+      10.731068,
+      122.551723, //sarap station
+      // 10.732143, 122.559791, //tabuc suba jollibe
+      // 10.715609,
+      // 122.562715, // ColdZone West
+      // 10.733472, 122.548947, //tubang CPU
+      // 10.696694, 122.545582, //Molo Plazas
+      // 10.694928,
+      // 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+      // 10.727482,
+      // 122.558188, // alicias
+      // 10.714335,
+      // 122.551852, // Sm City
+    ); // your test destination
+    _destination = _destinationNotifier.value;
 
-    // loadRouteData(); // Load jeepney routes based on this location
+    loadRouteData(); // Load jeepney routes based on this location
   }
 
   //initial map zoom and center
@@ -482,9 +483,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     for (final route in allRoutes) {
       bool nearCurrent = route.isPointNearRoute(
         current,
-        1000,
+        99999,
       ); // 500, 1000 edit later after debugging, distance between user and route
-      bool nearDestination = route.isPointNearRoute(destination, 1000);
+      bool nearDestination = route.isPointNearRoute(destination, 99999);
 
       // DEBUG: print distances to destination for this route
       double minDistToDest = double.infinity;
@@ -513,7 +514,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     LatLng current,
     LatLng destination,
     List<JeepneyRoute> routes, {
-    int limit = 1,
+    int limit = 999, // routes debugger colorerd
   }) {
     List<MapEntry<JeepneyRoute, double>> scoredRoutes = [];
 
@@ -698,20 +699,21 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         ),
         children: [
           TileLayer(
-            urlTemplate: 'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
+            urlTemplate:
+                'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
             tileProvider: CancellableNetworkTileProvider(),
           ),
           //uncomment this for debugging using fix or manual  location
-          // CurrentLocationLayer(
-          //   style: LocationMarkerStyle(
-          //     marker: DefaultLocationMarker(
-          //       child: Icon(Icons.location_pin, color: Colors.blue),
-          //     ),
-          //     markerSize: const Size(35, 35),
+          CurrentLocationLayer(
+            style: LocationMarkerStyle(
+              marker: DefaultLocationMarker(
+                child: Icon(Icons.location_pin, color: Colors.blue),
+              ),
+              markerSize: const Size(35, 35),
 
-          //     markerDirection: MarkerDirection.heading,
-          //   ),
-          // ),
+              markerDirection: MarkerDirection.heading,
+            ),
+          ),
 
           // Walking dotted line
           if (walkingPolylines.isNotEmpty)
@@ -721,28 +723,33 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               polylines: [
                 Polyline(
                   points: _route,
-                  color: const Color.fromARGB(255, 255, 143, 0), // cropped segment (may bug)
+                  color: const Color.fromARGB(
+                    255,
+                    255,
+                    143,
+                    0,
+                  ), // cropped segment (may bug)
                   strokeWidth: 4,
                 ),
               ],
             ),
-            
+
           // //currentlocation debugger for fixed location
-          if (_currentLocation != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _currentLocation!,
-                  width: 40,
-                  height: 40,
-                  child: const Icon(
-                    Icons.person_pin_circle_outlined,
-                    size: 40,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
+          // if (_currentLocation != null)
+          //   MarkerLayer(
+          //     markers: [
+          //       Marker(
+          //         point: _currentLocation!,
+          //         width: 40,
+          //         height: 40,
+          //         child: const Icon(
+          //           Icons.person_pin_circle_outlined,
+          //           size: 40,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
           //delete the above for debuggin only using the fix or manual location
           if (_destinationNotifier.value != null)
             MarkerLayer(
@@ -761,33 +768,33 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
             ),
 
           // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
-          // if (allRoutes.isNotEmpty)
-          //   PolylineLayer(
-          //     polylines:
-          //         allRoutes.map((route) {
-          //           return Polyline(
-          //             points: route.coordinates,
-          //             color: _getColorForRoute(
-          //               route.routeNumber,
-          //             ).withAlpha((0.5 * 255).toInt()), //7 opacity
-          //             strokeWidth: 6,
-          //           );
-          //         }).toList(),
-          //   ),
-          // if (_matchedRoute != null)
-          //   PolylineLayer(
-          //     polylines: [
-          //       Polyline(
-          //         points: _matchedRoute!.coordinates,
-          //         color: _getColorForRoute(
-          //           _matchedRoute!.routeNumber,
-          //         ).withAlpha((0.1 * 255).toInt()), // 20% opacity
-          //         strokeWidth: 10,
-          //       ),
-          //     ],
-          //   ),
+          if (allRoutes.isNotEmpty)
+            PolylineLayer(
+              polylines:
+                  allRoutes.map((route) {
+                    return Polyline(
+                      points: route.coordinates,
+                      color: _getColorForRoute(
+                        route.routeNumber,
+                      ).withAlpha((0.5 * 255).toInt()), //7 opacity
+                      strokeWidth: 6,
+                    );
+                  }).toList(),
+            ),
+          if (_matchedRoute != null)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: _matchedRoute!.coordinates,
+                  color: _getColorForRoute(
+                    _matchedRoute!.routeNumber,
+                  ).withAlpha((0.1 * 255).toInt()), // 20% opacity
+                  strokeWidth: 10,
+                ),
+              ],
+            ),
+
           // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
-            
         ],
       ),
       floatingActionButton: Stack(
@@ -832,21 +839,21 @@ Color _getColorForRoute(String routeNumber) {
   switch (routeNumber) {
     case '3':
       return const Color.fromARGB(255, 241, 41, 41);
-    case '10':
-      return const Color.fromARGB(255, 31, 118, 34);
-    case '11':
-      return Colors.purple;
-    case '2':
-      return const Color.fromARGB(255, 116, 73, 8);
-    case '4':
-      return const Color.fromARGB(255, 72, 233, 77);
-    case '25':
-      return Colors.black;
-    case '1A':
-      return const Color.fromARGB(255, 210, 92, 131);
-    case '1B':
-      return const Color.fromARGB(255, 11, 50, 243);
+    // case '10':
+    //   return const Color.fromARGB(255, 31, 118, 34);
+    // case '11':
+    //   return Colors.purple;
+    // case '2':
+    //   return const Color.fromARGB(255, 116, 73, 8);
+    // case '4':
+    //   return const Color.fromARGB(255, 72, 233, 77);
+    // case '25':
+    //   return Colors.black;
+    // case '1A':
+    //   return const Color.fromARGB(255, 210, 92, 131);
+    // case '1B':
+    //   return const Color.fromARGB(255, 11, 50, 243);
     default:
-      return Colors.black;
+      return Colors.transparent; // Default color if route number not matched
   }
 }
