@@ -837,22 +837,30 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
 Color _getColorForRoute(String routeNumber) {
   switch (routeNumber) {
-    case '3':
-      return const Color.fromARGB(255, 241, 41, 41);
-    // case '10':
-    //   return const Color.fromARGB(255, 31, 118, 34);
+    // case '3':
+    //   return const Color.fromARGB(255, 51, 181, 103);
     // case '11':
-    //   return Colors.purple;
+    //   return const Color.fromARGB(255, 233, 23, 248);
+    // case '15':
+    //   return const Color.fromARGB(255, 255, 77, 0);
     // case '2':
-    //   return const Color.fromARGB(255, 116, 73, 8);
+    //   return const Color.fromARGB(255, 255, 204, 0);
     // case '4':
     //   return const Color.fromARGB(255, 72, 233, 77);
+    //   case '5':
+    //   return const Color.fromARGB(255, 0, 26, 255);
     // case '25':
-    //   return Colors.black;
-    // case '1A':
-    //   return const Color.fromARGB(255, 210, 92, 131);
-    // case '1B':
-    //   return const Color.fromARGB(255, 11, 50, 243);
+    //   return const Color.fromARGB(255, 255, 234, 0);
+    // case '1':
+    //   return const Color.fromARGB(255, 255, 255, 255);
+    // case '7':
+    //   return const Color.fromARGB(255, 87, 25, 78);
+    // case '9':
+    //   return const Color.fromARGB(255, 66, 41, 28);
+    // // case '1A':
+    // //   return const Color.fromARGB(255, 210, 92, 131);
+    // // case '1B':
+    // //   return const Color.fromARGB(255, 11, 50, 243);
     default:
       return Colors.transparent; // Default color if route number not matched
   }
