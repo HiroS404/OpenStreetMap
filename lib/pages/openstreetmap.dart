@@ -26,7 +26,7 @@ double bearing(LatLng from, LatLng to) {
 bool isForward(
   double routeBearing,
   double targetBearing, {
-  double tolerance = 300,
+  double tolerance = 60,
 }) {
   // normalize difference to [-180, 180]
   double diff = (routeBearing - targetBearing + 540) % 360 - 180;
@@ -198,6 +198,43 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     //   10.695724,
     //   122.566170, //center city prop
     // );
+    const LatLng debuggingLocation = LatLng(
+      // 10.732143,
+      // 122.559791, //tabuc suba jollibe
+      // 10.731958,
+      // 122.560223, //sulodlon debug
+      // 10.732178,
+      // 122.559673, //tabuc suba sa piyak
+      // 10.733472,
+      // 122.548947, //tubang CPU
+      // 10.732610,
+      // 122.548220, // mt building
+      // 10.715609,
+      // 122.562715, // ColdZone West
+      // 10.725203,
+      // 122.556715, //Jaro plaza
+      10.696694,
+      122.545582, //Molo Plazas
+      // 10.694928, 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+      // 10.714335,
+      // 122.551852, // Sm City
+      // 10.731993,
+      // 122.549291, //promenade cpu
+      // 10.692037,
+      // 122.583255, // CT Parola
+      // 10.726009,
+      // 122.557774, // lapit alicias ah
+      // 10.726947,
+      // 122.558021, // lapit pgd
+      // 10.695724,
+      // 122.566170
+      // Center city proper
+      // 10.695522,
+      // 122.566212
+      // Center City proper across
+    );
 
     // setState(() {
     //   _currentLocation = debuggingLocation;
@@ -226,6 +263,33 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     //   122.543888, //molo
     // ); // your test destination
     // _destination = _destinationNotifier.value;
+    setState(() {
+      _currentLocation = debuggingLocation;
+      isLoading = false;
+    });
+    _destinationNotifier.value = const LatLng(
+      // 10.731068,
+      // 122.551723, //sarap station
+      // 10.732143, 122.559791, //tabuc suba jollibe
+      // 10.715609,
+      // 122.562715, // ColdZone West
+      // 10.733472,
+      // 122.548947, //tubang CPU
+      // 10.696694, 122.545582, //Molo Plazas
+      // 10.694928,
+      // 122.564686, //Rob Main
+      // 10.753623,
+      // 122.538430, //Gt mall
+      // 10.727482,
+      // 122.558188, // alicias
+      // 10.714335,
+      // 122.551852, // Sm City
+      // 10.697643,
+      // 122.543888 // Molo
+      10.693202,
+      122.500595, // mohon term
+    ); // your test destination
+    _destination = _destinationNotifier.value;
 
     // loadRouteData(); // Load jeepney routes based on this location
   }
@@ -566,6 +630,49 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     return bestRoute;
   }
 
+  JeepneyRoute? getMatchingRoute(
+    LatLng current,
+    LatLng destination,
+    List<JeepneyRoute> routes,
+  ) {
+    RouteSegment? bestSegment;
+    JeepneyRoute? bestRoute;
+    double bestScore = double.infinity;
+
+    for (final route in routes) {
+      final segment = findBestRouteSegment(
+        current,
+        destination,
+        route.coordinates,
+      );
+
+      if (segment != null) {
+        double score = segment.totalCost; // ✅ use total cost
+        if (score < bestScore) {
+          bestScore = score;
+          bestSegment = segment;
+          bestRoute = route;
+        }
+
+        print(
+          "Route ${route.routeNumber}: "
+          "startIndex=${segment.startIndex}, "
+          "endIndex=${segment.endIndex}, "
+          "walkStart=${segment.startWalkDistance.toStringAsFixed(0)}m, "
+          "ride=${segment.rideDistance.toStringAsFixed(0)}m, "
+          "walkEnd=${segment.endWalkDistance.toStringAsFixed(0)}m, "
+          "totalCost=${segment.totalCost.toStringAsFixed(0)}",
+        );
+      }
+    }
+
+    if (bestRoute != null && bestSegment != null) {
+      print("Best route selected: ${bestRoute.routeNumber}");
+    }
+
+    return bestRoute;
+  }
+
   List<JeepneyRoute> getTopNearbyRoutes(
     LatLng current,
     LatLng destination,
@@ -901,48 +1008,63 @@ RouteSegment? findBestRouteSegment(
   LatLng current,
   LatLng destination,
   List<LatLng> coords, {
-  double maxWalkDistance = 1000, // in meters
+  double maxWalkDistance = 200,
+  double snapThreshold = 25, // allow across-street snapping
 }) {
   final distance = Distance();
   final targetBearing = bearing(current, destination);
 
-  int? bestStartIndex;
-  int? bestEndIndex;
-  double bestStartDist = double.infinity;
-  double bestEndDist = double.infinity;
+  List<RouteSegment> candidates = [];
 
-  // Find closest forward-facing start point
   for (int i = 0; i < coords.length - 1; i++) {
     final segBearing = bearing(coords[i], coords[i + 1]);
-    final d = distance.as(LengthUnit.Meter, current, coords[i]);
+    final dStart = distance.as(LengthUnit.Meter, current, coords[i]);
 
-    if (d <= maxWalkDistance && isForward(segBearing, targetBearing)) {
-      if (d < bestStartDist) {
-        bestStartDist = d;
-        bestStartIndex = i;
+    // Skip far away points
+    if (dStart > maxWalkDistance && dStart > snapThreshold) continue;
+
+    // Snap-to-route override OR forward check
+    if (dStart <= snapThreshold ||
+        isForward(segBearing, targetBearing, tolerance: 60)) {
+      // Find best endIndex after i
+      int? bestEnd;
+      double bestEndDist = double.infinity;
+      for (int j = i + 1; j < coords.length; j++) {
+        final dEnd = distance.as(LengthUnit.Meter, destination, coords[j]);
+        if (dEnd < bestEndDist && dEnd <= maxWalkDistance) {
+          bestEnd = j;
+          bestEndDist = dEnd;
+        }
       }
+      if (bestEnd == null) continue;
+
+      // Compute ride distance
+      double rideDist = 0.0;
+      for (int k = i; k < bestEnd; k++) {
+        rideDist += distance.as(LengthUnit.Meter, coords[k], coords[k + 1]);
+      }
+
+      // Total trip cost (you can weight walk more if you want)
+      double totalCost = dStart + rideDist + bestEndDist;
+
+      candidates.add(
+        RouteSegment(
+          startIndex: i,
+          endIndex: bestEnd,
+          startWalkDistance: dStart,
+          endWalkDistance: bestEndDist,
+          rideDistance: rideDist,
+          totalCost: totalCost,
+        ),
+      );
     }
   }
 
-  if (bestStartIndex == null) return null;
+  if (candidates.isEmpty) return null;
 
-  // Now find closest destination point AFTER startIndex
-  for (int j = bestStartIndex + 1; j < coords.length; j++) {
-    final d = distance.as(LengthUnit.Meter, destination, coords[j]);
-    if (d < bestEndDist && d <= maxWalkDistance) {
-      bestEndDist = d;
-      bestEndIndex = j;
-    }
-  }
-
-  if (bestEndIndex == null) return null;
-
-  return RouteSegment(
-    startIndex: bestStartIndex,
-    endIndex: bestEndIndex,
-    startWalkDistance: bestStartDist,
-    endWalkDistance: bestEndDist,
-  );
+  // Pick best candidate by total cost
+  candidates.sort((a, b) => a.totalCost.compareTo(b.totalCost));
+  return candidates.first;
 }
 
 // Helper class to store route segment information
@@ -951,11 +1073,15 @@ class RouteSegment {
   final int endIndex;
   final double startWalkDistance;
   final double endWalkDistance;
+  final double rideDistance;
+  final double totalCost;
 
   RouteSegment({
     required this.startIndex,
     required this.endIndex,
     required this.startWalkDistance,
     required this.endWalkDistance,
+    required this.rideDistance,
+    required this.totalCost,
   });
 }
