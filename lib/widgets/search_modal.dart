@@ -15,44 +15,52 @@ class _SearchModalState extends State<SearchModal> {
   final Map<String, List<Map<String, dynamic>>> _searchCache = {};
 
   void _searchRestaurants(String query) async {
-    if (_searchCache.containsKey(query)) {
-      setState(() {
-        _results = _searchCache[query]!;
-      });
-      return;
-    }
-    final snapshot =
-        await FirebaseFirestore.instance
-            .collection('restaurants')
-            .where('menu', arrayContains: query.toLowerCase())
-            .where('drinks', arrayContains: query.toLowerCase())
-            .get();
-
-    final List<Map<String, dynamic>> fetchedResults =
-        snapshot.docs.map((doc) {
-          final data = doc.data();
-
-          // Extract latitude and longitude as numbers (assumed as 'num' type in Firestore)
-          final latitude = data['latitude'] as double? ?? 0.0;
-          final longitude = data['longitude'] as double? ?? 0.0;
-
-          return {
-            'name': data['name'],
-            'route': data['route'],
-            'latitude': latitude,
-            'longitude': longitude,
-            'address': data['address'],
-            'photoUrl': data['photoUrl'],
-          };
-        }).toList();
-
-    // Store in cache
-    _searchCache[query] = fetchedResults;
-
+  if (_searchCache.containsKey(query)) {
     setState(() {
-      _results = fetchedResults;
+      _results = _searchCache[query]!;
     });
+    return;
   }
+
+  final lowerQuery = query.toLowerCase();
+
+  // Query 1: menu
+  final menuSnapshot = await FirebaseFirestore.instance
+      .collection('restaurants')
+      .where('menu', arrayContains: lowerQuery)
+      .get();
+
+  // Query 2: drinks
+  final drinksSnapshot = await FirebaseFirestore.instance
+      .collection('restaurants')
+      .where('drinks', arrayContains: lowerQuery)
+      .get();
+
+  // Merge and deduplicate
+  final allDocs = {
+    for (final doc in [...menuSnapshot.docs, ...drinksSnapshot.docs])
+      doc.id: doc // deduplication by document ID
+  };
+
+  final List<Map<String, dynamic>> fetchedResults = allDocs.values.map((doc) {
+    final data = doc.data();
+
+    return {
+      'name': data['name'],
+      'route': data['route'],
+      'latitude': (data['latitude'] as double?) ?? 0.0,
+      'longitude': (data['longitude'] as double?) ?? 0.0,
+      'address': data['address'],
+      'photoUrl': data['photoUrl'],
+    };
+  }).toList();
+
+  _searchCache[query] = fetchedResults;
+
+  setState(() {
+    _results = fetchedResults;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
