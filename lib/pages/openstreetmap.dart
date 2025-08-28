@@ -153,8 +153,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.559673, //tabuc suba sa piyak
       // 10.733472,
       // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
+      // 10.732610,
+      // 122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -168,6 +168,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.551852, // Sm City
       // 10.731993,
       // 122.549291, //promenade cpu
+      // 10.692037,
+      // 122.583255, // CT Parola
+      // 10.726009,
+      // 122.557774, // lapit alicias ah
+      10.726947,
+      122.558021, // lapit pgd
     );
 
     setState(() {
@@ -175,12 +181,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       isLoading = false;
     });
     _destinationNotifier.value = const LatLng(
-      10.731068,
-      122.551723, //sarap station
+      // 10.731068,
+      // 122.551723, //sarap station
       // 10.732143, 122.559791, //tabuc suba jollibe
       // 10.715609,
       // 122.562715, // ColdZone West
-      // 10.733472, 122.548947, //tubang CPU
+      10.733472,
+      122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
       // 122.564686, //Rob Main
@@ -483,9 +490,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     for (final route in allRoutes) {
       bool nearCurrent = route.isPointNearRoute(
         current,
-        99999,
+        700,
       ); // 500, 1000 edit later after debugging, distance between user and route
-      bool nearDestination = route.isPointNearRoute(destination, 99999);
+      bool nearDestination = route.isPointNearRoute(destination, 700);
 
       // DEBUG: print distances to destination for this route
       double minDistToDest = double.infinity;
@@ -704,16 +711,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
             tileProvider: CancellableNetworkTileProvider(),
           ),
           //uncomment this for debugging using fix or manual  location
-          CurrentLocationLayer(
-            style: LocationMarkerStyle(
-              marker: DefaultLocationMarker(
-                child: Icon(Icons.location_pin, color: Colors.blue),
-              ),
-              markerSize: const Size(35, 35),
+          // CurrentLocationLayer(
+          //   style: LocationMarkerStyle(
+          //     marker: DefaultLocationMarker(
+          //       child: Icon(Icons.location_pin, color: Colors.blue),
+          //     ),
+          //     markerSize: const Size(35, 35),
 
-              markerDirection: MarkerDirection.heading,
-            ),
-          ),
+          //     markerDirection: MarkerDirection.heading,
+          //   ),
+          // ),
 
           // Walking dotted line
           if (walkingPolylines.isNotEmpty)
@@ -735,21 +742,21 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
             ),
 
           // //currentlocation debugger for fixed location
-          // if (_currentLocation != null)
-          //   MarkerLayer(
-          //     markers: [
-          //       Marker(
-          //         point: _currentLocation!,
-          //         width: 40,
-          //         height: 40,
-          //         child: const Icon(
-          //           Icons.person_pin_circle_outlined,
-          //           size: 40,
-          //           color: Colors.white,
-          //         ),
-          //       ),
-          //     ],
-          //   ),
+          if (_currentLocation != null)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: _currentLocation!,
+                  width: 40,
+                  height: 40,
+                  child: const Icon(
+                    Icons.person_pin_circle_outlined,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           //delete the above for debuggin only using the fix or manual location
           if (_destinationNotifier.value != null)
             MarkerLayer(
@@ -768,31 +775,31 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
             ),
 
           // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
-          if (allRoutes.isNotEmpty)
-            PolylineLayer(
-              polylines:
-                  allRoutes.map((route) {
-                    return Polyline(
-                      points: route.coordinates,
-                      color: _getColorForRoute(
-                        route.routeNumber,
-                      ).withAlpha((0.5 * 255).toInt()), //7 opacity
-                      strokeWidth: 6,
-                    );
-                  }).toList(),
-            ),
-          if (_matchedRoute != null)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _matchedRoute!.coordinates,
-                  color: _getColorForRoute(
-                    _matchedRoute!.routeNumber,
-                  ).withAlpha((0.1 * 255).toInt()), // 20% opacity
-                  strokeWidth: 10,
-                ),
-              ],
-            ),
+          // if (allRoutes.isNotEmpty)
+          //   PolylineLayer(
+          //     polylines:
+          //         allRoutes.map((route) {
+          //           return Polyline(
+          //             points: route.coordinates,
+          //             color: _getColorForRoute(
+          //               route.routeNumber,
+          //             ).withAlpha((0.5 * 255).toInt()), //7 opacity
+          //             strokeWidth: 6,
+          //           );
+          //         }).toList(),
+          //   ),
+          // if (_matchedRoute != null)
+          //   PolylineLayer(
+          //     polylines: [
+          //       Polyline(
+          //         points: _matchedRoute!.coordinates,
+          //         color: _getColorForRoute(
+          //           _matchedRoute!.routeNumber,
+          //         ).withAlpha((0.1 * 255).toInt()), // 20% opacity
+          //         strokeWidth: 10,
+          //       ),
+          //     ],
+          //   ),
 
           // POLY LINE FOR THE JEEPNEY ROUTE DELETE IF UNECESSARY
         ],
