@@ -483,40 +483,56 @@ class _HomePageState extends State<HomePage> {
                                     fontSize: 10,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.notifications_none,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
+                          child:
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Create Resto (CTA style icon chip)
                               Container(
                                 width: 38,
                                 height: 38,
-                                decoration: BoxDecoration(
-                                //  color: Colors.deepOrange,
+                                decoration: const BoxDecoration(
+                                  color: Colors.deepOrange,
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.sysAccent.withAlpha(40),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
-                                // Remove this IconButton entirely:
-                                // child: IconButton(
-                                //   icon: const Icon(
-                                //     Icons.person_outline_rounded,
-                                //     color: Colors.white,
-                                //     size: 25,
-                                //   ),
-                                //   onPressed: () {},
-                                // ),
+
+                                child: const Icon(
+                                  Icons.notifications,
+                                  color: Colors.white,
+                                ),
                               ),
+                              // const SizedBox(width: 6),
+                              // Container(
+                              //   width: 38,
+                              //   height: 38,
+                              //   decoration: BoxDecoration(
+                              //   //  color: Colors.deepOrange,
+                              //     shape: BoxShape.circle,
+                              //     boxShadow: [
+                              //       BoxShadow(
+                              //         color: AppColors.sysAccent.withAlpha(40),
+                              //         blurRadius: 6,
+                              //         offset: const Offset(0, 2),
+                              //       ),
+                              //     ],
+                              //   ),
+                              //   // Remove this IconButton entirely:
+                              //   // child: IconButton(
+                              //   //   icon: const Icon(
+                              //   //     Icons.person_outline_rounded,
+                              //   //     color: Colors.white,
+                              //   //     size: 25,
+                              //   //   ),
+                              //   //   onPressed: () {},
+                              //   // ),
+                              // ),
                             ],
                           ),
+                              )
                         ],
                       ),
+                      ]
+                    ),
                     ),
 
                     // Location, Title, Subtitle (only visible when header is expanded)
