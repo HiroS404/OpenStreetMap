@@ -317,6 +317,14 @@ class _HomePageState extends State<HomePage> {
   final PageController _mostBoughtPageController = PageController(
       viewportFraction: 1);
 
+  final Map<String, String> categoryEmojis = {
+    "All": "🔥",
+    "Meals": "🍴",
+    "Drinks": "🥤",
+    "Fast Food": "🍔",
+    "Snacks": "🍟",
+  };
+
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
 
@@ -785,14 +793,18 @@ class _HomePageState extends State<HomePage> {
           // Content
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
+              padding: const EdgeInsets.only(left: 12, right: 1, bottom: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
 
                   // Hot Deals Carousel
-                  sectionHeader("Hot Deals 🔥"),
+                  sectionHeader(
+                    _selectedCategory == "All"
+                        ? "Hot Deals ${categoryEmojis[_selectedCategory]}"
+                        : "${_selectedCategory} ${categoryEmojis[_selectedCategory] ?? ''}",
+                  ),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 280,
@@ -880,7 +892,11 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
 
                   // Most Bought Carousel
-                  sectionHeader("Most Bought 🔥"),
+                  sectionHeader(
+                    _selectedCategory == "All"
+                        ? "Hot Deals ${categoryEmojis[_selectedCategory]}"
+                        : "${_selectedCategory} ${categoryEmojis[_selectedCategory] ?? ''}",
+                  ),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 280,
