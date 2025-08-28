@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:map_try/pages/openstreetmap.dart';
 
 class RestoDetailScreen extends StatelessWidget {
   final String restoId;
@@ -160,7 +162,27 @@ class RestoDetailScreen extends StatelessWidget {
                             'Go to directions',
                             style: TextStyle(color: _brand),
                           ),
-                          onPressed: () {}, // todo
+                          onPressed: () {
+                            final GeoPoint location = data['location'];
+                            final LatLng restoLatLng = LatLng(
+                              location.latitude,
+                              location.longitude,
+                            );
+
+                            final destinationNotifier = ValueNotifier<LatLng?>(
+                              restoLatLng,
+                            );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => OpenstreetmapScreen(
+                                      destinationNotifier: destinationNotifier,
+                                    ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 20),

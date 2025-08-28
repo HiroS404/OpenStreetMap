@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+// import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -23,7 +23,11 @@ double bearing(LatLng from, LatLng to) {
   return (atan2(y, x) * 180 / pi + 360) % 360;
 }
 
-bool isForward(double routeBearing, double targetBearing, {double tolerance = 90}) {
+bool isForward(
+  double routeBearing,
+  double targetBearing, {
+  double tolerance = 300,
+}) {
   // normalize difference to [-180, 180]
   double diff = (routeBearing - targetBearing + 540) % 360 - 180;
   return diff.abs() <= tolerance;
@@ -161,63 +165,69 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     loadRouteData();
 
     // For debugging DO NOT DELETE: Use a fixed location in Iloilo City
-    const LatLng debuggingLocation = LatLng(
-      // 10.732143,
-      // 122.559791, //tabuc suba jollibe
-      // 10.731958,
-      // 122.560223, //sulodlon debug
-      // 10.732178,
-      // 122.559673, //tabuc suba sa piyak
-      // 10.733472,
-      // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
-      // 10.715609,
-      // 122.562715, // ColdZone West
-      // 10.725203,
-      // 122.556715, //Jaro plaza
-      // 10.696694,
-      // 122.545582, //Molo Plazas
-      // 10.694928, 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      // 10.714335,
-      // 122.551852, // Sm City
-      // 10.731993,
-      // 122.549291, //promenade cpu
-      // 10.692037,
-      // 122.583255, // CT Parola
-      // 10.726009,
-      // 122.557774, // lapit alicias ah
-      // 10.726947,
-      // 122.558021, // lapit pgd
-    );
+    // const LatLng debuggingLocation = LatLng(
+    //   // 10.732143,
+    //   // 122.559791, //tabuc suba jollibe
+    //   // 10.731958,
+    //   // 122.560223, //sulodlon debug
+    //   // 10.732178,
+    //   // 122.559673, //tabuc suba sa piyak
+    //   // 10.733472,
+    //   // 122.548947, //tubang CPU
+    //   // 10.732610,
+    //   // 122.548220, // mt building
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
+    //   // 10.725203,
+    //   // 122.556715, //Jaro plaza
+    //   // 10.697643,
+    //   // 122.543888, //Molo Plazas
+    //   // 10.694928, 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    //   // 10.731993,
+    //   // 122.549291, //promenade cpu
+    //   // 10.692037,
+    //   // 122.583255, // CT Parola
+    //   // 10.726009,
+    //   // 122.557774, // lapit alicias ah
+    //   // 10.726947,
+    //   // 122.558021, // lapit pgd
+    //   10.695724,
+    //   122.566170, //center city prop
+    // );
 
-    setState(() {
-      _currentLocation = debuggingLocation;
-      isLoading = false;
-    });
-    _destinationNotifier.value = const LatLng(
-      // 10.731068,
-      // 122.551723, //sarap station
-      // 10.732143, 122.559791, //tabuc suba jollibe
-      // 10.715609,
-      // 122.562715, // ColdZone West
-      // 10.733472,
-      // 122.548947, //tubang CPU
-      // 10.696694, 122.545582, //Molo Plazas
-      // 10.694928,
-      // 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      10.727482,
-      122.558188, // alicias
-      // 10.714335,
-      // 122.551852, // Sm City
-    ); // your test destination
-    _destination = _destinationNotifier.value;
+    // setState(() {
+    //   _currentLocation = debuggingLocation;
+    //   isLoading = false;
+    // });
+    // _destinationNotifier.value = const LatLng(
+    //   // 10.731068,
+    //   // 122.551723, //sarap station
+    //   // 10.732143, 122.559791, //tabuc suba jollibe
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
+    //   // 10.733472,
+    //   // 122.548947, //tubang CPU
+    //   // 10.696694, 122.545582, //Molo Plazas
+    //   // 10.694928,
+    //   // 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.727482,
+    //   // 122.558188, // alicias
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    //   // 10.693202,
+    //   // 122.500595, //mohon
+    //   10.697643,
+    //   122.543888, //molo
+    // ); // your test destination
+    // _destination = _destinationNotifier.value;
 
-    loadRouteData(); // Load jeepney routes based on this location
+    // loadRouteData(); // Load jeepney routes based on this location
   }
 
   //initial map zoom and center
@@ -310,10 +320,10 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
     if (matchingRoute != null) {
       final segment = extractSegmentFromRoute(
-  _currentLocation!,
-  _destination!,
-  matchingRoute.coordinates,
-);
+        _currentLocation!,
+        _destination!,
+        matchingRoute.coordinates,
+      );
 
       segmentDistance = calculateSegmentDistance(segment);
 
@@ -482,6 +492,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     });
   }
 
+  //unco
+  // ignore: unused_element
   JeepneyRoute _getClosestRoute(List<JeepneyRoute> routes) {
     double closestDistance = double.infinity;
     JeepneyRoute? closestRoute;
@@ -499,61 +511,66 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     return closestRoute ?? routes.first;
   }
 
-// Improved function to get closest point index with direction consideration
-int getClosestPointIndex(List<LatLng> coords, LatLng target) {
-  final distance = Distance();
-  double minDist = double.infinity;
-  int closestIndex = -1;
+  // Improved function to get closest point index with direction consideration
+  int getClosestPointIndex(List<LatLng> coords, LatLng target) {
+    final distance = Distance();
+    double minDist = double.infinity;
+    int closestIndex = -1;
 
-  for (int i = 0; i < coords.length; i++) {
-    final d = distance.as(LengthUnit.Meter, target, coords[i]);
-    if (d < minDist) {
-      minDist = d;
-      closestIndex = i;
-    }
-  }
-  return closestIndex;
-}
-
-
-JeepneyRoute? getMatchingRoute(
-  LatLng current,
-  LatLng destination,
-  List<JeepneyRoute> routes,
-) {
-  RouteSegment? bestSegment;
-  JeepneyRoute? bestRoute;
-  double bestScore = double.infinity;
-  
-  for (final route in routes) {
-    final segment = findBestRouteSegment(current, destination, route.coordinates);
-    
-    if (segment != null) {
-      // Score based on total walking distance
-      double score = segment.startWalkDistance + segment.endWalkDistance;
-      
-      if (score < bestScore) {
-        bestScore = score;
-        bestSegment = segment;
-        bestRoute = route;
+    for (int i = 0; i < coords.length; i++) {
+      final d = distance.as(LengthUnit.Meter, target, coords[i]);
+      if (d < minDist) {
+        minDist = d;
+        closestIndex = i;
       }
-      
-      print("Route ${route.routeNumber}: startIndex=${segment.startIndex}, endIndex=${segment.endIndex}, walkDistStart=${segment.startWalkDistance.toStringAsFixed(0)}m, walkDistEnd=${segment.endWalkDistance.toStringAsFixed(0)}m");
     }
+    return closestIndex;
   }
-  
-  if (bestRoute != null && bestSegment != null) {
-    print("Best route selected: ${bestRoute.routeNumber}");
+
+  JeepneyRoute? getMatchingRoute(
+    LatLng current,
+    LatLng destination,
+    List<JeepneyRoute> routes,
+  ) {
+    RouteSegment? bestSegment;
+    JeepneyRoute? bestRoute;
+    double bestScore = double.infinity;
+
+    for (final route in routes) {
+      final segment = findBestRouteSegment(
+        current,
+        destination,
+        route.coordinates,
+      );
+
+      if (segment != null) {
+        // Score based on total walking distance
+        double score = segment.startWalkDistance + segment.endWalkDistance;
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestSegment = segment;
+          bestRoute = route;
+        }
+
+        // print(
+        //   "Route ${route.routeNumber}: startIndex=${segment.startIndex}, endIndex=${segment.endIndex}, walkDistStart=${segment.startWalkDistance.toStringAsFixed(0)}m, walkDistEnd=${segment.endWalkDistance.toStringAsFixed(0)}m",
+        // );
+      }
+    }
+
+    if (bestRoute != null && bestSegment != null) {
+      // print("Best route selected: ${bestRoute.routeNumber}");
+    }
+
+    return bestRoute;
   }
-  
-  return bestRoute;
-}
 
   List<JeepneyRoute> getTopNearbyRoutes(
     LatLng current,
     LatLng destination,
     List<JeepneyRoute> routes, {
-    int limit = 999, // routes debugger colorerd
+    int limit = 1, // routes debugger colorerd
   }) {
     List<MapEntry<JeepneyRoute, double>> scoredRoutes = [];
 
@@ -576,21 +593,19 @@ JeepneyRoute? getMatchingRoute(
   //trying matvhing locgic (route segment from current to destination)
 
   // Updated extractSegment function to work with RouteSegment
-List<LatLng> extractSegmentFromRoute(
-  LatLng current,
-  LatLng destination,
-  List<LatLng> coords,
-) {
-  final segment = findBestRouteSegment(current, destination, coords);
-  
-  if (segment != null) {
-    return coords.sublist(segment.startIndex, segment.endIndex + 1);
-  } else {
-    return [];
+  List<LatLng> extractSegmentFromRoute(
+    LatLng current,
+    LatLng destination,
+    List<LatLng> coords,
+  ) {
+    final segment = findBestRouteSegment(current, destination, coords);
+
+    if (segment != null) {
+      return coords.sublist(segment.startIndex, segment.endIndex + 1);
+    } else {
+      return [];
+    }
   }
-}
-
-
 
   //haversine formulaaaa (for earth radius)
   double _calculateDistance(LatLng a, LatLng b) {
@@ -821,7 +836,7 @@ List<LatLng> extractSegmentFromRoute(
             child: FloatingActionButton(
               heroTag: 'user-location-fab',
               onPressed: _userCurrentLocation,
-              backgroundColor: Colors.deepOrangeAccent,
+              backgroundColor: Colors.orangeAccent,
               child: const Icon(
                 Icons.my_location,
                 size: 30,
@@ -836,7 +851,7 @@ List<LatLng> extractSegmentFromRoute(
               child: FloatingActionButton.extended(
                 label: const Text('Route'),
                 icon: const Icon(Icons.route),
-                backgroundColor: Colors.lightGreenAccent,
+                backgroundColor: Colors.white,
                 onPressed: () {
                   if (!_isModalOpen) {
                     showRouteModal(context);
@@ -849,45 +864,44 @@ List<LatLng> extractSegmentFromRoute(
     );
   }
 }
-
-Color _getColorForRoute(String routeNumber) {
-  switch (routeNumber) {
-    // case '3':
-    //   return const Color.fromARGB(255, 51, 181, 103);
-    // case '11':
-    //   return const Color.fromARGB(255, 233, 23, 248);
-    // case '15':
-    //   return const Color.fromARGB(255, 255, 77, 0);
-    // case '2':
-    //   return const Color.fromARGB(255, 255, 204, 0);
-    // case '4':
-    //   return const Color.fromARGB(255, 72, 233, 77);
-    //   case '5':
-    //   return const Color.fromARGB(255, 0, 26, 255);
-    // case '25':
-    //   return const Color.fromARGB(255, 255, 234, 0);
-    // case '1':
-    //   return const Color.fromARGB(255, 255, 255, 255);
-    // case '7':
-    //   return const Color.fromARGB(255, 87, 25, 78);
-    // case '9':
-    //   return const Color.fromARGB(255, 66, 41, 28);
-    // // case '1A':
-    // //   return const Color.fromARGB(255, 210, 92, 131);
-    // // case '1B':
-    // //   return const Color.fromARGB(255, 11, 50, 243);
-    default:
-      return Colors.transparent; // Default color if route number not matched
-  }
-}
-
+//for debugging route
+// Color _getColorForRoute(String routeNumber) {
+//   switch (routeNumber) {
+//     // case '3':
+//     //   return const Color.fromARGB(255, 51, 181, 103);
+//     // case '11':
+//     //   return const Color.fromARGB(255, 233, 23, 248);
+//     // case '15':
+//     //   return const Color.fromARGB(255, 255, 77, 0);
+//     // case '2':
+//     //   return const Color.fromARGB(255, 255, 204, 0);
+//     // case '4':
+//     //   return const Color.fromARGB(255, 72, 233, 77);
+//     //   case '5':
+//     //   return const Color.fromARGB(255, 0, 26, 255);
+//     // case '25':
+//     //   return const Color.fromARGB(255, 255, 234, 0);
+//     // case '1':
+//     //   return const Color.fromARGB(255, 255, 255, 255);
+//     // case '7':
+//     //   return const Color.fromARGB(255, 87, 25, 78);
+//     // case '9':
+//     //   return const Color.fromARGB(255, 66, 41, 28);
+//     // // case '1A':
+//     // //   return const Color.fromARGB(255, 210, 92, 131);
+//     // // case '1B':
+//     // //   return const Color.fromARGB(255, 11, 50, 243);
+//     default:
+//       return Colors.transparent; // Default color if route number not matched
+//   }
+// }
 
 // Function to find the best segment considering route direction
 RouteSegment? findBestRouteSegment(
   LatLng current,
   LatLng destination,
   List<LatLng> coords, {
-  double maxWalkDistance = 200,
+  double maxWalkDistance = 1000, // in meters
 }) {
   final distance = Distance();
   final targetBearing = bearing(current, destination);
@@ -931,15 +945,13 @@ RouteSegment? findBestRouteSegment(
   );
 }
 
-
-
 // Helper class to store route segment information
 class RouteSegment {
   final int startIndex;
   final int endIndex;
   final double startWalkDistance;
   final double endWalkDistance;
-  
+
   RouteSegment({
     required this.startIndex,
     required this.endIndex,

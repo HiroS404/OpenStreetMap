@@ -172,7 +172,7 @@ Widget restoCard({
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 19,
                         height: 1.2,
                       ),
                       maxLines: 1,
@@ -313,9 +313,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final PageController _hotDealsPageController = PageController(
-      viewportFraction: 1 );
+    viewportFraction: 1,
+  );
   final PageController _mostBoughtPageController = PageController(
-      viewportFraction: 1);
+    viewportFraction: 1,
+  );
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
@@ -382,7 +384,7 @@ class _HomePageState extends State<HomePage> {
             flexibleSpace: LayoutBuilder(
               builder: (context, constraints) {
                 final percent = ((constraints.maxHeight - kToolbarHeight) /
-                    (260 - kToolbarHeight))
+                        (260 - kToolbarHeight))
                     .clamp(0.0, 1.0);
                 return Stack(
                   fit: StackFit.expand,
@@ -414,11 +416,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                         gradient: LinearGradient(
                           colors:
-                          const [
-                            Colors.transparent,
-                            AppColors.gradientSoft,
-                            AppColors.secondary,
-                          ].map((c) => c.withAlpha(80)).toList(),
+                              const [
+                                Colors.transparent,
+                                AppColors.gradientSoft,
+                                AppColors.secondary,
+                              ].map((c) => c.withAlpha(80)).toList(),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -485,7 +487,7 @@ class _HomePageState extends State<HomePage> {
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                //  color: Colors.deepOrange,
+                                  //  color: Colors.deepOrange,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -615,13 +617,14 @@ class _HomePageState extends State<HomePage> {
                                           text: 'Hungry? We’ll lead the ',
                                           style: GoogleFonts.poppins(
                                             fontSize: 18,
-                                            fontWeight:
-                                            FontWeight.w700,
+                                            fontWeight: FontWeight.w700,
                                             color: Colors.black,
                                           ),
                                           children: [
                                             WidgetSpan(
-                                              alignment: PlaceholderAlignment.baseline, // align to text baseline
+                                              alignment:
+                                                  PlaceholderAlignment
+                                                      .baseline, // align to text baseline
                                               baseline: TextBaseline.alphabetic,
                                               child: Stack(
                                                 children: [
@@ -629,20 +632,28 @@ class _HomePageState extends State<HomePage> {
                                                   Text(
                                                     'way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 18, // match main text
-                                                      fontWeight: FontWeight.w900,
-                                                      foreground: Paint()
-                                                        ..style = PaintingStyle.stroke
-                                                        ..strokeWidth = 2
-                                                        ..color = Colors.black,
+                                                      fontSize:
+                                                          18, // match main text
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      foreground:
+                                                          Paint()
+                                                            ..style =
+                                                                PaintingStyle
+                                                                    .stroke
+                                                            ..strokeWidth = 2
+                                                            ..color =
+                                                                Colors.black,
                                                     ),
                                                   ),
                                                   // Fill
                                                   Text(
                                                     'way',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 18, // match main text
-                                                      fontWeight: FontWeight.w900,
+                                                      fontSize:
+                                                          18, // match main text
+                                                      fontWeight:
+                                                          FontWeight.w900,
                                                       color: Colors.white,
                                                     ),
                                                   ),
@@ -714,10 +725,10 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
                                         foreground:
-                                        Paint()
-                                          ..style = PaintingStyle.stroke
-                                          ..strokeWidth = 2
-                                          ..color = Colors.black,
+                                            Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black,
                                       ),
                                     ),
                                     TextSpan(
@@ -727,10 +738,10 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.2,
                                         foreground:
-                                        Paint()
-                                          ..style = PaintingStyle.stroke
-                                          ..strokeWidth = 2
-                                          ..color = Colors.black,
+                                            Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black,
                                       ),
                                     ),
                                   ],
@@ -793,28 +804,32 @@ class _HomePageState extends State<HomePage> {
 
                   // Hot Deals Carousel
                   sectionHeader(
-                    _selectedCategory == "All" ? "Hot Deals 🔥" : _selectedCategory + "🔥",
+                    _selectedCategory == "All"
+                        ? "Hot Deals 🔥"
+                        : "$_selectedCategory🔥",
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
-
                     height: 280,
                     child: Builder(
                       builder: (context) {
-                        final filteredRestaurants = _selectedCategory == "All"
-                            ? _restaurants
-                            : _restaurants.where((resto) {
-                          return resto.menu.any((item) =>
-                          (item['category'] as String)
-                              .toLowerCase() ==
-                              _selectedCategory.toLowerCase());
-
-                        }).toList();
+                        final filteredRestaurants =
+                            _selectedCategory == "All"
+                                ? _restaurants
+                                : _restaurants.where((resto) {
+                                  return resto.menu.any(
+                                    (item) =>
+                                        (item['category'] as String)
+                                            .toLowerCase() ==
+                                        _selectedCategory.toLowerCase(),
+                                  );
+                                }).toList();
 
                         if (filteredRestaurants.isEmpty) {
                           return const Center(
                             child: Text(
-                                "No restaurants found in this category."),
+                              "No restaurants found in this category.",
+                            ),
                           );
                         }
 
@@ -824,11 +839,11 @@ class _HomePageState extends State<HomePage> {
                               child: ScrollConfiguration(
                                 behavior: const MaterialScrollBehavior()
                                     .copyWith(
-                                  dragDevices: {
-                                    PointerDeviceKind.touch,
-                                    PointerDeviceKind.mouse,
-                                  },
-                                ),
+                                      dragDevices: {
+                                        PointerDeviceKind.touch,
+                                        PointerDeviceKind.mouse,
+                                      },
+                                    ),
                                 child: PageView.builder(
                                   controller: _hotDealsPageController,
                                   itemCount: filteredRestaurants.length,
@@ -841,9 +856,10 @@ class _HomePageState extends State<HomePage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                RestoDetailScreen(
-                                                    restoId: resto.id),
+                                            builder:
+                                                (context) => RestoDetailScreen(
+                                                  restoId: resto.id,
+                                                ),
                                           ),
                                         );
                                       },
@@ -862,17 +878,18 @@ class _HomePageState extends State<HomePage> {
                               controller: _hotDealsPageController,
                               count: filteredRestaurants.length,
                               effect: WormEffect(
-                                  activeDotColor: AppColors.button,
-                                  dotColor: Colors.grey,
-                                  dotHeight: 10,
-                                  dotWidth: 10,
-                                  spacing: 8),
+                                activeDotColor: AppColors.button,
+                                dotColor: Colors.grey,
+                                dotHeight: 10,
+                                dotWidth: 10,
+                                spacing: 8,
+                              ),
                               onDotClicked: (index) {
                                 _hotDealsPageController.animateToPage(
-                                    index,
-                                    duration:
-                                    const Duration(milliseconds: 400),
-                                    curve: Curves.easeInOut);
+                                  index,
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeInOut,
+                                );
                               },
                             ),
                           ],
@@ -927,16 +944,18 @@ class _HomePageState extends State<HomePage> {
                           controller: _mostBoughtPageController,
                           count: 3,
                           effect: WormEffect(
-                              activeDotColor: AppColors.button,
-                              dotColor: Colors.grey,
-                              dotHeight: 10,
-                              dotWidth: 10,
-                              spacing: 8),
+                            activeDotColor: AppColors.button,
+                            dotColor: Colors.grey,
+                            dotHeight: 10,
+                            dotWidth: 10,
+                            spacing: 8,
+                          ),
                           onDotClicked: (index) {
                             _mostBoughtPageController.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeInOut);
+                              index,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            );
                           },
                         ),
                       ],
@@ -951,4 +970,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
