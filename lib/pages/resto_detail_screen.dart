@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:map_try/pages/openstreetmap.dart';
 
 class RestoDetailScreen extends StatelessWidget {
   final String restoId;
-  const RestoDetailScreen({super.key, required this.restoId});
+  final ValueNotifier<LatLng?> destinationNotifier;
+  const RestoDetailScreen({
+    super.key,
+    required this.restoId,
+    required this.destinationNotifier,
+  });
 
   static const _brand = Color(0xFFE85205);
   static const _bg = Color(0xFFfcfcfc);
@@ -169,22 +173,13 @@ class RestoDetailScreen extends StatelessWidget {
                               location.longitude,
                             );
 
-                            final destinationNotifier = ValueNotifier<LatLng?>(
-                              restoLatLng,
-                            );
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => OpenstreetmapScreen(
-                                      destinationNotifier: destinationNotifier,
-                                    ),
-                              ),
-                            );
+                            destinationNotifier.value = restoLatLng;
+                            Navigator.pop(context);
+                            Navigator.pop(context);
                           },
                         ),
                       ),
+
                       const SizedBox(height: 20),
 
                       // Menu header

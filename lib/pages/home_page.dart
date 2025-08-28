@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:map_try/model/restaurant_model.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/pages/resto_detail_screen.dart';
@@ -306,7 +307,9 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ValueNotifier<LatLng?> destinationNotifier;
+
+  const HomePage({super.key, required this.destinationNotifier});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -859,6 +862,9 @@ class _HomePageState extends State<HomePage> {
                                             builder:
                                                 (context) => RestoDetailScreen(
                                                   restoId: resto.id,
+                                                  destinationNotifier:
+                                                      widget
+                                                          .destinationNotifier,
                                                 ),
                                           ),
                                         );

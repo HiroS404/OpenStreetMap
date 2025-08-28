@@ -85,27 +85,48 @@ class BottomNavBar extends StatefulWidget {
 class BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
 
-  final ValueNotifier<LatLng?> destinationNotifier = ValueNotifier(null);
+  late final ValueNotifier<LatLng?> destinationNotifier;
+  late final SearchModal _searchModal;
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    destinationNotifier = ValueNotifier<LatLng?>(null);
+    _searchModal = SearchModal(destinationNotifier: destinationNotifier);
     _pages = [
-      HomePage(),
+      HomePage(destinationNotifier: destinationNotifier),
       OpenstreetmapScreen(destinationNotifier: destinationNotifier),
       Container(), // Search will not be visible in IndexedStack
       SettingsPage(),
     ];
   }
 
+  @override
+  void dispose() {
+    destinationNotifier.dispose();
+
+    super.dispose();
+  }
+
+  // void _onItemTapped(int index) {
+  //   if (index == 2) {
+  //     setState(() {
+  //       _isSearchOpen = true;
+  //     });
+  //   } else {
+  //     setState(() {
+  //       _isSearchOpen = false;
+  //       _selectedIndex = index;
+  //     });
+  //   }
+  // }
   void _onItemTapped(int index) {
     if (index == 2) {
       showModalBottomSheet(
         context: context,
-        builder:
-            (context) => SearchModal(destinationNotifier: destinationNotifier),
+        builder: (context) => _searchModal,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
       );
@@ -120,7 +141,24 @@ class BottomNavBarState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
-        children: [IndexedStack(index: _selectedIndex, children: _pages)],
+        children: [
+          IndexedStack(index: _selectedIndex, children: _pages),
+          // if (_isSearchOpen)
+          //   Positioned.fill(
+          //     child: Material(
+          //       color: Colors.black54, // dim background
+          //       child: SafeArea(
+          //         child: Align(
+          //           alignment: Alignment.bottomCenter,
+          //           child: FractionallySizedBox(
+          //             heightFactor: 0.85,
+          //             child: _searchModal, // reuses same stateful widget
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+        ],
       ),
 
       bottomNavigationBar: BottomNavigationBar(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_try/pages/resto_detail_screen.dart';
 
 class SearchModal extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
   const SearchModal({super.key, required this.destinationNotifier});
+
   @override
   State<SearchModal> createState() => _SearchModalState();
 }
@@ -12,55 +14,111 @@ class SearchModal extends StatefulWidget {
 class _SearchModalState extends State<SearchModal> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> _results = [];
+  // ignore: unused_field
   final Map<String, List<Map<String, dynamic>>> _searchCache = {};
 
   void _searchRestaurants(String query) async {
-  if (_searchCache.containsKey(query)) {
+    final lowerQuery = query.toLowerCase();
+
+    // ✅ If user types "all" → get ALL restaurants
+    if (lowerQuery == "all") {
+      final allSnapshot =
+          await FirebaseFirestore.instance.collection('restaurants').get();
+
+      final List<Map<String, dynamic>> fetchedResults =
+          allSnapshot.docs.map((doc) {
+            final data = doc.data();
+            final geoPoint = data['location'] as GeoPoint?;
+            return {
+              'id': doc.id,
+              'name': data['name'] ?? '',
+              'route': data['route'] ?? '',
+              'address': data['address'] ?? '',
+              'headerImageUrl': data['headerImageUrl'] ?? '',
+              'location': geoPoint,
+            };
+          }).toList();
+
+      setState(() {
+        _results = fetchedResults;
+      });
+      return;
+    }
+
+    final allSnapshot =
+        await FirebaseFirestore.instance.collection('restaurants').get();
+
+    final List<Map<String, dynamic>> fetchedResults = [];
+
+    for (final doc in allSnapshot.docs) {
+      final data = doc.data();
+      final geoPoint = data['location'] as GeoPoint?;
+      bool hasMatchingItem = false;
+
+      // Check menu items
+      if (data['menu'] is List) {
+        final menuList = data['menu'] as List;
+        for (final item in menuList) {
+          if (item is Map<String, dynamic>) {
+            final itemName = (item['name'] ?? '').toString().toLowerCase();
+            final itemCategory =
+                (item['category'] ?? '').toString().toLowerCase();
+
+            if (itemName.contains(lowerQuery) ||
+                itemCategory.contains(lowerQuery)) {
+              hasMatchingItem = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // Check drinks if no menu match found
+      if (!hasMatchingItem && data['drinks'] is List) {
+        final drinksList = data['drinks'] as List;
+        for (final item in drinksList) {
+          if (item is Map<String, dynamic>) {
+            final itemName = (item['name'] ?? '').toString().toLowerCase();
+            final itemCategory =
+                (item['category'] ?? '').toString().toLowerCase();
+
+            if (itemName.contains(lowerQuery) ||
+                itemCategory.contains(lowerQuery)) {
+              hasMatchingItem = true;
+              break;
+            }
+          } else if (item is String) {
+            // Handle case where drinks might be stored as strings
+            if (item.toLowerCase().contains(lowerQuery)) {
+              hasMatchingItem = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // Also check restaurant name
+      final restoName = (data['name'] ?? '').toString().toLowerCase();
+      if (restoName.contains(lowerQuery)) {
+        hasMatchingItem = true;
+      }
+
+      if (hasMatchingItem) {
+        fetchedResults.add({
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'route': data['route'] ?? '',
+          'address': data['address'] ?? '',
+          'headerImageUrl': data['headerImageUrl'] ?? '',
+          'location': geoPoint,
+        });
+      }
+    }
+
     setState(() {
-      _results = _searchCache[query]!;
+      _results = fetchedResults;
     });
-    return;
   }
-
-  final lowerQuery = query.toLowerCase();
-
-  // Query 1: menu
-  final menuSnapshot = await FirebaseFirestore.instance
-      .collection('restaurants')
-      .where('menu', arrayContains: lowerQuery)
-      .get();
-
-  // Query 2: drinks
-  final drinksSnapshot = await FirebaseFirestore.instance
-      .collection('restaurants')
-      .where('drinks', arrayContains: lowerQuery)
-      .get();
-
-  // Merge and deduplicate
-  final allDocs = {
-    for (final doc in [...menuSnapshot.docs, ...drinksSnapshot.docs])
-      doc.id: doc // deduplication by document ID
-  };
-
-  final List<Map<String, dynamic>> fetchedResults = allDocs.values.map((doc) {
-    final data = doc.data();
-
-    return {
-      'name': data['name'],
-      'route': data['route'],
-      'latitude': (data['latitude'] as double?) ?? 0.0,
-      'longitude': (data['longitude'] as double?) ?? 0.0,
-      'address': data['address'],
-      'photoUrl': data['photoUrl'],
-    };
-  }).toList();
-
-  _searchCache[query] = fetchedResults;
-
-  setState(() {
-    _results = fetchedResults;
-  });
-}
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +130,6 @@ class _SearchModalState extends State<SearchModal> {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-
             image: const DecorationImage(
               image: NetworkImage(
                 "https://png.pngtree.com/png-vector/20240125/ourmid/pngtree-no-food-3d-illustrations-png-image_11495729.png",
@@ -134,7 +191,7 @@ class _SearchModalState extends State<SearchModal> {
                         _results.isEmpty
                             ? const Center(
                               child: Text(
-                                "No results found. \n \nFOR DEMO: try adobo, pancit canton, or fried chicken.....\n or try type 'all' ",
+                                "No results found. \n \nFOR DEMO: try adobo, fried chicken, cordon bleu, hedang pantat.....\n or try type 'all' ",
                               ),
                             )
                             : ListView.builder(
@@ -142,16 +199,8 @@ class _SearchModalState extends State<SearchModal> {
                               itemCount: _results.length,
                               itemBuilder: (context, index) {
                                 final resto = _results[index];
-                                // print("Resto data keys: ${resto.keys}");
-                                // print("Full restaurant document: $resto");
-
                                 return RestaurantCard(
-                                  name: resto['name'],
-                                  description:
-                                      "Short Descripttion .......\n\n example adress: ${resto['address'] ?? 'No address'} \n Example Route no.: ${resto['route']}",
-                                  photoUrl: resto['photoUrl'] ?? '',
-                                  latitude: resto['latitude'] ?? 0.0,
-                                  longitude: resto['longitude'] ?? 0.0,
+                                  data: resto,
                                   destinationNotifier:
                                       widget.destinationNotifier,
                                 );
@@ -168,42 +217,35 @@ class _SearchModalState extends State<SearchModal> {
   }
 }
 
-// Separate RestaurantCard Widget
 class RestaurantCard extends StatelessWidget {
-  final String name;
-  final String description;
-  final String photoUrl;
-  final double latitude;
-  final double longitude;
-  final ValueNotifier<LatLng?> destinationNotifier; //
+  final Map<String, dynamic> data;
+  final ValueNotifier<LatLng?> destinationNotifier;
 
   const RestaurantCard({
     super.key,
-    required this.name,
-    required this.description,
-    required this.photoUrl,
-    required this.latitude,
-    required this.longitude,
-    required this.destinationNotifier, //
+    required this.data,
+    required this.destinationNotifier,
   });
 
   @override
   Widget build(BuildContext context) {
+    final geoPoint = data['location'] as GeoPoint?;
+    final lat = geoPoint?.latitude ?? 0.0;
+    final lng = geoPoint?.longitude ?? 0.0;
+
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(
+        Navigator.push(
           context,
-          '/vendor-profile',
-          arguments: {
-            'name': name,
-            'description': description,
-            'photoUrl': photoUrl,
-            'latitude': latitude,
-            'longitude': longitude,
-          },
+          MaterialPageRoute(
+            builder:
+                (context) => RestoDetailScreen(
+                  restoId: data['id'], // doc id
+                  destinationNotifier: destinationNotifier,
+                ),
+          ),
         );
       },
-
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 4,
@@ -211,13 +253,12 @@ class RestaurantCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Food image
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
               child: Image.network(
-                photoUrl,
+                data['headerImageUrl'] ?? '',
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -235,7 +276,7 @@ class RestaurantCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    data['name'] ?? '',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -243,7 +284,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    description,
+                    data['address'] ?? 'No address',
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 10),
@@ -251,15 +292,8 @@ class RestaurantCard extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        destinationNotifier.value = LatLng(latitude, longitude);
-                        // print(
-                        //   "Database Latitude: ${latitude}, Longitude: ${longitude}",
-                        // );
-                        // print(
-                        //   "Destination updated: ${destinationNotifier.value}",
-                        // );
-
-                        Navigator.pop(context); // Close modal if open
+                        destinationNotifier.value = LatLng(lat, lng);
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.directions),
                       label: const Text(
