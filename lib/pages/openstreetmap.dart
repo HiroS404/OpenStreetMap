@@ -722,7 +722,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 IconButton(
                   icon: const Icon(Icons.map, color: Colors.deepOrangeAccent),
                   onPressed: () {
-                    // Navigator.pushNamed(context, '/login');
+                    // nothing
                   },
                 ),
               ],
@@ -742,7 +742,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
             tileProvider: CancellableNetworkTileProvider(),
           ),
-          //uncomment this for debugging using fix or manual  location
+          //uncomment this below for debugging using fix or manual  location
           CurrentLocationLayer(
             style: LocationMarkerStyle(
               marker: DefaultLocationMarker(
@@ -855,7 +855,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           ),
           if (_matchedRoute != null)
             Positioned(
-              bottom: 80, // space above the other FAB
+              bottom: 80, // space above the other
               right: 16,
               child: FloatingActionButton.extended(
                 label: const Text('Route'),
