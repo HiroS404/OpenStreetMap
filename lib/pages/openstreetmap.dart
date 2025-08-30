@@ -176,87 +176,89 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   // call this after you set _matchedRoute, _currentLocation or _destination
   Future<void> _updateAllWalkingPolylines() async {
-    if (_currentLocation == null ||
-        _destination == null ||
-        _matchedRoute == null) {
-      return;
-    }
-
-    final segment = findBestRouteSegment(
-      _currentLocation!,
-      _destination!,
-      _matchedRoute!.coordinates,
-    );
-
-    if (segment == null) return;
-
-    // Clear existing polylines
-    setState(() {
-      _startWalkingPolylines = [];
-      _endWalkingPolylines = [];
-    });
-
-    // Get jeepney start and end points
-    final LatLng jeepneyStartPoint =
-        _matchedRoute!.coordinates[segment.startIndex];
-    final LatLng jeepneyEndPoint = _matchedRoute!.coordinates[segment.endIndex];
-
-    // Update walking distances
-    walkingDistance = segment.startWalkDistance;
-    endWalkingDistance = segment.endWalkDistance;
-
-    // Create both walking routes concurrently
-    final futures = <Future<void>>[];
-
-    // Start walking route (user → jeepney start)
-    if (segment.startWalkDistance > 10) {
-      futures.add(
-        _orsService
-            .getRoute(
-              _currentLocation!,
-              jeepneyStartPoint,
-              profile: "foot-walking",
-            )
-            .then((route) {
-              if (route != null && mounted) {
-                setState(() {
-                  _startWalkingPolylines = createDottedPolyline(
-                    route,
-                    color: Colors.blue,
-                    strokeWidth: 3,
-                  );
-                });
-              }
-            }),
-      );
-    }
-
-    // End walking route (jeepney end → destination)
-    if (segment.endWalkDistance > 10) {
-      futures.add(
-        _orsService
-            .getRoute(jeepneyEndPoint, _destination!, profile: "foot-walking")
-            .then((route) {
-              if (route != null && mounted) {
-                setState(() {
-                  _endWalkingPolylines = createDottedPolyline(
-                    route,
-                    color: Colors.green,
-                    strokeWidth: 3,
-                  );
-                });
-              }
-            }),
-      );
-    }
-
-    // Wait for both requests to complete
-    await Future.wait(futures);
-
-    setState(() {
-      _walkingPolylinesCalculated = true;
-    });
+  if (_currentLocation == null ||
+      _destination == null ||
+      _matchedRoute == null) {
+    return;
   }
+
+  final segment = findBestRouteSegment(
+    _currentLocation!,
+    _destination!,
+    _matchedRoute!.coordinates,
+  );
+
+  if (segment == null) return;
+
+  // Clear existing polylines
+  setState(() {
+    _startWalkingPolylines = [];
+    _endWalkingPolylines = [];
+  });
+
+  // Get jeepney start and end points
+  final LatLng jeepneyStartPoint =
+      _matchedRoute!.coordinates[segment.startIndex];
+  final LatLng jeepneyEndPoint = _matchedRoute!.coordinates[segment.endIndex];
+
+  // Update walking distances
+  walkingDistance = segment.startWalkDistance;
+  endWalkingDistance = segment.endWalkDistance;
+
+  // Create both walking routes concurrently
+  final futures = <Future<void>>[];
+
+  // Start walking route (user → jeepney start)
+  // Removed the > 10m threshold to show all walking routes
+  if (segment.startWalkDistance > 5) { // Lowered from 10m to 5m
+    futures.add(
+      _orsService
+          .getRoute(
+            _currentLocation!,
+            jeepneyStartPoint,
+            profile: "foot-walking",
+          )
+          .then((route) {
+            if (route != null && mounted) {
+              setState(() {
+                _startWalkingPolylines = createDottedPolyline(
+                  route,
+                  color: Colors.blue,
+                  strokeWidth: 3,
+                );
+              });
+            }
+          }),
+    );
+  }
+
+  // End walking route (jeepney end → destination)  
+  if (segment.endWalkDistance > 5) { // Lowered from 10m to 5m
+    futures.add(
+      _orsService
+          .getRoute(jeepneyEndPoint, _destination!, profile: "foot-walking")
+          .then((route) {
+            if (route != null && mounted) {
+              setState(() {
+                _endWalkingPolylines = createDottedPolyline(
+                  route,
+                  color: Colors.green,
+                  strokeWidth: 3,
+                );
+              });
+            }
+          }),
+    );
+  }
+
+  // Wait for both requests to complete
+  await Future.wait(futures);
+
+  setState(() {
+    _walkingPolylinesCalculated = true;
+  });
+}
+
 
   //location initialization
   Future<void> _initializeLocation() async {
@@ -336,8 +338,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.732143, 122.559791, //tabuc suba jollibe
       // 10.715609,
       // 122.562715, // ColdZone West
-      10.716225933976629,
-      122.56377696990968, // somewhere further coldzone west
+      // 10.716225933976629,
+      // 122.56377696990968, // somewhere further coldzone west
       // 10.733472,
       // 122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
@@ -347,8 +349,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.538430, //Gt mall
       // 10.727482,
       // 122.558188, // alicias
-      // 10.714335,
-      // 122.551852, // Sm City
+      10.714335,
+      122.551852, // Sm City
       // 10.697643,
       // 122.543888 // Molo
       // 10.693202,
@@ -435,23 +437,47 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   //loading jeepney routes from jepney_routes.json and matching with user location and destination
   //loading jeepney routes from jepney_routes.json and matching with user location and destination
   void loadRouteData() async {
-    List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
-    if (!mounted || _currentLocation == null || _destination == null) return;
+  List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
+  if (!mounted || _currentLocation == null || _destination == null) return;
 
-    allRoutes = getTopNearbyRoutes(
+  allRoutes = getTopNearbyRoutes(
+    _currentLocation!,
+    _destination!,
+    jeepneyRoutes,
+  );
+
+  final matchingRoute = getMatchingRoute(
+    _currentLocation!,
+    _destination!,
+    jeepneyRoutes,
+  );
+
+  if (matchingRoute != null) {
+    // Use the segment information from findBestRouteSegment
+    final segment = findBestRouteSegment(
       _currentLocation!,
       _destination!,
-      jeepneyRoutes,
+      matchingRoute.coordinates,
     );
 
-    final matchingRoute = getMatchingRoute(
-      _currentLocation!,
-      _destination!,
-      jeepneyRoutes,
-    );
+    if (segment != null) {
+      // Use the segment's startIndex and endIndex directly - they already consider direction
+      final routeSegment = matchingRoute.coordinates.sublist(
+        segment.startIndex, 
+        segment.endIndex + 1
+      );
+      segmentDistance = calculateSegmentDistance(routeSegment);
 
-    if (matchingRoute != null) {
-      // find closest indices along the matched route
+      setState(() {
+        _route = routeSegment;
+        _matchedRoute = matchingRoute;
+        _walkingPolylinesCalculated = false; // Reset flag
+      });
+
+      // Update walking polylines
+      _updateAllWalkingPolylines();
+    } else {
+      // Fallback to old logic if no segment found
       final int startIndex = getClosestPointIndex(
         matchingRoute.coordinates,
         _currentLocation!,
@@ -461,7 +487,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         _destination!,
       );
 
-      // enforce ordering (start must be before end)
+      // Only apply min/max as fallback
       final int fromIndex = startIndex < endIndex ? startIndex : endIndex;
       final int toIndex = startIndex < endIndex ? endIndex : startIndex;
 
@@ -471,26 +497,26 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       setState(() {
         _route = segment;
         _matchedRoute = matchingRoute;
-        _walkingPolylinesCalculated = false; // Reset flag
+        _walkingPolylinesCalculated = false;
       });
 
-      // Update walking polylines
       _updateAllWalkingPolylines();
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text(
-                "No matching jeepney route found from your location to destination.",
-              ),
-              duration: Duration(seconds: 8),
+    }
+  } else {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              "No matching jeepney route found from your location to destination.",
             ),
-          );
-      }
+            duration: Duration(seconds: 8),
+          ),
+        );
     }
   }
+}
 
   //showing route modal with details (button will be shown if a route is matched)
   void showRouteModal(BuildContext context) {
@@ -1180,8 +1206,10 @@ RouteSegment? findBestRouteSegment(
   LatLng current,
   LatLng destination,
   List<LatLng> coords, {
-  double maxWalkDistance = 200,
-  double snapThreshold = 25, // allow across-street snapping
+  double maxWalkDistance = 800,        // Increased from 200m to 800m
+  double preferredWalkDistance = 300,  // Preferred distance for scoring
+  double snapThreshold = 25,
+  double maxTotalWalk = 1200,          // Maximum combined walking distance
 }) {
   final distance = Distance();
   final targetBearing = bearing(current, destination);
@@ -1192,22 +1220,29 @@ RouteSegment? findBestRouteSegment(
     final segBearing = bearing(coords[i], coords[i + 1]);
     final dStart = distance.as(LengthUnit.Meter, current, coords[i]);
 
-    // Skip far away points
+    // More lenient filtering - allow longer walks but penalize them in scoring
     if (dStart > maxWalkDistance && dStart > snapThreshold) continue;
 
     // Snap-to-route override OR forward check
     if (dStart <= snapThreshold ||
         isForward(segBearing, targetBearing, tolerance: 60)) {
-      // Find best endIndex after i
+      
+      // Find best endIndex AFTER i
       int? bestEnd;
       double bestEndDist = double.infinity;
+      
       for (int j = i + 1; j < coords.length; j++) {
         final dEnd = distance.as(LengthUnit.Meter, destination, coords[j]);
-        if (dEnd < bestEndDist && dEnd <= maxWalkDistance) {
-          bestEnd = j;
-          bestEndDist = dEnd;
+        
+        // Allow longer end walking distances, but check total walking
+        if (dEnd <= maxWalkDistance && (dStart + dEnd) <= maxTotalWalk) {
+          if (dEnd < bestEndDist) {
+            bestEnd = j;
+            bestEndDist = dEnd;
+          }
         }
       }
+      
       if (bestEnd == null) continue;
 
       // Compute ride distance
@@ -1216,8 +1251,19 @@ RouteSegment? findBestRouteSegment(
         rideDist += distance.as(LengthUnit.Meter, coords[k], coords[k + 1]);
       }
 
-      // Total trip cost (you can weight walk more if you want)
-      double totalCost = dStart + rideDist + bestEndDist;
+      // Enhanced scoring that penalizes long walks but doesn't eliminate them
+      double walkPenalty = 0.0;
+      
+      // Penalize walks longer than preferred distance
+      if (dStart > preferredWalkDistance) {
+        walkPenalty += (dStart - preferredWalkDistance) * 2; // 2x penalty for excess walking
+      }
+      if (bestEndDist > preferredWalkDistance) {
+        walkPenalty += (bestEndDist - preferredWalkDistance) * 2;
+      }
+      
+      // Total trip cost with walking penalty
+      double totalCost = dStart + rideDist + bestEndDist + walkPenalty;
 
       candidates.add(
         RouteSegment(
@@ -1234,10 +1280,12 @@ RouteSegment? findBestRouteSegment(
 
   if (candidates.isEmpty) return null;
 
-  // Pick best candidate by total cost
+  // Pick best candidate by total cost (now includes walking penalties)
   candidates.sort((a, b) => a.totalCost.compareTo(b.totalCost));
   return candidates.first;
 }
+
+
 
 // Helper class to store route segment information
 class RouteSegment {
