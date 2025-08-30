@@ -98,7 +98,7 @@ class BottomNavBarState extends State<BottomNavBar> {
     _pages = [
       HomePage(destinationNotifier: destinationNotifier),
       OpenstreetmapScreen(destinationNotifier: destinationNotifier),
-      Container(), // Search will not be visible in IndexedStack
+      Container(), // Search bottBar
       SettingsPage(),
     ];
   }
