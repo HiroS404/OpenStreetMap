@@ -78,6 +78,7 @@ flutter:
   assets:
     - .env
     - Assets/jeepney_routes.json
+    - Assets/transfer_spots.json
     - Assets/route_pics/
     - Assets/login/
   # The following line ensures that the Material Icons font is
