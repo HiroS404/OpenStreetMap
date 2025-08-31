@@ -204,8 +204,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.559673, //tabuc suba sa piyak
       // 10.733472,
       // 122.548947, //tubang CPU
-      // 10.732610,
-      // 122.548220, // mt building
+      10.732610,
+      122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -231,8 +231,10 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.695522,
       // 122.566212
       // Center City proper across
-      10.69321774107972,
-      122.49947369098665, // mohon term
+      // 10.69321774107972,
+      // 122.49947369098665, // mohon term
+      // 10.74472415057673,
+      // 122.56394863128664 // hause ni mhar
     );
 
     setState(() {
@@ -247,8 +249,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.562715, // ColdZone West
       // 10.716225933976629,
       // 122.56377696990968, // somewhere further coldzone west
-      10.733472,
-      122.548947, //tubang CPU
+      // 10.733472,
+      // 122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
       // 122.564686, //Rob Main
@@ -262,6 +264,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.543888 // Molo
       // 10.693202,
       // 122.500595, // mohon term
+      // 10.725203,
+      // 122.556715, //Jaro plaza
     ); // your test destination
     _destination = _destinationNotifier.value;
 
@@ -423,38 +427,34 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     List<JeepneyRoute> allRoutes,
   ) {
     final segment = singleRoute.segments.first;
+    final routeNumber = singleRoute.routeNumbers.first;
 
-    // Find the actual route that matches this segment
-    JeepneyRoute? matchingRoute;
-    for (final route in allRoutes) {
-      final testSegment = findBestRouteSegment(
-        _currentLocation!,
-        _destination!,
-        route.coordinates,
-      );
+    // Find the route by route number instead of trying to match segments
+    final matchingRoute = allRoutes.firstWhere(
+      (route) => route.routeNumber == routeNumber,
+      orElse: () => throw Exception('Route $routeNumber not found'),
+    );
 
-      if (testSegment != null &&
-          testSegment.startIndex == segment.startIndex &&
-          testSegment.endIndex == segment.endIndex) {
-        matchingRoute = route;
-        break;
-      }
-    }
+    // Extract the route segment using the indices from the best route result
+    final routeSegment = matchingRoute.coordinates.sublist(
+      segment.startIndex,
+      segment.endIndex + 1,
+    );
 
-    if (matchingRoute != null) {
-      final routeSegment = matchingRoute.coordinates.sublist(
-        segment.startIndex,
-        segment.endIndex + 1,
-      );
-
+    setState(() {
       _route = routeSegment;
       _matchedRoute = matchingRoute;
       segmentDistance = calculateSegmentDistance(routeSegment);
-      _walkingPolylinesCalculated = false;
 
-      // Update walking polylines
-      _updateAllWalkingPolylines();
-    }
+      // Update the global walking distance variables for the modal
+      walkingDistance = segment.startWalkDistance;
+      endWalkingDistance = segment.endWalkDistance;
+
+      _walkingPolylinesCalculated = false;
+    });
+
+    // Update walking polylines after setting the state
+    _updateAllWalkingPolylines();
   }
 
   // Add this helper function for transfer spots loading
@@ -1291,8 +1291,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   //   }
   // }
 }
-
-
 
 // --- bearing utilities ---
 double bearing(LatLng from, LatLng to) {
