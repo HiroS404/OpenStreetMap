@@ -524,7 +524,9 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                   ),
                   child:
                       _headerImageBytes == null
-                          ? const Center(child: Text("Tap + to add image"))
+                          ? const Center(
+                            child: Text("Tap the + button to add image"),
+                          )
                           : null,
                 ),
 
@@ -651,9 +653,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
                     if (selectedLocation != null) {
                       setState(() {
                         _addressController.text = selectedLocation['address'];
-                        // You can also store coordinates for later use
-                        // _selectedLat = selectedLocation['lat'];
-                        // _selectedLng = selectedLocation['lng'];
+
                         selectedLat = selectedLocation['lat'];
                         selectedLng = selectedLocation['lng'];
                         // print(
@@ -855,7 +855,7 @@ class VendorRegistrationPageState extends State<VendorRegistrationPage> {
               onPressed: _saveToFirebase,
               icon: const Icon(Icons.save),
               label: const Text(
-                "Save Items",
+                "Register Resto",
                 style: TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
