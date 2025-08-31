@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_try/main.dart';
 
 class RestoDetailScreen extends StatelessWidget {
   final String restoId;
@@ -173,9 +174,13 @@ class RestoDetailScreen extends StatelessWidget {
                               location.longitude,
                             );
 
+                            // update destination for existing map screen
                             destinationNotifier.value = restoLatLng;
+
+                            //close resto details screen
                             Navigator.pop(context);
-                            Navigator.pop(context);
+
+                            bottomNavIndexNotifier.value = 1;
                           },
                         ),
                       ),
