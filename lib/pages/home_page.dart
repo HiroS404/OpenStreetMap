@@ -685,10 +685,13 @@ class _HomePageState extends State<HomePage> {
                       left: 16,
                       right: 16,
                       bottom: 12,
+                      height: 50,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
+
                         decoration: BoxDecoration(
                           color: Colors.white,
+
                           border: Border.all(
                             color: AppColors.sysAccent.withAlpha(70),
                           ),

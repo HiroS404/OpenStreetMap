@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:map_try/pages/menuManagementPage.dart';
+import 'package:map_try/pages/resto%20AddressMap/pick_address_map.dart';
 
 class VendorProfilePage extends StatefulWidget {
   final Map<String, dynamic>? restaurantData;
@@ -30,6 +31,39 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       onPressed: onPressed,
       tooltip: 'Edit',
     );
+  }
+
+  Future<void> _editAddressWithMap() async {
+    // Navigate to map picker
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PickAddressMapScreen(), // your picker screen
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final newAddress = result['address'] ?? '';
+      final lat = result['lat'];
+      final lng = result['lng'];
+
+      if (newAddress.isNotEmpty && lat != null && lng != null) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return;
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(user.uid)
+            .update({
+              'address': newAddress,
+              'location': GeoPoint(lat, lng), // ✅ Firestore GeoPoint
+            });
+
+        setState(() {
+          _vendorData!['address'] = newAddress;
+          _vendorData!['location'] = GeoPoint(lat, lng);
+        });
+      }
+    }
   }
 
   Future<void> _fetchVendorData() async {
@@ -481,7 +515,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_vendorData!['headerImageUrl'] != '')
+            if ((_vendorData!['headerImageUrl'] as String?)?.isNotEmpty ??
+                false)
               Stack(
                 children: [
                   ClipRRect(
@@ -546,13 +581,27 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    _vendorData!['tags'] ??
-                        'dapat • dynamic na dre kate • HAHAHA', // placeholder lng ni, wala kita tags sa firebase (pafinalize) pwede mn wala nlng ni
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF8c8c8c),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          (_vendorData!['tags'] as String?)
+                                      ?.trim()
+                                      .isNotEmpty ==
+                                  true
+                              ? _vendorData!['tags']
+                              : 'Put your tagline here',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF8c8c8c),
+                          ),
+                        ),
+                      ),
+                      if (_isEditing)
+                        _smallEditButton(
+                          () => _editField('tags', 'Tags'),
+                        ), // ✅ now editable
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -581,17 +630,40 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   ),
 
                   const SizedBox(height: 14),
+
                   _expandableInfoRow(
                     Icons.phone,
                     _vendorData!['phoneNumber'] ??
                         '', // ang ari mn wala mn ta actually contact pero nami mn nga idea ahh, finalize lng
                     'phoneNumber',
                   ),
-                  _expandableInfoRow(
-                    Icons.location_on,
-                    _vendorData!['address'] ?? '',
-                    'address',
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: const Color(0xFFE85205),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: ExpandableText(
+                          _vendorData!['address'] ?? '',
+                          trimLength: 50,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF8C8C8C),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_isEditing)
+                        _smallEditButton(() {
+                          _editAddressWithMap();
+                        }),
+                    ],
                   ),
+
                   _expandableInfoRow(
                     Icons.access_time,
                     _vendorData!['hours'] ?? '12:00 PM – 12:00 AM',
@@ -599,26 +671,26 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
                   ),
 
                   const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFE85205)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      icon: const Icon(
-                        Icons.directions,
-                        color: Color(0xFFE85205),
-                      ),
-                      label: const Text(
-                        'Go to directions',
-                        style: TextStyle(color: Color(0xFFE85205)),
-                      ),
-                      onPressed: () {},
-                    ),
-                  ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: OutlinedButton.icon(
+                  //     style: OutlinedButton.styleFrom(
+                  //       side: const BorderSide(color: Color(0xFFE85205)),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(8),
+                  //       ),
+                  //     ),
+                  //     icon: const Icon(
+                  //       Icons.directions,
+                  //       color: Color(0xFFE85205),
+                  //     ),
+                  //     label: const Text(
+                  //       'Go to directions',
+                  //       style: TextStyle(color: Color(0xFFE85205)),
+                  //     ),
+                  //     onPressed: () {},
+                  //   ),
+                  // ),
                   const SizedBox(height: 20),
 
                   Row(
@@ -779,24 +851,31 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
   // Add this helper widget for expandable text
   Widget _expandableInfoRow(IconData icon, String text, String fieldKey) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8), // spacing between rows
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, color: const Color(0xFFE85205), size: 20),
           const SizedBox(width: 10),
+
+          // Let text expand fully
           Expanded(
             child: ExpandableText(
               text,
-              trimLength: 50, // adjust cutoff for expansion
+              trimLength: 50,
               style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
             ),
           ),
-          const SizedBox(width: 6),
+
+          // Edit button always far right
           if (_isEditing)
-            _smallEditButton(
-              () => _editField(fieldKey, _getFieldLabel(fieldKey)),
-            ),
+            _smallEditButton(() {
+              if (fieldKey == 'address') {
+                _editAddressWithMap(); // special case for address
+              } else {
+                _editField(fieldKey, _getFieldLabel(fieldKey));
+              }
+            }),
         ],
       ),
     );

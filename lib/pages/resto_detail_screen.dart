@@ -44,11 +44,11 @@ class RestoDetailScreen extends StatelessWidget {
 
           final headerUrl = (data['headerImageUrl'] ?? '').toString();
           final name = (data['name'] ?? '').toString();
-          final tags = (data['tags'] ?? 'Bar • Brewery • Gastropub').toString();
+          final tags = (data['tags'] ?? '').toString();
           final description = (data['description'] ?? '').toString();
           final phone = (data['phoneNumber'] ?? '').toString();
           final address = (data['address'] ?? '').toString();
-          final hours = (data['hours'] ?? '12:00 PM – 12:00 AM').toString();
+          final hours = (data['hours'] ?? 'N/A').toString();
 
           // Menu (List<Map<String, dynamic>> expected, but we’ll be defensive)
           final List menuList =
@@ -151,7 +151,7 @@ class RestoDetailScreen extends StatelessWidget {
 
                       const SizedBox(height: 18),
 
-                      // Directions button (no logic, just UI)
+                      // Directions button
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
@@ -244,7 +244,7 @@ class RestoDetailScreen extends StatelessWidget {
               children: [
                 // Category title
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     category,
                     style: const TextStyle(
@@ -256,7 +256,7 @@ class RestoDetailScreen extends StatelessWidget {
 
                 // Horizontal gallery of items
                 SizedBox(
-                  height: 160, // adjust card height
+                  height: 80, // adjust card height
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: items.length,
