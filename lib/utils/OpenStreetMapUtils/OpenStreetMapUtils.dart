@@ -310,12 +310,12 @@ MultiRouteResult? findBestRoute(
   List<JeepneyRoute> allRoutes,
   List<TransferSpot> transferSpots,
 ) {
-  print("🎯 Finding best route...");
+  // print("🎯 Finding best route...");
   List<MultiRouteResult> allOptions = [];
 
   // ALWAYS try single route options first with more lenient parameters
   final singleOptions = findSingleRouteOptions(start, destination, allRoutes);
-  print("Found ${singleOptions.length} single route options");
+  // print("Found ${singleOptions.length} single route options");
 
   if (singleOptions.isNotEmpty) {
     // Check if any single route has reasonable walking distance
@@ -326,7 +326,7 @@ MultiRouteResult? findBestRoute(
         }).toList();
 
     if (reasonableSingleRoutes.isNotEmpty) {
-      print("✅ Found reasonable single routes, strongly preferring these");
+      // print("✅ Found reasonable single routes, strongly preferring these");
 
       // Add single routes with small bonus
       final bonusedSingleRoutes =
@@ -351,9 +351,9 @@ MultiRouteResult? findBestRoute(
           }).toList();
 
       if (excessiveWalkingSingle.isNotEmpty) {
-        print(
-          "⚠️ Single routes require significant walking, checking 2-route options",
-        );
+        // print(
+        //   "⚠️ Single routes require significant walking, checking 2-route options",
+        // );
         final multiOptions = findMultiRouteOptions(
           start,
           destination,
@@ -364,9 +364,9 @@ MultiRouteResult? findBestRoute(
       }
     } else {
       // No reasonable single routes, try multi-route
-      print(
-        "❌ Single routes require excessive walking, checking multi-route options",
-      );
+      // print(
+      //   "❌ Single routes require excessive walking, checking multi-route options",
+      // );
       allOptions.addAll(singleOptions); // Keep as backup
       final multiOptions = findMultiRouteOptions(
         start,
@@ -378,7 +378,7 @@ MultiRouteResult? findBestRoute(
     }
   } else {
     // No single routes found at all
-    print("❌ No single routes found, checking multi-route options");
+    // print("❌ No single routes found, checking multi-route options");
     final multiOptions = findMultiRouteOptions(
       start,
       destination,
@@ -389,7 +389,7 @@ MultiRouteResult? findBestRoute(
   }
 
   if (allOptions.isEmpty) {
-    print("❌ No route options found at all");
+    // print("❌ No route options found at all");
     return null;
   }
 
@@ -405,11 +405,11 @@ MultiRouteResult? findBestRoute(
   });
 
   final best = allOptions.first;
-  print(
-    "🏆 Best route selected: ${best.tripCount} trip(s), "
-    "routes: ${best.routeNumbers}, "
-    "walk: ${best.totalWalkDistance.toInt()}m, cost: ${best.totalCost.toInt()}",
-  );
+  // print(
+  //   "🏆 Best route selected: ${best.tripCount} trip(s), "
+  //   "routes: ${best.routeNumbers}, "
+  //   "walk: ${best.totalWalkDistance.toInt()}m, cost: ${best.totalCost.toInt()}",
+  // );
 
   return best;
 }
@@ -459,19 +459,19 @@ bool isValidTransfer(
       distance.as(LengthUnit.Meter, start, transferPoint) +
       distance.as(LengthUnit.Meter, transferPoint, destination);
 
-  print("   🔍 Transfer validation:");
-  print("      Direct distance: ${directDistance.toInt()}m");
-  print("      Via transfer: ${viaTransferDistance.toInt()}m");
-  print("      Walking distance: ${option.totalWalkDistance.toInt()}m");
-  print(
-    "      Detour ratio: ${(viaTransferDistance / directDistance).toStringAsFixed(2)}",
-  );
+  // print("   🔍 Transfer validation:");
+  // print("      Direct distance: ${directDistance.toInt()}m");
+  // print("      Via transfer: ${viaTransferDistance.toInt()}m");
+  // print("      Walking distance: ${option.totalWalkDistance.toInt()}m");
+  // print(
+  //   "      Detour ratio: ${(viaTransferDistance / directDistance).toStringAsFixed(2)}",
+  // );
 
   // More lenient validation - allow up to 2x detour and 1.5km walking
   final isValidDetour = viaTransferDistance <= directDistance * 2.0;
   final isValidWalking = option.totalWalkDistance <= 1500;
 
-  print("      Valid detour: $isValidDetour, Valid walking: $isValidWalking");
+  // print("      Valid detour: $isValidDetour, Valid walking: $isValidWalking");
 
   return isValidDetour && isValidWalking;
 }
@@ -546,12 +546,12 @@ MultiRouteResult? evaluateTransferOption(
 
   final totalCost = totalWalk + totalRide + transferPenalty;
 
-  print("      ✅ Transfer evaluation:");
-  print("         Route ${route1.routeNumber} → ${route2.routeNumber}");
-  print("         Walk: ${totalWalk.toInt()}m, Ride: ${totalRide.toInt()}m");
-  print(
-    "         Penalty: ${transferPenalty.toInt()}, Total cost: ${totalCost.toInt()}",
-  );
+  // print("      ✅ Transfer evaluation:");
+  // print("         Route ${route1.routeNumber} → ${route2.routeNumber}");
+  // print("         Walk: ${totalWalk.toInt()}m, Ride: ${totalRide.toInt()}m");
+  // print(
+  //   "         Penalty: ${transferPenalty.toInt()}, Total cost: ${totalCost.toInt()}",
+  // );
 
   return MultiRouteResult(
     segments: [segment1, segment2],
@@ -570,12 +570,12 @@ List<MultiRouteResult> findMultiRouteOptions(
   List<JeepneyRoute> allRoutes,
   List<TransferSpot> transferSpots,
 ) {
-  print("🔍 Finding 2-route transfer options only...");
+  // print("🔍 Finding 2-route transfer options only...");
   List<MultiRouteResult> options = [];
 
   // For each transfer spot, find ONLY direct 2-route combinations
   for (final spot in transferSpots) {
-    print("Checking transfer spot: ${spot.name}");
+    // print("Checking transfer spot: ${spot.name}");
 
     final availableRoutes =
         allRoutes
@@ -583,7 +583,7 @@ List<MultiRouteResult> findMultiRouteOptions(
             .toList();
 
     if (availableRoutes.length < 2) {
-      print("   ❌ Not enough routes at ${spot.name}");
+      // print("   ❌ Not enough routes at ${spot.name}");
       continue;
     }
 
@@ -599,9 +599,9 @@ List<MultiRouteResult> findMultiRouteOptions(
       );
       if (segment != null && segment.startWalkDistance <= 400) {
         firstLegRoutes.add(route);
-        print(
-          "   ✅ Route ${route.routeNumber} can reach ${spot.name} from start",
-        );
+        // print(
+        //   "   ✅ Route ${route.routeNumber} can reach ${spot.name} from start",
+        // );
       }
     }
 
@@ -617,27 +617,27 @@ List<MultiRouteResult> findMultiRouteOptions(
       );
       if (segment != null && segment.endWalkDistance <= 400) {
         secondLegRoutes.add(route);
-        print(
-          "   ✅ Route ${route.routeNumber} can reach destination from ${spot.name}",
-        );
+        // print(
+        //   "   ✅ Route ${route.routeNumber} can reach destination from ${spot.name}",
+        // );
       }
     }
 
-    print(
-      "   First leg routes: ${firstLegRoutes.map((r) => r.routeNumber).toList()}",
-    );
-    print(
-      "   Second leg routes: ${secondLegRoutes.map((r) => r.routeNumber).toList()}",
-    );
+    // print(
+    //   "   First leg routes: ${firstLegRoutes.map((r) => r.routeNumber).toList()}",
+    // );
+    // print(
+    //   "   Second leg routes: ${secondLegRoutes.map((r) => r.routeNumber).toList()}",
+    // );
 
     // Try combinations - but limit to reasonable options
     for (final route1 in firstLegRoutes) {
       for (final route2 in secondLegRoutes) {
         if (route1.routeNumber == route2.routeNumber) continue;
 
-        print(
-          "   🔄 Evaluating: Route ${route1.routeNumber} → Route ${route2.routeNumber}",
-        );
+        // print(
+        //   "   🔄 Evaluating: Route ${route1.routeNumber} → Route ${route2.routeNumber}",
+        // );
 
         final option = evaluateTransferOption(
           start,
@@ -648,11 +648,11 @@ List<MultiRouteResult> findMultiRouteOptions(
         );
 
         if (option != null) {
-          print(
-            "   ✅ Valid 2-route option: ${route1.routeNumber} → ${route2.routeNumber} via ${spot.name}",
-          );
-          print("      Total walk: ${option.totalWalkDistance.toInt()}m");
-          print("      Total cost: ${option.totalCost.toInt()}");
+          // print(
+          //   "   ✅ Valid 2-route option: ${route1.routeNumber} → ${route2.routeNumber} via ${spot.name}",
+          // );
+          // print("      Total walk: ${option.totalWalkDistance.toInt()}m");
+          // print("      Total cost: ${option.totalCost.toInt()}");
           options.add(option);
         }
       }
@@ -665,7 +665,7 @@ List<MultiRouteResult> findMultiRouteOptions(
     options = options.take(3).toList();
   }
 
-  print("🎯 Final valid 2-route options: ${options.length}");
+  // print("🎯 Final valid 2-route options: ${options.length}");
   return options;
 }
 
@@ -697,8 +697,8 @@ List<MultiRouteResult> findSingleRouteOptions(
         adjustedCost -= 100; // Small bonus for moderate walking
       }
 
-      print("   Single route option: Route ${route.routeNumber}");
-      print("      Walk: ${totalWalk.toInt()}m, Cost: ${adjustedCost.toInt()}");
+      // print("   Single route option: Route ${route.routeNumber}");
+      // print("      Walk: ${totalWalk.toInt()}m, Cost: ${adjustedCost.toInt()}");
 
       options.add(
         MultiRouteResult(
@@ -714,6 +714,6 @@ List<MultiRouteResult> findSingleRouteOptions(
     }
   }
 
-  print("📍 Found ${options.length} single route options");
+  // print("📍 Found ${options.length} single route options");
   return options;
 }

@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 // import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:latlong2/latlong.dart';
@@ -195,81 +194,81 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     loadRouteData();
 
     // For debugging DO NOT DELETE: Use a fixed location in Iloilo City
-    const LatLng debuggingLocation = LatLng(
-      // 10.732143,
-      // 122.559791, //tabuc suba jollibe
-      // 10.731958,
-      // 122.560223, //sulodlon debug
-      // 10.732178,
-      // 122.559673, //tabuc suba sa piyak
-      // 10.733472,
-      // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
-      // 10.715609,
-      // 122.562715, // ColdZone West
-      // 10.725203,
-      // 122.556715, //Jaro plaza
-      // 10.696694,
-      // 122.545582, //Molo Plazas
-      // 10.694928, 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      // 10.714335,
-      // 122.551852, // Sm City
-      // 10.731993,
-      // 122.549291, //promenade cpu
-      // 10.692037,
-      // 122.583255, // CT Parola
-      // 10.726009,
-      // 122.557774, // lapit alicias ah
-      // 10.726947,
-      // 122.558021, // lapit pgd
-      // 10.695724,
-      // 122.566170
-      // Center city proper
-      // 10.695522,
-      // 122.566212
-      // Center City proper across
-      // 10.69321774107972,
-      // 122.49947369098665, // mohon term
-      // 10.74472415057673,
-      // 122.56394863128664 // hause ni mhar
-    );
+    // const LatLng debuggingLocation = LatLng(
+    //   // 10.732143,
+    //   // 122.559791, //tabuc suba jollibe
+    //   // 10.731958,
+    //   // 122.560223, //sulodlon debug
+    //   // 10.732178,
+    //   // 122.559673, //tabuc suba sa piyak
+    //   // 10.733472,
+    //   // 122.548947, //tubang CPU
+    //   10.732610,
+    //   122.548220, // mt building
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
+    //   // 10.725203,
+    //   // 122.556715, //Jaro plaza
+    //   // 10.696694,
+    //   // 122.545582, //Molo Plazas
+    //   // 10.694928, 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    //   // 10.731993,
+    //   // 122.549291, //promenade cpu
+    //   // 10.692037,
+    //   // 122.583255, // CT Parola
+    //   // 10.726009,
+    //   // 122.557774, // lapit alicias ah
+    //   // 10.726947,
+    //   // 122.558021, // lapit pgd
+    //   // 10.695724,
+    //   // 122.566170
+    //   // Center city proper
+    //   // 10.695522,
+    //   // 122.566212
+    //   // Center City proper across
+    //   // 10.69321774107972,
+    //   // 122.49947369098665, // mohon term
+    //   // 10.74472415057673,
+    //   // 122.56394863128664 // hause ni mhar
+    // );
 
-    setState(() {
-      _currentLocation = debuggingLocation;
-      isLoading = false;
-    });
-    _destinationNotifier.value = const LatLng(
-      // 10.731068,
-      // 122.551723, //sarap station
-      // 10.732143, 122.559791, //tabuc suba jollibe
-      // 10.715609,
-      // 122.562715, // ColdZone West
-      // 10.716225933976629,
-      // 122.56377696990968, // somewhere further coldzone west
-      // 10.733472,
-      // 122.548947, //tubang CPU
-      // 10.696694, 122.545582, //Molo Plazas
-      // 10.694928,
-      // 122.564686, //Rob Main
-      // 10.753623,
-      // 122.538430, //Gt mall
-      // 10.727482,
-      // 122.558188, // alicias
-      // 10.714335,
-      // 122.551852, // Sm City
-      // 10.697643,
-      // 122.543888 // Molo
-      // 10.693202,
-      // 122.500595, // mohon term
-      // 10.725203,
-      // 122.556715, //Jaro plaza
-    ); // your test destination
-    _destination = _destinationNotifier.value;
+    // setState(() {
+    //   _currentLocation = debuggingLocation;
+    //   isLoading = false;
+    // });
+    // _destinationNotifier.value = const LatLng(
+    //   // 10.731068,
+    //   // 122.551723, //sarap station
+    //   // 10.732143, 122.559791, //tabuc suba jollibe
+    //   // 10.715609,
+    //   // 122.562715, // ColdZone West
+    //   // 10.716225933976629,
+    //   // 122.56377696990968, // somewhere further coldzone west
+    //   // 10.733472,
+    //   // 122.548947, //tubang CPU
+    //   // 10.696694, 122.545582, //Molo Plazas
+    //   // 10.694928,
+    //   // 122.564686, //Rob Main
+    //   // 10.753623,
+    //   // 122.538430, //Gt mall
+    //   // 10.727482,
+    //   // 122.558188, // alicias
+    //   // 10.714335,
+    //   // 122.551852, // Sm City
+    //   // 10.697643,
+    //   // 122.543888 // Molo
+    //   // 10.693202,
+    //   // 122.500595, // mohon term
+    //   // 10.725203,
+    //   // 122.556715, //Jaro plaza
+    // ); // your test destination
+    // _destination = _destinationNotifier.value;
 
-    loadRouteData(); // Load jeepney routes based on this location
+    // loadRouteData(); // Load jeepney routes based on this location
   }
 
   //initial map zoom and center
@@ -347,35 +346,35 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   //loading jeepney routes from jepney_routes.json and matching with user location and destination
   void loadRouteData() async {
-    print("🚀 Starting loadRouteData");
+    // print("🚀 Starting loadRouteData");
 
     List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
-    print("📍 Loaded ${jeepneyRoutes.length} jeepney routes");
+    // print("📍 Loaded ${jeepneyRoutes.length} jeepney routes");
 
     List<TransferSpot> transferSpots = [];
 
     try {
       transferSpots = await loadTransferSpotsFromJson();
-      print("🔄 Loaded ${transferSpots.length} transfer spots");
+      // print("🔄 Loaded ${transferSpots.length} transfer spots");
     } catch (e) {
-      print("❌ Transfer spots not found, using single routes only: $e");
+      // print("❌ Transfer spots not found, using single routes only: $e");
       transferSpots = [];
     }
 
     if (!mounted || _currentLocation == null || _destination == null) {
-      print("❌ Not mounted or missing location data");
+      // print("❌ Not mounted or missing location data");
       return;
     }
 
-    print("📍 Current: $_currentLocation");
-    print("🎯 Destination: $_destination");
+    // print("📍 Current: $_currentLocation");
+    // print("🎯 Destination: $_destination");
 
     allRoutes = getTopNearbyRoutes(
       _currentLocation!,
       _destination!,
       jeepneyRoutes,
     );
-    print("🛣️ Found ${allRoutes.length} nearby routes");
+    // print("🛣️ Found ${allRoutes.length} nearby routes");
 
     // Use the new multi-route system
     final bestRoute = findBestRoute(
@@ -386,14 +385,14 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     );
 
     if (bestRoute != null) {
-      print("✅ Found best route with ${bestRoute.tripCount} trip(s)");
-      print("   Routes: ${bestRoute.routeNumbers}");
-      print(
-        "   Total walk: ${bestRoute.totalWalkDistance.toStringAsFixed(0)}m",
-      );
-      print(
-        "   Total ride: ${bestRoute.totalRideDistance.toStringAsFixed(0)}m",
-      );
+      // print("✅ Found best route with ${bestRoute.tripCount} trip(s)");
+      // print("   Routes: ${bestRoute.routeNumbers}");
+      // print(
+      //   "   Total walk: ${bestRoute.totalWalkDistance.toStringAsFixed(0)}m",
+      // );
+      // print(
+      //   "   Total ride: ${bestRoute.totalRideDistance.toStringAsFixed(0)}m",
+      // );
 
       // Store the best route solution and get the actual route objects
       _bestRoute = bestRoute;
@@ -409,15 +408,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
       setState(() {
         if (bestRoute.tripCount == 1) {
-          print("🚌 Handling single route");
+          // print("🚌 Handling single route");
           _handleSingleRoute(bestRoute, jeepneyRoutes);
         } else {
-          print("🔄 Handling multi-route");
+          // print("🔄 Handling multi-route");
           _handleMultiRoute(bestRoute, jeepneyRoutes);
         }
       });
     } else {
-      print("⚠️ No best route found, using fallback");
+      // print("⚠️ No best route found, using fallback");
       _handleFallbackSingleRoute(jeepneyRoutes);
     }
   }
@@ -506,7 +505,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
         if (testSegment != null) {
           segmentRoute = route;
-          if (firstRoute == null) firstRoute = route;
+          firstRoute ??= route;
 
           // Add this segment's coordinates to combined route
           final segmentCoords = route.coordinates.sublist(
@@ -1157,15 +1156,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                 'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
             tileProvider: CancellableNetworkTileProvider(),
           ),
-          CurrentLocationLayer(
-            style: LocationMarkerStyle(
-              marker: DefaultLocationMarker(
-                child: Icon(Icons.location_pin, color: Colors.blue),
-              ),
-              markerSize: const Size(35, 35),
-              markerDirection: MarkerDirection.heading,
-            ),
-          ),
+
+          // CurrentLocationLayer(
+          //   style: LocationMarkerStyle(
+          //     marker: DefaultLocationMarker(
+          //       child: Icon(Icons.location_pin, color: Colors.blue),
+          //     ),
+          //     markerSize: const Size(35, 35),
+          //     markerDirection: MarkerDirection.heading,
+          //   ),
+          // ),
 
           // START Walking dotted line (current to jeepney start) - BLUE
           if (_startWalkingPolylines.isNotEmpty)
@@ -1187,7 +1187,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               ],
             ),
 
-          // Current location debugger for fixed location
+          // Current location GPS
           if (_currentLocation != null)
             MarkerLayer(
               markers: [
@@ -1596,12 +1596,12 @@ MultiRouteResult? findBestRoute(
   List<JeepneyRoute> allRoutes,
   List<TransferSpot> transferSpots,
 ) {
-  print("🎯 Finding best route...");
+  // print("🎯 Finding best route...");
   List<MultiRouteResult> allOptions = [];
 
   // ALWAYS try single route options first with more lenient parameters
   final singleOptions = findSingleRouteOptions(start, destination, allRoutes);
-  print("Found ${singleOptions.length} single route options");
+  // print("Found ${singleOptions.length} single route options");
 
   if (singleOptions.isNotEmpty) {
     // Check if any single route has reasonable walking distance
@@ -1612,7 +1612,7 @@ MultiRouteResult? findBestRoute(
         }).toList();
 
     if (reasonableSingleRoutes.isNotEmpty) {
-      print("✅ Found reasonable single routes, strongly preferring these");
+      // print("✅ Found reasonable single routes, strongly preferring these");
 
       // Add single routes with small bonus
       final bonusedSingleRoutes =
@@ -1637,9 +1637,9 @@ MultiRouteResult? findBestRoute(
           }).toList();
 
       if (excessiveWalkingSingle.isNotEmpty) {
-        print(
-          "⚠️ Single routes require significant walking, checking 2-route options",
-        );
+        // print(
+        //   "⚠️ Single routes require significant walking, checking 2-route options",
+        // );
         final multiOptions = findMultiRouteOptions(
           start,
           destination,
@@ -1650,9 +1650,9 @@ MultiRouteResult? findBestRoute(
       }
     } else {
       // No reasonable single routes, try multi-route
-      print(
-        "❌ Single routes require excessive walking, checking multi-route options",
-      );
+      // print(
+      //   "❌ Single routes require excessive walking, checking multi-route options",
+      // );
       allOptions.addAll(singleOptions); // Keep as backup
       final multiOptions = findMultiRouteOptions(
         start,
@@ -1664,7 +1664,7 @@ MultiRouteResult? findBestRoute(
     }
   } else {
     // No single routes found at all
-    print("❌ No single routes found, checking multi-route options");
+    // print("❌ No single routes found, checking multi-route options");
     final multiOptions = findMultiRouteOptions(
       start,
       destination,
@@ -1675,7 +1675,7 @@ MultiRouteResult? findBestRoute(
   }
 
   if (allOptions.isEmpty) {
-    print("❌ No route options found at all");
+    // print("❌ No route options found at all");
     return null;
   }
 
@@ -1691,11 +1691,11 @@ MultiRouteResult? findBestRoute(
   });
 
   final best = allOptions.first;
-  print(
-    "🏆 Best route selected: ${best.tripCount} trip(s), "
-    "routes: ${best.routeNumbers}, "
-    "walk: ${best.totalWalkDistance.toInt()}m, cost: ${best.totalCost.toInt()}",
-  );
+  // print(
+  //   "🏆 Best route selected: ${best.tripCount} trip(s), "
+  //   "routes: ${best.routeNumbers}, "
+  //   "walk: ${best.totalWalkDistance.toInt()}m, cost: ${best.totalCost.toInt()}",
+  // );
 
   return best;
 }
@@ -1745,19 +1745,19 @@ bool isValidTransfer(
       distance.as(LengthUnit.Meter, start, transferPoint) +
       distance.as(LengthUnit.Meter, transferPoint, destination);
 
-  print("   🔍 Transfer validation:");
-  print("      Direct distance: ${directDistance.toInt()}m");
-  print("      Via transfer: ${viaTransferDistance.toInt()}m");
-  print("      Walking distance: ${option.totalWalkDistance.toInt()}m");
-  print(
-    "      Detour ratio: ${(viaTransferDistance / directDistance).toStringAsFixed(2)}",
-  );
+  // print("   🔍 Transfer validation:");
+  // print("      Direct distance: ${directDistance.toInt()}m");
+  // print("      Via transfer: ${viaTransferDistance.toInt()}m");
+  // print("      Walking distance: ${option.totalWalkDistance.toInt()}m");
+  // print(
+  //   "      Detour ratio: ${(viaTransferDistance / directDistance).toStringAsFixed(2)}",
+  // );
 
   // More lenient validation - allow up to 2x detour and 1.5km walking
   final isValidDetour = viaTransferDistance <= directDistance * 2.0;
   final isValidWalking = option.totalWalkDistance <= 1500;
 
-  print("      Valid detour: $isValidDetour, Valid walking: $isValidWalking");
+  // print("      Valid detour: $isValidDetour, Valid walking: $isValidWalking");
 
   return isValidDetour && isValidWalking;
 }
@@ -1832,12 +1832,12 @@ MultiRouteResult? evaluateTransferOption(
 
   final totalCost = totalWalk + totalRide + transferPenalty;
 
-  print("      ✅ Transfer evaluation:");
-  print("         Route ${route1.routeNumber} → ${route2.routeNumber}");
-  print("         Walk: ${totalWalk.toInt()}m, Ride: ${totalRide.toInt()}m");
-  print(
-    "         Penalty: ${transferPenalty.toInt()}, Total cost: ${totalCost.toInt()}",
-  );
+  // print("      ✅ Transfer evaluation:");
+  // print("         Route ${route1.routeNumber} → ${route2.routeNumber}");
+  // print("         Walk: ${totalWalk.toInt()}m, Ride: ${totalRide.toInt()}m");
+  // print(
+  //   "         Penalty: ${transferPenalty.toInt()}, Total cost: ${totalCost.toInt()}",
+  // );
 
   return MultiRouteResult(
     segments: [segment1, segment2],
@@ -1856,12 +1856,12 @@ List<MultiRouteResult> findMultiRouteOptions(
   List<JeepneyRoute> allRoutes,
   List<TransferSpot> transferSpots,
 ) {
-  print("🔍 Finding 2-route transfer options only...");
+  // print("🔍 Finding 2-route transfer options only...");
   List<MultiRouteResult> options = [];
 
   // For each transfer spot, find ONLY direct 2-route combinations
   for (final spot in transferSpots) {
-    print("Checking transfer spot: ${spot.name}");
+    // print("Checking transfer spot: ${spot.name}");
 
     final availableRoutes =
         allRoutes
@@ -1869,7 +1869,7 @@ List<MultiRouteResult> findMultiRouteOptions(
             .toList();
 
     if (availableRoutes.length < 2) {
-      print("   ❌ Not enough routes at ${spot.name}");
+      // print("   ❌ Not enough routes at ${spot.name}");
       continue;
     }
 
@@ -1885,9 +1885,9 @@ List<MultiRouteResult> findMultiRouteOptions(
       );
       if (segment != null && segment.startWalkDistance <= 400) {
         firstLegRoutes.add(route);
-        print(
-          "   ✅ Route ${route.routeNumber} can reach ${spot.name} from start",
-        );
+        // print(
+        //   "   ✅ Route ${route.routeNumber} can reach ${spot.name} from start",
+        // );
       }
     }
 
@@ -1903,27 +1903,27 @@ List<MultiRouteResult> findMultiRouteOptions(
       );
       if (segment != null && segment.endWalkDistance <= 400) {
         secondLegRoutes.add(route);
-        print(
-          "   ✅ Route ${route.routeNumber} can reach destination from ${spot.name}",
-        );
+        // print(
+        //   "   ✅ Route ${route.routeNumber} can reach destination from ${spot.name}",
+        // );
       }
     }
 
-    print(
-      "   First leg routes: ${firstLegRoutes.map((r) => r.routeNumber).toList()}",
-    );
-    print(
-      "   Second leg routes: ${secondLegRoutes.map((r) => r.routeNumber).toList()}",
-    );
+    // print(
+    //   "   First leg routes: ${firstLegRoutes.map((r) => r.routeNumber).toList()}",
+    // );
+    // print(
+    //   "   Second leg routes: ${secondLegRoutes.map((r) => r.routeNumber).toList()}",
+    // );
 
     // Try combinations - but limit to reasonable options
     for (final route1 in firstLegRoutes) {
       for (final route2 in secondLegRoutes) {
         if (route1.routeNumber == route2.routeNumber) continue;
 
-        print(
-          "   🔄 Evaluating: Route ${route1.routeNumber} → Route ${route2.routeNumber}",
-        );
+        // print(
+        //   "   🔄 Evaluating: Route ${route1.routeNumber} → Route ${route2.routeNumber}",
+        // );
 
         final option = evaluateTransferOption(
           start,
@@ -1934,12 +1934,12 @@ List<MultiRouteResult> findMultiRouteOptions(
         );
 
         if (option != null) {
-          print(
-            "   ✅ Valid 2-route option: ${route1.routeNumber} → ${route2.routeNumber} via ${spot.name}",
-          );
-          print("      Total walk: ${option.totalWalkDistance.toInt()}m");
-          print("      Total cost: ${option.totalCost.toInt()}");
-          options.add(option);
+          // print(
+          //   "   ✅ Valid 2-route option: ${route1.routeNumber} → ${route2.routeNumber} via ${spot.name}",
+          // );
+          // print("      Total walk: ${option.totalWalkDistance.toInt()}m");
+          // print("      Total cost: ${option.totalCost.toInt()}");
+          // options.add(option);
         }
       }
     }
@@ -1951,7 +1951,7 @@ List<MultiRouteResult> findMultiRouteOptions(
     options = options.take(3).toList();
   }
 
-  print("🎯 Final valid 2-route options: ${options.length}");
+  // print("🎯 Final valid 2-route options: ${options.length}");
   return options;
 }
 
@@ -1983,8 +1983,8 @@ List<MultiRouteResult> findSingleRouteOptions(
         adjustedCost -= 100; // Small bonus for moderate walking
       }
 
-      print("   Single route option: Route ${route.routeNumber}");
-      print("      Walk: ${totalWalk.toInt()}m, Cost: ${adjustedCost.toInt()}");
+      // print("   Single route option: Route ${route.routeNumber}");
+      // print("      Walk: ${totalWalk.toInt()}m, Cost: ${adjustedCost.toInt()}");
 
       options.add(
         MultiRouteResult(
@@ -2000,6 +2000,6 @@ List<MultiRouteResult> findSingleRouteOptions(
     }
   }
 
-  print("📍 Found ${options.length} single route options");
+  // print("📍 Found ${options.length} single route options");
   return options;
 }
