@@ -13,105 +13,8 @@ import 'package:http/http.dart' as http;
 import 'package:map_try/model/route_loader.dart';
 import 'package:map_try/services/mapbox_service.dart';
 import 'package:map_try/services/ors_service.dart';
-
-const String kYourOrsApiKey =
-    "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImE5MGM0OTU0Nzg1ODRmNzdiZGJhZWFiYWVkYTY1ODE1IiwiaCI6Im11cm11cjY0In0=";
-
-// --- bearing utilities ---
-double bearing(LatLng from, LatLng to) {
-  final dLon = (to.longitude - from.longitude) * pi / 180;
-  final lat1 = from.latitude * pi / 180;
-  final lat2 = to.latitude * pi / 180;
-
-  final y = sin(dLon) * cos(lat2);
-  final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
-  return (atan2(y, x) * 180 / pi + 360) % 360;
-}
-
-bool isForward(
-  double routeBearing,
-  double targetBearing, {
-  double tolerance = 60,
-}) {
-  // normalize difference to [-180, 180]
-  double diff = (routeBearing - targetBearing + 540) % 360 - 180;
-  return diff.abs() <= tolerance;
-}
-
-// for walking distance and polylines
-final Distance _distance = Distance();
-double walkingDistance = 0.0;
-List<Polyline> walkingPolylines = [];
-double segmentDistance = 0.0;
-
-double endWalkingDistance = 0.0;
-List<Polyline> endWalkingPolylines = [];
-
-// Find nearest point on all jeepney routes
-LatLng findNearestPointOnAllRoutes(
-  LatLng userLocation,
-  List<JeepneyRoute> allRoutes,
-) {
-  LatLng? nearestPoint;
-  double minDistance = double.infinity;
-
-  for (final route in allRoutes) {
-    for (final coord in route.coordinates) {
-      final double dist = _distance(userLocation, coord);
-      if (dist < minDistance) {
-        minDistance = dist;
-        nearestPoint = coord;
-      }
-    }
-  }
-
-  return nearestPoint!;
-}
-
-//dotted line for walking distance
-// Builds a dotted polyline from a full path.
-// Each small segment is drawn, then a gap, then another segment, etc.
-List<Polyline> createDottedPolyline(
-  List<LatLng> path, {
-  double dashLengthMeters = 8, // length of each drawn dash
-  double gapLengthMeters = 6, // length of the gap
-  double strokeWidth = 3,
-  Color color = Colors.blue,
-}) {
-  final List<Polyline> out = [];
-  if (path.length < 2) return out;
-
-  // simple linear interpolation between two points
-  LatLng _lerp(LatLng a, LatLng b, double t) => LatLng(
-    a.latitude + (b.latitude - a.latitude) * t,
-    a.longitude + (b.longitude - a.longitude) * t,
-  );
-
-  for (int i = 0; i < path.length - 1; i++) {
-    final a = path[i];
-    final b = path[i + 1];
-    final double segDist = _distance.as(LengthUnit.Meter, a, b);
-    if (segDist <= 0) continue;
-
-    double pos = 0.0;
-    while (pos < segDist) {
-      final double end = (pos + dashLengthMeters).clamp(0.0, segDist);
-      final double t1 = pos / segDist;
-      final double t2 = end / segDist;
-
-      out.add(
-        Polyline(
-          points: [_lerp(a, b, t1), _lerp(a, b, t2)],
-          color: color,
-          strokeWidth: strokeWidth,
-        ),
-      );
-
-      pos += dashLengthMeters + gapLengthMeters;
-    }
-  }
-  return out;
-}
+import 'package:map_try/utils/OpenStreetMapUtils/OpenStreetMapUtils.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 //Main OpenStreetMap screen
 
@@ -140,8 +43,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   bool isLoading = true;
 
-  final Map<String, List<LatLng>> _orsCache = {};
-  final bool _isRequestingWalking = false;
   late OrsService _orsService;
 
   List<Polyline> _startWalkingPolylines = []; // walk from user to jeepney start
@@ -149,11 +50,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       []; // walk from jeepney end to destination
   bool _walkingPolylinesCalculated = false;
 
+  MultiRouteResult? _bestRoute;
+  List<JeepneyRoute> _selectedRoutes =
+      []; // Only the routes in the best solution
+
   @override
   void initState() {
     super.initState();
     _destinationNotifier = widget.destinationNotifier;
-    _orsService = OrsService(kYourOrsApiKey);
+    _orsService = OrsService(ORSApiKey);
 
     _initializeLocation().then((_) {
       _destinationNotifier.addListener(() {
@@ -176,89 +81,90 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   // call this after you set _matchedRoute, _currentLocation or _destination
   Future<void> _updateAllWalkingPolylines() async {
-  if (_currentLocation == null ||
-      _destination == null ||
-      _matchedRoute == null) {
-    return;
-  }
+    if (_currentLocation == null ||
+        _destination == null ||
+        _matchedRoute == null) {
+      return;
+    }
 
-  final segment = findBestRouteSegment(
-    _currentLocation!,
-    _destination!,
-    _matchedRoute!.coordinates,
-  );
-
-  if (segment == null) return;
-
-  // Clear existing polylines
-  setState(() {
-    _startWalkingPolylines = [];
-    _endWalkingPolylines = [];
-  });
-
-  // Get jeepney start and end points
-  final LatLng jeepneyStartPoint =
-      _matchedRoute!.coordinates[segment.startIndex];
-  final LatLng jeepneyEndPoint = _matchedRoute!.coordinates[segment.endIndex];
-
-  // Update walking distances
-  walkingDistance = segment.startWalkDistance;
-  endWalkingDistance = segment.endWalkDistance;
-
-  // Create both walking routes concurrently
-  final futures = <Future<void>>[];
-
-  // Start walking route (user → jeepney start)
-  // Removed the > 10m threshold to show all walking routes
-  if (segment.startWalkDistance > 5) { // Lowered from 10m to 5m
-    futures.add(
-      _orsService
-          .getRoute(
-            _currentLocation!,
-            jeepneyStartPoint,
-            profile: "foot-walking",
-          )
-          .then((route) {
-            if (route != null && mounted) {
-              setState(() {
-                _startWalkingPolylines = createDottedPolyline(
-                  route,
-                  color: Colors.blue,
-                  strokeWidth: 3,
-                );
-              });
-            }
-          }),
+    final segment = findBestRouteSegment(
+      _currentLocation!,
+      _destination!,
+      _matchedRoute!.coordinates,
     );
+
+    if (segment == null) return;
+
+    // Clear existing polylines
+    setState(() {
+      _startWalkingPolylines = [];
+      _endWalkingPolylines = [];
+    });
+
+    // Get jeepney start and end points
+    final LatLng jeepneyStartPoint =
+        _matchedRoute!.coordinates[segment.startIndex];
+    final LatLng jeepneyEndPoint = _matchedRoute!.coordinates[segment.endIndex];
+
+    // Update walking distances
+    walkingDistance = segment.startWalkDistance;
+    endWalkingDistance = segment.endWalkDistance;
+
+    // Create both walking routes concurrently
+    final futures = <Future<void>>[];
+
+    // Start walking route (user → jeepney start)
+    // Removed the > 10m threshold to show all walking routes
+    if (segment.startWalkDistance > 5) {
+      // Lowered from 10m to 5m
+      futures.add(
+        _orsService
+            .getRoute(
+              _currentLocation!,
+              jeepneyStartPoint,
+              profile: "foot-walking",
+            )
+            .then((route) {
+              if (route != null && mounted) {
+                setState(() {
+                  _startWalkingPolylines = createDottedPolyline(
+                    route,
+                    color: Colors.blue,
+                    strokeWidth: 3,
+                  );
+                });
+              }
+            }),
+      );
+    }
+
+    // End walking route (jeepney end → destination)
+    if (segment.endWalkDistance > 5) {
+      // Lowered from 10m to 5m
+      futures.add(
+        _orsService
+            .getRoute(jeepneyEndPoint, _destination!, profile: "foot-walking")
+            .then((route) {
+              if (route != null && mounted) {
+                setState(() {
+                  _endWalkingPolylines = createDottedPolyline(
+                    route,
+                    color: Colors.green,
+                    strokeWidth: 3,
+                  );
+                });
+              }
+            }),
+      );
+    }
+
+    // Wait for both requests to complete
+    await Future.wait(futures);
+
+    setState(() {
+      _walkingPolylinesCalculated = true;
+    });
   }
-
-  // End walking route (jeepney end → destination)  
-  if (segment.endWalkDistance > 5) { // Lowered from 10m to 5m
-    futures.add(
-      _orsService
-          .getRoute(jeepneyEndPoint, _destination!, profile: "foot-walking")
-          .then((route) {
-            if (route != null && mounted) {
-              setState(() {
-                _endWalkingPolylines = createDottedPolyline(
-                  route,
-                  color: Colors.green,
-                  strokeWidth: 3,
-                );
-              });
-            }
-          }),
-    );
-  }
-
-  // Wait for both requests to complete
-  await Future.wait(futures);
-
-  setState(() {
-    _walkingPolylinesCalculated = true;
-  });
-}
-
 
   //location initialization
   Future<void> _initializeLocation() async {
@@ -299,8 +205,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.559673, //tabuc suba sa piyak
       // 10.733472,
       // 122.548947, //tubang CPU
-      10.732610,
-      122.548220, // mt building
+      // 10.732610,
+      // 122.548220, // mt building
       // 10.715609,
       // 122.562715, // ColdZone West
       // 10.725203,
@@ -326,6 +232,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 10.695522,
       // 122.566212
       // Center City proper across
+      10.69321774107972,
+      122.49947369098665, // mohon term
     );
 
     setState(() {
@@ -340,8 +248,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.562715, // ColdZone West
       // 10.716225933976629,
       // 122.56377696990968, // somewhere further coldzone west
-      // 10.733472,
-      // 122.548947, //tubang CPU
+      10.733472,
+      122.548947, //tubang CPU
       // 10.696694, 122.545582, //Molo Plazas
       // 10.694928,
       // 122.564686, //Rob Main
@@ -349,8 +257,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       // 122.538430, //Gt mall
       // 10.727482,
       // 122.558188, // alicias
-      10.714335,
-      122.551852, // Sm City
+      // 10.714335,
+      // 122.551852, // Sm City
       // 10.697643,
       // 122.543888 // Molo
       // 10.693202,
@@ -435,90 +343,312 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   }
 
   //loading jeepney routes from jepney_routes.json and matching with user location and destination
-  //loading jeepney routes from jepney_routes.json and matching with user location and destination
   void loadRouteData() async {
-  List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
-  if (!mounted || _currentLocation == null || _destination == null) return;
+    print("🚀 Starting loadRouteData");
 
-  allRoutes = getTopNearbyRoutes(
-    _currentLocation!,
-    _destination!,
-    jeepneyRoutes,
-  );
+    List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
+    print("📍 Loaded ${jeepneyRoutes.length} jeepney routes");
 
-  final matchingRoute = getMatchingRoute(
-    _currentLocation!,
-    _destination!,
-    jeepneyRoutes,
-  );
+    List<TransferSpot> transferSpots = [];
 
-  if (matchingRoute != null) {
-    // Use the segment information from findBestRouteSegment
-    final segment = findBestRouteSegment(
+    try {
+      transferSpots = await loadTransferSpotsFromJson();
+      print("🔄 Loaded ${transferSpots.length} transfer spots");
+    } catch (e) {
+      print("❌ Transfer spots not found, using single routes only: $e");
+      transferSpots = [];
+    }
+
+    if (!mounted || _currentLocation == null || _destination == null) {
+      print("❌ Not mounted or missing location data");
+      return;
+    }
+
+    print("📍 Current: $_currentLocation");
+    print("🎯 Destination: $_destination");
+
+    allRoutes = getTopNearbyRoutes(
       _currentLocation!,
       _destination!,
-      matchingRoute.coordinates,
+      jeepneyRoutes,
+    );
+    print("🛣️ Found ${allRoutes.length} nearby routes");
+
+    // Use the new multi-route system
+    final bestRoute = findBestRoute(
+      _currentLocation!,
+      _destination!,
+      jeepneyRoutes,
+      transferSpots,
     );
 
-    if (segment != null) {
-      // Use the segment's startIndex and endIndex directly - they already consider direction
-      final routeSegment = matchingRoute.coordinates.sublist(
-        segment.startIndex, 
-        segment.endIndex + 1
+    if (bestRoute != null) {
+      print("✅ Found best route with ${bestRoute.tripCount} trip(s)");
+      print("   Routes: ${bestRoute.routeNumbers}");
+      print(
+        "   Total walk: ${bestRoute.totalWalkDistance.toStringAsFixed(0)}m",
       );
-      segmentDistance = calculateSegmentDistance(routeSegment);
+      print(
+        "   Total ride: ${bestRoute.totalRideDistance.toStringAsFixed(0)}m",
+      );
+
+      // Store the best route solution and get the actual route objects
+      _bestRoute = bestRoute;
+      _selectedRoutes = [];
+
+      for (final routeNumber in bestRoute.routeNumbers) {
+        final route = jeepneyRoutes.firstWhere(
+          (r) => r.routeNumber == routeNumber,
+          orElse: () => jeepneyRoutes.first, // fallback
+        );
+        _selectedRoutes.add(route);
+      }
 
       setState(() {
-        _route = routeSegment;
-        _matchedRoute = matchingRoute;
-        _walkingPolylinesCalculated = false; // Reset flag
+        if (bestRoute.tripCount == 1) {
+          print("🚌 Handling single route");
+          _handleSingleRoute(bestRoute, jeepneyRoutes);
+        } else {
+          print("🔄 Handling multi-route");
+          _handleMultiRoute(bestRoute, jeepneyRoutes);
+        }
       });
+    } else {
+      print("⚠️ No best route found, using fallback");
+      _handleFallbackSingleRoute(jeepneyRoutes);
+    }
+  }
+
+  void _handleSingleRoute(
+    MultiRouteResult singleRoute,
+    List<JeepneyRoute> allRoutes,
+  ) {
+    final segment = singleRoute.segments.first;
+
+    // Find the actual route that matches this segment
+    JeepneyRoute? matchingRoute;
+    for (final route in allRoutes) {
+      final testSegment = findBestRouteSegment(
+        _currentLocation!,
+        _destination!,
+        route.coordinates,
+      );
+
+      if (testSegment != null &&
+          testSegment.startIndex == segment.startIndex &&
+          testSegment.endIndex == segment.endIndex) {
+        matchingRoute = route;
+        break;
+      }
+    }
+
+    if (matchingRoute != null) {
+      final routeSegment = matchingRoute.coordinates.sublist(
+        segment.startIndex,
+        segment.endIndex + 1,
+      );
+
+      _route = routeSegment;
+      _matchedRoute = matchingRoute;
+      segmentDistance = calculateSegmentDistance(routeSegment);
+      _walkingPolylinesCalculated = false;
 
       // Update walking polylines
       _updateAllWalkingPolylines();
-    } else {
-      // Fallback to old logic if no segment found
-      final int startIndex = getClosestPointIndex(
-        matchingRoute.coordinates,
-        _currentLocation!,
-      );
-      final int endIndex = getClosestPointIndex(
-        matchingRoute.coordinates,
-        _destination!,
-      );
-
-      // Only apply min/max as fallback
-      final int fromIndex = startIndex < endIndex ? startIndex : endIndex;
-      final int toIndex = startIndex < endIndex ? endIndex : startIndex;
-
-      final segment = matchingRoute.coordinates.sublist(fromIndex, toIndex + 1);
-      segmentDistance = calculateSegmentDistance(segment);
-
-      setState(() {
-        _route = segment;
-        _matchedRoute = matchingRoute;
-        _walkingPolylinesCalculated = false;
-      });
-
-      _updateAllWalkingPolylines();
-    }
-  } else {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              "No matching jeepney route found from your location to destination.",
-            ),
-            duration: Duration(seconds: 8),
-          ),
-        );
     }
   }
-}
 
-  //showing route modal with details (button will be shown if a route is matched)
+  // Add this helper function for transfer spots loading
+  Future<List<TransferSpot>> loadTransferSpotsFromJson() async {
+    final String jsonString = await rootBundle.loadString(
+      'assets/transfer_spots.json',
+    );
+    final List<dynamic> jsonList = json.decode(jsonString);
+    return jsonList.map((json) => TransferSpot.fromJson(json)).toList();
+  }
+
+  // Enhanced multi-route handling
+  void _handleMultiRoute(
+    MultiRouteResult multiRoute,
+    List<JeepneyRoute> allRoutes,
+  ) {
+    // For now, combine all route segments into one polyline
+    List<LatLng> combinedRoute = [];
+    JeepneyRoute? firstRoute;
+
+    for (int i = 0; i < multiRoute.segments.length; i++) {
+      final segment = multiRoute.segments[i];
+
+      // Find matching route for this segment
+      JeepneyRoute? segmentRoute;
+      LatLng segmentStart, segmentEnd;
+
+      if (i == 0) {
+        // First segment: start -> first transfer point
+        segmentStart = _currentLocation!;
+        segmentEnd = multiRoute.transferPoints.first;
+      } else if (i == multiRoute.segments.length - 1) {
+        // Last segment: last transfer point -> destination
+        segmentStart = multiRoute.transferPoints[i - 1];
+        segmentEnd = _destination!;
+      } else {
+        // Middle segment: transfer point -> transfer point
+        segmentStart = multiRoute.transferPoints[i - 1];
+        segmentEnd = multiRoute.transferPoints[i];
+      }
+
+      // Find the route that best matches this segment
+      for (final route in allRoutes) {
+        final testSegment = findBestRouteSegment(
+          segmentStart,
+          segmentEnd,
+          route.coordinates,
+        );
+
+        if (testSegment != null) {
+          segmentRoute = route;
+          if (firstRoute == null) firstRoute = route;
+
+          // Add this segment's coordinates to combined route
+          final segmentCoords = route.coordinates.sublist(
+            testSegment.startIndex,
+            testSegment.endIndex + 1,
+          );
+
+          if (combinedRoute.isEmpty) {
+            combinedRoute.addAll(segmentCoords);
+          } else {
+            // Add without duplicating the connection point
+            combinedRoute.addAll(segmentCoords.skip(1));
+          }
+          break;
+        }
+      }
+    }
+
+    if (combinedRoute.isNotEmpty && firstRoute != null) {
+      _route = combinedRoute;
+      _matchedRoute = firstRoute; // Use first route for reference
+      segmentDistance = calculateSegmentDistance(combinedRoute);
+      _walkingPolylinesCalculated = false;
+
+      // Update walking polylines for multi-route
+      _updateMultiRouteWalkingPolylines(multiRoute);
+    }
+  }
+
+  Future<void> _updateMultiRouteWalkingPolylines(
+    MultiRouteResult multiRoute,
+  ) async {
+    setState(() {
+      _startWalkingPolylines = [];
+      _endWalkingPolylines = [];
+    });
+
+    final futures = <Future<void>>[];
+
+    // Start walking (user -> first route start)
+    final firstSegment = multiRoute.segments.first;
+    if (firstSegment.startWalkDistance > 5) {
+      walkingDistance = firstSegment.startWalkDistance;
+
+      futures.add(
+        _orsService
+            .getRoute(
+              _currentLocation!,
+              _route.first, // Start of combined route
+              profile: "foot-walking",
+            )
+            .then((route) {
+              if (route != null && mounted) {
+                setState(() {
+                  _startWalkingPolylines = createDottedPolyline(
+                    route,
+                    color: Colors.blue,
+                    strokeWidth: 3,
+                  );
+                });
+              }
+            }),
+      );
+    }
+
+    // End walking (last route end -> destination)
+    final lastSegment = multiRoute.segments.last;
+    if (lastSegment.endWalkDistance > 5) {
+      endWalkingDistance = lastSegment.endWalkDistance;
+
+      futures.add(
+        _orsService
+            .getRoute(
+              _route.last, // End of combined route
+              _destination!,
+              profile: "foot-walking",
+            )
+            .then((route) {
+              if (route != null && mounted) {
+                setState(() {
+                  _endWalkingPolylines = createDottedPolyline(
+                    route,
+                    color: Colors.green,
+                    strokeWidth: 3,
+                  );
+                });
+              }
+            }),
+      );
+    }
+
+    await Future.wait(futures);
+
+    setState(() {
+      _walkingPolylinesCalculated = true;
+    });
+  }
+
+  void _handleFallbackSingleRoute(List<JeepneyRoute> jeepneyRoutes) {
+    final matchedRoute = getMatchingRoute(
+      _currentLocation!,
+      _destination!,
+      jeepneyRoutes,
+    );
+
+    if (matchedRoute != null) {
+      final segment = findBestRouteSegment(
+        _currentLocation!,
+        _destination!,
+        matchedRoute.coordinates,
+      );
+
+      if (segment != null) {
+        final routeSegment = matchedRoute.coordinates.sublist(
+          segment.startIndex,
+          segment.endIndex + 1,
+        );
+
+        _route = routeSegment;
+        _matchedRoute = matchedRoute;
+        segmentDistance = calculateSegmentDistance(routeSegment);
+        _walkingPolylinesCalculated = false;
+
+        _updateAllWalkingPolylines();
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                "No matching jeepney route found from your location to destination.",
+              ),
+              duration: Duration(seconds: 8),
+            ),
+          );
+      }
+    }
+  }
+
   void showRouteModal(BuildContext context) {
     _isModalOpen = true;
     final animationController = BottomSheet.createAnimationController(this);
@@ -560,6 +690,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                     child: ListView(
                       controller: scrollController,
                       children: [
+                        // Drag handle
                         Center(
                           child: Container(
                             width: 40,
@@ -572,14 +703,14 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           ),
                         ),
 
-                        // STEP 1: Walk to jeepney start
+                        // Step 1: Walk to first jeepney
                         ListTile(
                           leading: const Icon(
                             Icons.directions_walk,
                             color: Colors.blue,
                           ),
                           title: const Text(
-                            "Step 1: Walk to the nearest jeep route",
+                            "Step 1: Walk to the nearest jeepney route",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
@@ -590,58 +721,124 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                         ),
                         const SizedBox(height: 8),
 
-                        // STEP 2: Ride the jeepney
-                        ListTile(
-                          leading: const Icon(
-                            Icons.directions_bus,
-                            color: Colors.orange,
-                          ),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Step 2: Ride Jeepney Route ${_matchedRoute?.routeNumber ?? ''}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepOrangeAccent,
+                        // Display ONLY the selected routes from the best solution
+                        if (_route.isNotEmpty &&
+                            _selectedRoutes.isNotEmpty) ...[
+                          // Use _selectedRoutes instead of allRoutes!
+                          for (int i = 0; i < _selectedRoutes.length; i++) ...[
+                            ListTile(
+                              leading: const Icon(
+                                Icons.directions_bus,
+                                color: Colors.orange,
+                              ),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Step ${i + 2}: Ride Jeepney Route ${_selectedRoutes[i].routeNumber}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepOrangeAccent,
+                                    ),
+                                  ),
+                                  Image.asset(
+                                    "Assets/route_pics/${_selectedRoutes[i].routeNumber}.png",
+                                    height: 200,
+                                    fit: BoxFit.contain,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              height: 100,
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  size: 40,
+                                                ),
+                                              ),
+                                            ),
+                                  ),
+                                ],
+                              ),
+                              subtitle: Text(
+                                "Direction: ${_selectedRoutes[i].direction}\n"
+                                "Estimated Distance: ${(calculateSegmentDistance(_selectedRoutes[i].coordinates) / 1000).toStringAsFixed(2)} km",
+                              ),
+                            ),
+
+                            // Add transfer step between routes (but not after the last route)
+                            if (i < _selectedRoutes.length - 1)
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.transfer_within_a_station,
+                                  color: Colors.purple,
+                                ),
+                                title: Text(
+                                  "Step ${i + 3}: Transfer to Route ${_selectedRoutes[i + 1].routeNumber}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: const Text(
+                                  "Get off and transfer to the next route",
                                 ),
                               ),
-                              Image.asset(
-                                "Assets/route_pics/${_matchedRoute?.routeNumber}.png",
-                                height: 250,
-                                width: 250,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      height: 120,
-                                      color: Colors.grey[200],
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 40,
+                          ],
+                        ] else if (_route.isNotEmpty &&
+                            _matchedRoute != null) ...[
+                          // Single route fallback (when _selectedRoutes is empty)
+                          ListTile(
+                            leading: const Icon(
+                              Icons.directions_bus,
+                              color: Colors.orange,
+                            ),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Step 2: Ride Jeepney Route ${_matchedRoute?.routeNumber ?? ''}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepOrangeAccent,
+                                  ),
+                                ),
+                                Image.asset(
+                                  "Assets/route_pics/${_matchedRoute?.routeNumber}.png",
+                                  height: 200,
+                                  fit: BoxFit.contain,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Container(
+                                        height: 100,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 40,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              "Direction: ${_matchedRoute?.direction ?? ''}\n"
+                              "Ride Distance: ${(segmentDistance / 1000).toStringAsFixed(2)} km\n"
+                              "Estimated Time: ${estimateJeepneyTime(segmentDistance)}",
+                            ),
                           ),
-                          subtitle: Text(
-                            "Route Direction: ${_matchedRoute?.direction ?? ''}\n"
-                            "Ride Distance: ${(segmentDistance / 1000).toStringAsFixed(2)} km\n"
-                            "Estimated Travel Time: ${estimateJeepneyTime(segmentDistance)}",
-                          ),
-                        ),
+                        ],
+
                         const SizedBox(height: 8),
 
-                        // STEP 3: Walk to destination (NEW)
+                        // Final step: Walk to destination
                         ListTile(
                           leading: const Icon(
                             Icons.directions_walk,
                             color: Colors.green,
                           ),
-                          title: const Text(
-                            "Step 3: Walk to your destination",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          title: Text(
+                            "Final Step: Walk to your destination",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             endWalkingDistance > 10
@@ -649,9 +846,10 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                                 : "You'll arrive directly at your destination!",
                           ),
                         ),
+
                         const SizedBox(height: 16),
 
-                        // SUMMARY
+                        // Trip Summary
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -692,24 +890,21 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    "Ride: ${(segmentDistance / 1000).toStringAsFixed(2)}km",
+                                    "Jeepney trips: ${_selectedRoutes.isNotEmpty ? _selectedRoutes.length : 1}",
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.timer,
-                                    size: 16,
-                                    color: Colors.grey,
+                              Text("Total Time: ${_getTotalEstimatedTime()}"),
+                              if (_bestRoute != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Routes: ${_bestRoute!.routeNumbers.join(' → ')}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "Total Est. Time: ${_getTotalEstimatedTime()}",
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -722,9 +917,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           ),
         );
       },
-    ).whenComplete(() {
-      _isModalOpen = false;
-    });
+    );
   }
 
   // ADD this helper function for total time calculation
@@ -860,22 +1053,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     }
   }
 
-  //haversine formulaaaa (for earth radius)
-  double _calculateDistance(LatLng a, LatLng b) {
-    const double earthRadius = 6371;
-    double dLat = _degToRad(b.latitude - a.latitude);
-    double dLon = _degToRad(b.longitude - a.longitude);
-    double lat1 = _degToRad(a.latitude);
-    double lat2 = _degToRad(b.latitude);
-
-    double aCalc =
-        sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
-
-    return earthRadius * c;
-  }
-
   double _degToRad(double deg) => deg * (pi / 180.0);
   //for walking time estimation
   String getWalkingTimeEstimate(double distanceInMeters) {
@@ -911,118 +1088,32 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     return "${timeInMinutes.toStringAsFixed(1)} minutes";
   }
 
+  //haversine formulaaaa (for earth radius)
+  double _calculateDistance(LatLng a, LatLng b) {
+    const double earthRadius = 6371;
+    double dLat = _degToRad(b.latitude - a.latitude);
+    double dLon = _degToRad(b.longitude - a.longitude);
+    double lat1 = _degToRad(a.latitude);
+    double lat2 = _degToRad(b.latitude);
+
+    double aCalc =
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
+
+    return earthRadius * c;
+  }
+
+  // Remove the ENTIRE polyline logic from your build() method
+  // Replace the build method section starting from "//dotted line" comment with this:
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    //dotted line
-    if (_currentLocation != null &&
-        allRoutes.isNotEmpty &&
-        _destination != null) {
-      final segment = findBestRouteSegment(
-        _currentLocation!,
-        _destination!,
-        _matchedRoute?.coordinates ?? [],
-      );
+    // REMOVED ALL THE OLD POLYLINE LOGIC FROM HERE
+    // The new multi-route system handles polylines in the functions above
 
-      if (segment != null && _matchedRoute != null) {
-        final ors = OrsService("YOUR_ORS_API_KEY");
-
-        // Start walking polyline (current location → jeepney start)
-        if (segment.startWalkDistance > 10) {
-          final LatLng jeepneyStartPoint =
-              _matchedRoute!.coordinates[segment.startIndex];
-          walkingDistance = segment.startWalkDistance;
-
-          ors
-              .getRoute(
-                _currentLocation!,
-                jeepneyStartPoint,
-                profile: "foot-walking",
-              )
-              .then((orsRoute) {
-                if (orsRoute != null) {
-                  setState(() {
-                    walkingPolylines = createDottedPolyline(
-                      orsRoute,
-                      color: Colors.blue,
-                    );
-                  });
-                }
-              });
-        } else {
-          walkingDistance = 0;
-          walkingPolylines = [];
-        }
-
-        // End walking polyline (jeepney end → destination)
-        if (segment.endWalkDistance > 10) {
-          final LatLng jeepneyEndPoint =
-              _matchedRoute!.coordinates[segment.endIndex];
-          endWalkingDistance = segment.endWalkDistance;
-
-          ors
-              .getRoute(jeepneyEndPoint, _destination!, profile: "foot-walking")
-              .then((orsRoute) {
-                if (orsRoute != null) {
-                  setState(() {
-                    endWalkingPolylines = createDottedPolyline(
-                      orsRoute,
-                      color: Colors.green,
-                    );
-                  });
-                }
-              });
-        } else {
-          endWalkingDistance = 0;
-          endWalkingPolylines = [];
-        }
-      } else {
-        // Fallback to old logic if no segment found
-        final bool isNear = allRoutes.any(
-          (route) => route.isPointNearRoute(_currentLocation!, 10),
-        );
-
-        if (!isNear) {
-          final LatLng nearestPoint = findNearestPointOnAllRoutes(
-            _currentLocation!,
-            allRoutes,
-          );
-
-          walkingDistance = Distance().as(
-            LengthUnit.Meter,
-            _currentLocation!,
-            nearestPoint,
-          );
-
-          final ors = OrsService("YOUR_ORS_API_KEY");
-
-          ors
-              .getRoute(
-                _currentLocation!,
-                nearestPoint,
-                profile: "foot-walking",
-              )
-              .then((orsRoute) {
-                if (orsRoute != null) {
-                  setState(() {
-                    walkingPolylines = createDottedPolyline(
-                      orsRoute,
-                      color: Colors.blue,
-                    );
-                  });
-                }
-              });
-        } else {
-          walkingDistance = 0;
-          walkingPolylines = [];
-        }
-
-        // Clear end walking polylines if no segment
-        endWalkingDistance = 0;
-        endWalkingPolylines = [];
-      }
-    }
     //main OpenStreetMap widget with layers and controls
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -1168,140 +1259,36 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       ),
     );
   }
-}
-//for debugging route
-// Color _getColorForRoute(String routeNumber) {
-//   switch (routeNumber) {
-//     // case '3':
-//     //   return const Color.fromARGB(255, 51, 181, 103);
-//     // case '11':
-//     //   return const Color.fromARGB(255, 233, 23, 248);
-//     // case '15':
-//     //   return const Color.fromARGB(255, 255, 77, 0);
-//     // case '2':
-//     //   return const Color.fromARGB(255, 255, 204, 0);
-//     // case '4':
-//     //   return const Color.fromARGB(255, 72, 233, 77);
-//     //   case '5':
-//     //   return const Color.fromARGB(255, 0, 26, 255);
-//     // case '25':
-//     //   return const Color.fromARGB(255, 255, 234, 0);
-//     // case '1':
-//     //   return const Color.fromARGB(255, 255, 255, 255);
-//     // case '7':
-//     //   return const Color.fromARGB(255, 87, 25, 78);
-//     // case '9':
-//     //   return const Color.fromARGB(255, 66, 41, 28);
-//     // // case '1A':
-//     // //   return const Color.fromARGB(255, 210, 92, 131);
-//     // // case '1B':
-//     // //   return const Color.fromARGB(255, 11, 50, 243);
-//     default:
-//       return Colors.transparent; // Default color if route number not matched
-//   }
-// }
 
-// Function to find the best segment considering route direction
-RouteSegment? findBestRouteSegment(
-  LatLng current,
-  LatLng destination,
-  List<LatLng> coords, {
-  double maxWalkDistance = 800,        // Increased from 200m to 800m
-  double preferredWalkDistance = 300,  // Preferred distance for scoring
-  double snapThreshold = 25,
-  double maxTotalWalk = 1200,          // Maximum combined walking distance
-}) {
-  final distance = Distance();
-  final targetBearing = bearing(current, destination);
-
-  List<RouteSegment> candidates = [];
-
-  for (int i = 0; i < coords.length - 1; i++) {
-    final segBearing = bearing(coords[i], coords[i + 1]);
-    final dStart = distance.as(LengthUnit.Meter, current, coords[i]);
-
-    // More lenient filtering - allow longer walks but penalize them in scoring
-    if (dStart > maxWalkDistance && dStart > snapThreshold) continue;
-
-    // Snap-to-route override OR forward check
-    if (dStart <= snapThreshold ||
-        isForward(segBearing, targetBearing, tolerance: 60)) {
-      
-      // Find best endIndex AFTER i
-      int? bestEnd;
-      double bestEndDist = double.infinity;
-      
-      for (int j = i + 1; j < coords.length; j++) {
-        final dEnd = distance.as(LengthUnit.Meter, destination, coords[j]);
-        
-        // Allow longer end walking distances, but check total walking
-        if (dEnd <= maxWalkDistance && (dStart + dEnd) <= maxTotalWalk) {
-          if (dEnd < bestEndDist) {
-            bestEnd = j;
-            bestEndDist = dEnd;
-          }
-        }
-      }
-      
-      if (bestEnd == null) continue;
-
-      // Compute ride distance
-      double rideDist = 0.0;
-      for (int k = i; k < bestEnd; k++) {
-        rideDist += distance.as(LengthUnit.Meter, coords[k], coords[k + 1]);
-      }
-
-      // Enhanced scoring that penalizes long walks but doesn't eliminate them
-      double walkPenalty = 0.0;
-      
-      // Penalize walks longer than preferred distance
-      if (dStart > preferredWalkDistance) {
-        walkPenalty += (dStart - preferredWalkDistance) * 2; // 2x penalty for excess walking
-      }
-      if (bestEndDist > preferredWalkDistance) {
-        walkPenalty += (bestEndDist - preferredWalkDistance) * 2;
-      }
-      
-      // Total trip cost with walking penalty
-      double totalCost = dStart + rideDist + bestEndDist + walkPenalty;
-
-      candidates.add(
-        RouteSegment(
-          startIndex: i,
-          endIndex: bestEnd,
-          startWalkDistance: dStart,
-          endWalkDistance: bestEndDist,
-          rideDistance: rideDist,
-          totalCost: totalCost,
-        ),
-      );
-    }
-  }
-
-  if (candidates.isEmpty) return null;
-
-  // Pick best candidate by total cost (now includes walking penalties)
-  candidates.sort((a, b) => a.totalCost.compareTo(b.totalCost));
-  return candidates.first;
-}
-
-
-
-// Helper class to store route segment information
-class RouteSegment {
-  final int startIndex;
-  final int endIndex;
-  final double startWalkDistance;
-  final double endWalkDistance;
-  final double rideDistance;
-  final double totalCost;
-
-  RouteSegment({
-    required this.startIndex,
-    required this.endIndex,
-    required this.startWalkDistance,
-    required this.endWalkDistance,
-    required this.rideDistance,
-    required this.totalCost,
-  });
+  //for debugging route
+  // Color _getColorForRoute(String routeNumber) {
+  //   switch (routeNumber) {
+  //     // case '3':
+  //     //   return const Color.fromARGB(255, 51, 181, 103);
+  //     // case '11':
+  //     //   return const Color.fromARGB(255, 233, 23, 248);
+  //     // case '15':
+  //     //   return const Color.fromARGB(255, 255, 77, 0);
+  //     // case '2':
+  //     //   return const Color.fromARGB(255, 255, 204, 0);
+  //     // case '4':
+  //     //   return const Color.fromARGB(255, 72, 233, 77);
+  //     //   case '5':
+  //     //   return const Color.fromARGB(255, 0, 26, 255);
+  //     // case '25':
+  //     //   return const Color.fromARGB(255, 255, 234, 0);
+  //     // case '1':
+  //     //   return const Color.fromARGB(255, 255, 255, 255);
+  //     // case '7':
+  //     //   return const Color.fromARGB(255, 87, 25, 78);
+  //     // case '9':
+  //     //   return const Color.fromARGB(255, 66, 41, 28);
+  //     // // case '1A':
+  //     // //   return const Color.fromARGB(255, 210, 92, 131);
+  //     // // case '1B':
+  //     // //   return const Color.fromARGB(255, 11, 50, 243);
+  //     default:
+  //       return Colors.transparent; // Default color if route number not matched
+  //   }
+  // }
 }
