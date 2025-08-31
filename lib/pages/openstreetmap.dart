@@ -141,7 +141,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   bool isLoading = true;
 
   final Map<String, List<LatLng>> _orsCache = {};
-  bool _isRequestingWalking = false;
+  final bool _isRequestingWalking = false;
   late OrsService _orsService;
 
   List<Polyline> _startWalkingPolylines = []; // walk from user to jeepney start
