@@ -323,12 +323,14 @@ class _HomePageState extends State<HomePage> {
   final PageController _mostBoughtPageController = PageController(
     viewportFraction: 1,
   );
+  final TextEditingController _searchController = TextEditingController();
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
   String _selectedCategory = "All";
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -502,7 +504,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ],
                                 ),
-                                // Remove this IconButton entirely:
+                                // wala ta users for now remove lang
                                 // child: IconButton(
                                 //   icon: const Icon(
                                 //     Icons.person_outline_rounded,
@@ -699,11 +701,32 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ],
                         ),
-                        child: const TextField(
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value.toLowerCase();
+                            });
+                          },
+                          controller: _searchController,
                           decoration: InputDecoration(
-                            icon: Icon(Icons.search, color: AppColors.button),
-                            hintText: "Let's find the food you like",
-                            border: InputBorder.none,
+                            hintText: "Let's find food you want...",
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchQuery = "";
+                                        });
+                                      },
+                                    )
+                                    : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ),
@@ -809,31 +832,53 @@ class _HomePageState extends State<HomePage> {
 
                   // Hot Deals Carousel
                   sectionHeader(
-                    _selectedCategory == "All"
-                        ? "Hot Deals 🔥"
-                        : "$_selectedCategory🔥",
+                    _searchQuery.isNotEmpty
+                        ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} 🔥"
+                        : (_selectedCategory == "All"
+                            ? "Hot Deals 🔥"
+                            : "$_selectedCategory 🔥"),
                   ),
+
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 280,
                     child: Builder(
                       builder: (context) {
                         final filteredRestaurants =
-                            _selectedCategory == "All"
-                                ? _restaurants
-                                : _restaurants.where((resto) {
-                                  return resto.menu.any(
-                                    (item) =>
-                                        (item['category'] as String)
-                                            .toLowerCase() ==
-                                        _selectedCategory.toLowerCase(),
-                                  );
-                                }).toList();
+                            _restaurants.where((resto) {
+                              // 🔎 Global search (menu name or category)
+                              if (_searchQuery.isNotEmpty) {
+                                return resto.menu.any((item) {
+                                  final menuName =
+                                      (item['name'] as String).toLowerCase();
+                                  final category =
+                                      (item['category'] as String)
+                                          .toLowerCase();
+
+                                  return menuName.contains(_searchQuery) ||
+                                      category.contains(_searchQuery);
+                                });
+                              } else {
+                                // 📂 Fallback to category filter when no search
+                                return _selectedCategory == "All"
+                                    ? true
+                                    : resto.menu.any(
+                                      (item) =>
+                                          (item['category'] as String)
+                                              .toLowerCase() ==
+                                          _selectedCategory.toLowerCase(),
+                                    );
+                              }
+                            }).toList();
 
                         if (filteredRestaurants.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
-                              "No restaurants found in this category.",
+                              "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           );
                         }
