@@ -13,6 +13,10 @@ import 'package:map_try/widgets/search_modal.dart';
 import 'package:map_try/pages/settings_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Global controllers
+final ValueNotifier<int> bottomNavIndexNotifier = ValueNotifier<int>(0);
+final ValueNotifier<LatLng?> destinationNotifier = ValueNotifier<LatLng?>(null);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -83,45 +87,23 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
-
-  late final ValueNotifier<LatLng?> destinationNotifier;
   late final SearchModal _searchModal;
-
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    destinationNotifier = ValueNotifier<LatLng?>(null);
+
     _searchModal = SearchModal(destinationNotifier: destinationNotifier);
+
     _pages = [
       HomePage(destinationNotifier: destinationNotifier),
       OpenstreetmapScreen(destinationNotifier: destinationNotifier),
-      Container(), // Search will not be visible in IndexedStack
+      Container(), // search modal
       SettingsPage(),
     ];
   }
 
-  @override
-  void dispose() {
-    destinationNotifier.dispose();
-
-    super.dispose();
-  }
-
-  // void _onItemTapped(int index) {
-  //   if (index == 2) {
-  //     setState(() {
-  //       _isSearchOpen = true;
-  //     });
-  //   } else {
-  //     setState(() {
-  //       _isSearchOpen = false;
-  //       _selectedIndex = index;
-  //     });
-  //   }
-  // }
   void _onItemTapped(int index) {
     if (index == 2) {
       showModalBottomSheet(
@@ -131,54 +113,40 @@ class BottomNavBarState extends State<BottomNavBar> {
         backgroundColor: Colors.transparent,
       );
     } else {
-      setState(() {
-        _selectedIndex = index;
-      });
+      bottomNavIndexNotifier.value = index;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          IndexedStack(index: _selectedIndex, children: _pages),
-          // if (_isSearchOpen)
-          //   Positioned.fill(
-          //     child: Material(
-          //       color: Colors.black54, // dim background
-          //       child: SafeArea(
-          //         child: Align(
-          //           alignment: Alignment.bottomCenter,
-          //           child: FractionallySizedBox(
-          //             heightFactor: 0.85,
-          //             child: _searchModal, // reuses same stateful widget
-          //           ),
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-        ],
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepOrangeAccent,
-        unselectedItemColor: Colors.black54,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions),
-            label: "Directions",
+    return ValueListenableBuilder<int>(
+      valueListenable: bottomNavIndexNotifier,
+      builder: (context, selectedIndex, _) {
+        return Scaffold(
+          body: IndexedStack(index: selectedIndex, children: _pages),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: selectedIndex,
+            selectedItemColor: Colors.deepOrangeAccent,
+            unselectedItemColor: Colors.black54,
+            onTap: _onItemTapped,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.directions),
+                label: "Directions",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: "Search",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: "Settings",
+              ),
+            ],
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

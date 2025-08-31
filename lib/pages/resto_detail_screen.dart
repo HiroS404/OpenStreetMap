@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_try/main.dart';
 
 class RestoDetailScreen extends StatelessWidget {
   final String restoId;
@@ -44,11 +45,11 @@ class RestoDetailScreen extends StatelessWidget {
 
           final headerUrl = (data['headerImageUrl'] ?? '').toString();
           final name = (data['name'] ?? '').toString();
-          final tags = (data['tags'] ?? 'Bar • Brewery • Gastropub').toString();
+          final tags = (data['tags'] ?? '').toString();
           final description = (data['description'] ?? '').toString();
           final phone = (data['phoneNumber'] ?? '').toString();
           final address = (data['address'] ?? '').toString();
-          final hours = (data['hours'] ?? '12:00 PM – 12:00 AM').toString();
+          final hours = (data['hours'] ?? 'N/A').toString();
 
           // Menu (List<Map<String, dynamic>> expected, but we’ll be defensive)
           final List menuList =
@@ -151,7 +152,7 @@ class RestoDetailScreen extends StatelessWidget {
 
                       const SizedBox(height: 18),
 
-                      // Directions button (no logic, just UI)
+                      // Directions button
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
@@ -173,9 +174,13 @@ class RestoDetailScreen extends StatelessWidget {
                               location.longitude,
                             );
 
+                            // update destination for existing map screen
                             destinationNotifier.value = restoLatLng;
+
+                            //close resto details screen
                             Navigator.pop(context);
-                            Navigator.pop(context);
+
+                            bottomNavIndexNotifier.value = 1;
                           },
                         ),
                       ),
@@ -244,7 +249,7 @@ class RestoDetailScreen extends StatelessWidget {
               children: [
                 // Category title
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     category,
                     style: const TextStyle(
@@ -256,7 +261,7 @@ class RestoDetailScreen extends StatelessWidget {
 
                 // Horizontal gallery of items
                 SizedBox(
-                  height: 160, // adjust card height
+                  height: 80, // adjust card height
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: items.length,

@@ -53,17 +53,22 @@ Widget sectionHeader(String title) {
         title,
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      TextButton(
-        onPressed: () {},
-        style: TextButton.styleFrom(
-          backgroundColor: AppColors.button,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      //no function yet, add tlng liwat depende sa layout
+      Container(
+        margin: const EdgeInsets.only(right: 8),
+        child: TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            backgroundColor: AppColors.button,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
+          child: const Text("← Swipe", style: TextStyle(fontSize: 12)),
         ),
-        child: const Text("See All"),
       ),
     ],
   );
@@ -132,10 +137,7 @@ Widget restoCard({
               children: [
                 Icon(Icons.star, size: 12, color: Colors.white),
                 SizedBox(width: 2),
-                Text(
-                  "4.5",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
+                Text("0", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
           ),
@@ -321,12 +323,14 @@ class _HomePageState extends State<HomePage> {
   final PageController _mostBoughtPageController = PageController(
     viewportFraction: 1,
   );
+  final TextEditingController _searchController = TextEditingController();
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
 
   /// Default to a non-"Meals" category so cards appear ONLY when Meals is pressed
   String _selectedCategory = "All";
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -500,7 +504,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ],
                                 ),
-                                // Remove this IconButton entirely:
+                                // wala ta users for now remove lang
                                 // child: IconButton(
                                 //   icon: const Icon(
                                 //     Icons.person_outline_rounded,
@@ -681,10 +685,13 @@ class _HomePageState extends State<HomePage> {
                       left: 16,
                       right: 16,
                       bottom: 12,
+                      height: 50,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
+
                         decoration: BoxDecoration(
                           color: Colors.white,
+
                           border: Border.all(
                             color: AppColors.sysAccent.withAlpha(70),
                           ),
@@ -697,11 +704,32 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ],
                         ),
-                        child: const TextField(
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value.toLowerCase();
+                            });
+                          },
+                          controller: _searchController,
                           decoration: InputDecoration(
-                            icon: Icon(Icons.search, color: AppColors.button),
-                            hintText: "Let's find the food you like",
-                            border: InputBorder.none,
+                            hintText: "Let's find food you want...",
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchQuery = "";
+                                        });
+                                      },
+                                    )
+                                    : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ),
@@ -807,31 +835,53 @@ class _HomePageState extends State<HomePage> {
 
                   // Hot Deals Carousel
                   sectionHeader(
-                    _selectedCategory == "All"
-                        ? "Hot Deals 🔥"
-                        : "$_selectedCategory🔥",
+                    _searchQuery.isNotEmpty
+                        ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} 🔥"
+                        : (_selectedCategory == "All"
+                            ? "Hot Deals 🔥"
+                            : "$_selectedCategory 🔥"),
                   ),
+
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 280,
                     child: Builder(
                       builder: (context) {
                         final filteredRestaurants =
-                            _selectedCategory == "All"
-                                ? _restaurants
-                                : _restaurants.where((resto) {
-                                  return resto.menu.any(
-                                    (item) =>
-                                        (item['category'] as String)
-                                            .toLowerCase() ==
-                                        _selectedCategory.toLowerCase(),
-                                  );
-                                }).toList();
+                            _restaurants.where((resto) {
+                              // 🔎 Global search (menu name or category)
+                              if (_searchQuery.isNotEmpty) {
+                                return resto.menu.any((item) {
+                                  final menuName =
+                                      (item['name'] as String).toLowerCase();
+                                  final category =
+                                      (item['category'] as String)
+                                          .toLowerCase();
+
+                                  return menuName.contains(_searchQuery) ||
+                                      category.contains(_searchQuery);
+                                });
+                              } else {
+                                // 📂 Fallback to category filter when no search
+                                return _selectedCategory == "All"
+                                    ? true
+                                    : resto.menu.any(
+                                      (item) =>
+                                          (item['category'] as String)
+                                              .toLowerCase() ==
+                                          _selectedCategory.toLowerCase(),
+                                    );
+                              }
+                            }).toList();
 
                         if (filteredRestaurants.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
-                              "No restaurants found in this category.",
+                              "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           );
                         }
@@ -928,18 +978,23 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '1) Ted’s Batchoy',
-                                  address: 'Jaro Plaza',
+                                  name: '-------------',
+                                  address: '-------------', //placeholder
                                 ),
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '2) Mang Inasal',
-                                  address: 'Diversion Road',
+                                  name: '-------------',
+                                  address: '-------------',
                                 ),
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '3) Deco’s Batchoy',
-                                  address: 'City Proper',
+                                  name: '-------------',
+                                  address: '-------------',
+                                ),
+                                restoCard(
+                                  headerImageUrl: '',
+                                  name: '-------------',
+                                  address: '-------------',
                                 ),
                               ],
                             ),
