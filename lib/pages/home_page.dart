@@ -53,17 +53,22 @@ Widget sectionHeader(String title) {
         title,
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      TextButton(
-        onPressed: () {},
-        style: TextButton.styleFrom(
-          backgroundColor: AppColors.button,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      //no function yet, add tlng liwat depende sa layout
+      Container(
+        margin: const EdgeInsets.only(right: 8),
+        child: TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            backgroundColor: AppColors.button,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
+          child: const Text("← Swipe", style: TextStyle(fontSize: 12)),
         ),
-        child: const Text("See All"),
       ),
     ],
   );
@@ -132,10 +137,7 @@ Widget restoCard({
               children: [
                 Icon(Icons.star, size: 12, color: Colors.white),
                 SizedBox(width: 2),
-                Text(
-                  "4.5",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
+                Text("0", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
           ),
@@ -928,18 +930,23 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '1) Ted’s Batchoy',
-                                  address: 'Jaro Plaza',
+                                  name: '-------------',
+                                  address: '-------------', //placeholder
                                 ),
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '2) Mang Inasal',
-                                  address: 'Diversion Road',
+                                  name: '-------------',
+                                  address: '-------------',
                                 ),
                                 restoCard(
                                   headerImageUrl: '',
-                                  name: '3) Deco’s Batchoy',
-                                  address: 'City Proper',
+                                  name: '-------------',
+                                  address: '-------------',
+                                ),
+                                restoCard(
+                                  headerImageUrl: '',
+                                  name: '-------------',
+                                  address: '-------------',
                                 ),
                               ],
                             ),
