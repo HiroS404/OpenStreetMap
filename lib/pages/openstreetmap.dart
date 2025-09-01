@@ -62,14 +62,33 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       _destinationNotifier.addListener(() {
         final newDestination = _destinationNotifier.value;
         if (newDestination != null && _currentLocation != null) {
+          // Close any open modals first
+          if (_isModalOpen) {
+            Navigator.of(context, rootNavigator: true).pop();
+            _isModalOpen = false;
+          }
+
           _destination = newDestination;
           loadRouteData();
-          // print("Current Location: $_currentLocation");
-          // print(
-          //   "New Destination: $newDestination",
-          // ); // uses jeepney route, not OSRM anymore (route base on jeepney_routes.json)
+          print("Current Location: $_currentLocation");
+          print("New Destination: $newDestination");
         }
       });
+    });
+  }
+
+  void _clearRouteData() {
+    setState(() {
+      _route = [];
+      _matchedRoute = null;
+      _selectedRoutes = [];
+      _bestRoute = null;
+      _startWalkingPolylines = [];
+      _endWalkingPolylines = [];
+      _walkingPolylinesCalculated = false;
+      walkingDistance = 0.0;
+      endWalkingDistance = 0.0;
+      segmentDistance = 0.0;
     });
   }
 
@@ -346,35 +365,38 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
   //loading jeepney routes from jepney_routes.json and matching with user location and destination
   void loadRouteData() async {
-    // print("🚀 Starting loadRouteData");
+    // Clear previous route data before loading new data
+    _clearRouteData();
+
+    print("🚀 Starting loadRouteData");
 
     List<JeepneyRoute> jeepneyRoutes = await loadRoutesFromJson();
-    // print("📍 Loaded ${jeepneyRoutes.length} jeepney routes");
+    print("📊 Loaded ${jeepneyRoutes.length} jeepney routes");
 
     List<TransferSpot> transferSpots = [];
 
     try {
       transferSpots = await loadTransferSpotsFromJson();
-      // print("🔄 Loaded ${transferSpots.length} transfer spots");
+      print("🔄 Loaded ${transferSpots.length} transfer spots");
     } catch (e) {
-      // print("❌ Transfer spots not found, using single routes only: $e");
+      print("⚠️ Transfer spots not found, using single routes only: $e");
       transferSpots = [];
     }
 
     if (!mounted || _currentLocation == null || _destination == null) {
-      // print("❌ Not mounted or missing location data");
+      print("⚠️ Not mounted or missing location data");
       return;
     }
 
-    // print("📍 Current: $_currentLocation");
-    // print("🎯 Destination: $_destination");
+    print("📍 Current: $_currentLocation");
+    print("🎯 Destination: $_destination");
 
     allRoutes = getTopNearbyRoutes(
       _currentLocation!,
       _destination!,
       jeepneyRoutes,
     );
-    // print("🛣️ Found ${allRoutes.length} nearby routes");
+    print("🛣️ Found ${allRoutes.length} nearby routes");
 
     // Use the new multi-route system
     final bestRoute = findBestRoute(
@@ -385,14 +407,14 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     );
 
     if (bestRoute != null) {
-      // print("✅ Found best route with ${bestRoute.tripCount} trip(s)");
-      // print("   Routes: ${bestRoute.routeNumbers}");
-      // print(
-      //   "   Total walk: ${bestRoute.totalWalkDistance.toStringAsFixed(0)}m",
-      // );
-      // print(
-      //   "   Total ride: ${bestRoute.totalRideDistance.toStringAsFixed(0)}m",
-      // );
+      print("✅ Found best route with ${bestRoute.tripCount} trip(s)");
+      print("   Routes: ${bestRoute.routeNumbers}");
+      print(
+        "   Total walk: ${bestRoute.totalWalkDistance.toStringAsFixed(0)}m",
+      );
+      print(
+        "   Total ride: ${bestRoute.totalRideDistance.toStringAsFixed(0)}m",
+      );
 
       // Store the best route solution and get the actual route objects
       _bestRoute = bestRoute;
@@ -408,15 +430,15 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
 
       setState(() {
         if (bestRoute.tripCount == 1) {
-          // print("🚌 Handling single route");
+          print("🚌 Handling single route");
           _handleSingleRoute(bestRoute, jeepneyRoutes);
         } else {
-          // print("🔄 Handling multi-route");
+          print("🔄 Handling multi-route");
           _handleMultiRoute(bestRoute, jeepneyRoutes);
         }
       });
     } else {
-      // print("⚠️ No best route found, using fallback");
+      print("⚠️ No best route found, using fallback");
       _handleFallbackSingleRoute(jeepneyRoutes);
     }
   }
@@ -648,6 +670,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   }
 
   void showRouteModal(BuildContext context) {
+    if (_isModalOpen) return; // Prevent multiple modals
+
     _isModalOpen = true;
     final animationController = BottomSheet.createAnimationController(this);
     animationController.duration = const Duration(milliseconds: 1000);
@@ -673,7 +697,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                   onNotification: (notification) {
                     if (notification.extent <= notification.minExtent + 0.05) {
                       Navigator.of(context).pop();
-                      _isModalOpen = false;
                     }
                     return true;
                   },
@@ -834,9 +857,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             Icons.directions_walk,
                             color: Colors.green,
                           ),
-                          title: Text(
+                          title: const Text(
                             "Final Step: Walk to your destination",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             endWalkingDistance > 10
@@ -915,7 +938,10 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           ),
         );
       },
-    );
+    ).then((_) {
+      // This executes when the modal is closed
+      _isModalOpen = false;
+    });
   }
 
   // ADD this helper function for total time calculation
@@ -1239,7 +1265,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               ),
             ),
           ),
-          if (_matchedRoute != null)
+          if (_matchedRoute != null ||
+              (_selectedRoutes.isNotEmpty && _route.isNotEmpty))
             Positioned(
               bottom: 80,
               right: 16,
