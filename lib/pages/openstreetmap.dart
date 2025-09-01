@@ -699,115 +699,47 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                       Navigator.of(context).pop();
                     }
                     return true;
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(16),
+                  }, //here ang container nga ga cause ui problem
+                  child: ListView(
+                    scrollDirection: Axis.vertical,
+
+                    // controller: scrollController,
+                    children: [
+                      // Drag handle
+                      // Center(
+                      //   child: Container(
+                      //     width: 40,
+                      //     height: 4,
+                      //     margin: const EdgeInsets.only(bottom: 12),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.grey[300],
+                      //       borderRadius: BorderRadius.circular(4),
+                      //     ),
+                      //   ),
+                      // ),
+
+                      // Step 1: Walk to first jeepney
+                      ListTile(
+                        leading: const Icon(
+                          Icons.directions_walk,
+                          color: Colors.blue,
+                        ),
+                        title: const Text(
+                          "Step 1: Walk to the nearest jeepney route",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          walkingDistance > 10
+                              ? "Walk ${walkingDistance.toStringAsFixed(0)} meters (${getWalkingTimeEstimate(walkingDistance)})"
+                              : "You are already at the jeepney route!",
+                        ),
                       ),
-                    ),
-                    child: ListView(
-                      controller: scrollController,
-                      children: [
-                        // Drag handle
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 8),
 
-                        // Step 1: Walk to first jeepney
-                        ListTile(
-                          leading: const Icon(
-                            Icons.directions_walk,
-                            color: Colors.blue,
-                          ),
-                          title: const Text(
-                            "Step 1: Walk to the nearest jeepney route",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            walkingDistance > 10
-                                ? "Walk ${walkingDistance.toStringAsFixed(0)} meters (${getWalkingTimeEstimate(walkingDistance)})"
-                                : "You are already at the jeepney route!",
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Display ONLY the selected routes from the best solution
-                        if (_route.isNotEmpty &&
-                            _selectedRoutes.isNotEmpty) ...[
-                          // Use _selectedRoutes instead of allRoutes!
-                          for (int i = 0; i < _selectedRoutes.length; i++) ...[
-                            ListTile(
-                              leading: const Icon(
-                                Icons.directions_bus,
-                                color: Colors.orange,
-                              ),
-                              title: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Step ${i + 2}: Ride Jeepney Route ${_selectedRoutes[i].routeNumber}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.deepOrangeAccent,
-                                    ),
-                                  ),
-                                  Image.asset(
-                                    "Assets/route_pics/${_selectedRoutes[i].routeNumber}.png",
-                                    height: 200,
-                                    fit: BoxFit.contain,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                              height: 100,
-                                              color: Colors.grey[200],
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                            ),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Text(
-                                "Direction: ${_selectedRoutes[i].direction}\n"
-                                "Estimated Distance: ${(calculateSegmentDistance(_selectedRoutes[i].coordinates) / 1000).toStringAsFixed(2)} km",
-                              ),
-                            ),
-
-                            // Add transfer step between routes (but not after the last route)
-                            if (i < _selectedRoutes.length - 1)
-                              ListTile(
-                                leading: const Icon(
-                                  Icons.transfer_within_a_station,
-                                  color: Colors.purple,
-                                ),
-                                title: Text(
-                                  "Step ${i + 3}: Transfer to Route ${_selectedRoutes[i + 1].routeNumber}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: const Text(
-                                  "Get off and transfer to the next route",
-                                ),
-                              ),
-                          ],
-                        ] else if (_route.isNotEmpty &&
-                            _matchedRoute != null) ...[
-                          // Single route fallback (when _selectedRoutes is empty)
+                      // Display ONLY the selected routes from the best solution
+                      if (_route.isNotEmpty && _selectedRoutes.isNotEmpty) ...[
+                        // Use _selectedRoutes instead of allRoutes!
+                        for (int i = 0; i < _selectedRoutes.length; i++) ...[
                           ListTile(
                             leading: const Icon(
                               Icons.directions_bus,
@@ -817,14 +749,14 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Step 2: Ride Jeepney Route ${_matchedRoute?.routeNumber ?? ''}",
+                                  "Step ${i + 2}: Ride Jeepney Route ${_selectedRoutes[i].routeNumber}",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepOrangeAccent,
                                   ),
                                 ),
                                 Image.asset(
-                                  "Assets/route_pics/${_matchedRoute?.routeNumber}.png",
+                                  "Assets/route_pics/${_selectedRoutes[i].routeNumber}.png",
                                   height: 200,
                                   fit: BoxFit.contain,
                                   errorBuilder:
@@ -842,95 +774,154 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                               ],
                             ),
                             subtitle: Text(
-                              "Direction: ${_matchedRoute?.direction ?? ''}\n"
-                              "Ride Distance: ${(segmentDistance / 1000).toStringAsFixed(2)} km\n"
-                              "Estimated Time: ${estimateJeepneyTime(segmentDistance)}",
+                              "Direction: ${_selectedRoutes[i].direction}\n"
+                              "Estimated Distance: ${(calculateSegmentDistance(_selectedRoutes[i].coordinates) / 1000).toStringAsFixed(2)} km",
                             ),
                           ),
+
+                          // Add transfer step between routes (but not after the last route)
+                          if (i < _selectedRoutes.length - 1)
+                            ListTile(
+                              leading: const Icon(
+                                Icons.transfer_within_a_station,
+                                color: Colors.purple,
+                              ),
+                              title: Text(
+                                "Step ${i + 3}: Transfer to Route ${_selectedRoutes[i + 1].routeNumber}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                "Get off and transfer to the next route",
+                              ),
+                            ),
                         ],
-
-                        const SizedBox(height: 8),
-
-                        // Final step: Walk to destination
+                      ] else if (_route.isNotEmpty &&
+                          _matchedRoute != null) ...[
+                        // Single route fallback (when _selectedRoutes is empty)
                         ListTile(
                           leading: const Icon(
-                            Icons.directions_walk,
-                            color: Colors.green,
+                            Icons.directions_bus,
+                            color: Colors.orange,
                           ),
-                          title: const Text(
-                            "Final Step: Walk to your destination",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            endWalkingDistance > 10
-                                ? "Walk ${endWalkingDistance.toStringAsFixed(0)} meters (${getWalkingTimeEstimate(endWalkingDistance)})"
-                                : "You'll arrive directly at your destination!",
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Trip Summary
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
+                          title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Trip Summary",
-                                style: TextStyle(
+                              Text(
+                                "Step 2: Ride Jeepney Route ${_matchedRoute?.routeNumber ?? ''}",
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  color: Colors.deepOrangeAccent,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.directions_walk,
-                                    size: 16,
-                                    color: Colors.blue,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "Walk: ${(walkingDistance + endWalkingDistance).toStringAsFixed(0)}m",
-                                  ),
-                                ],
+                              Image.asset(
+                                "Assets/route_pics/${_matchedRoute?.routeNumber}.png",
+                                height: 200,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ),
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.directions_bus,
-                                    size: 16,
-                                    color: Colors.orange,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "Jeepney trips: ${_selectedRoutes.isNotEmpty ? _selectedRoutes.length : 1}",
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text("Total Time: ${_getTotalEstimatedTime()}"),
-                              if (_bestRoute != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Routes: ${_bestRoute!.routeNumbers.join(' → ')}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
                             ],
+                          ),
+                          subtitle: Text(
+                            "Direction: ${_matchedRoute?.direction ?? ''}\n"
+                            "Ride Distance: ${(segmentDistance / 1000).toStringAsFixed(2)} km\n"
+                            "Estimated Time: ${estimateJeepneyTime(segmentDistance)}",
                           ),
                         ),
                       ],
-                    ),
+
+                      const SizedBox(height: 8),
+
+                      // Final step: Walk to destination
+                      ListTile(
+                        leading: const Icon(
+                          Icons.directions_walk,
+                          color: Colors.green,
+                        ),
+                        title: const Text(
+                          "Final Step: Walk to your destination",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          endWalkingDistance > 10
+                              ? "Walk ${endWalkingDistance.toStringAsFixed(0)} meters (${getWalkingTimeEstimate(endWalkingDistance)})"
+                              : "You'll arrive directly at your destination!",
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Trip Summary
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Trip Summary",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.directions_walk,
+                                  size: 16,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Walk: ${(walkingDistance + endWalkingDistance).toStringAsFixed(0)}m",
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.directions_bus,
+                                  size: 16,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Jeepney trips: ${_selectedRoutes.isNotEmpty ? _selectedRoutes.length : 1}",
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text("Total Time: ${_getTotalEstimatedTime()}"),
+                            if (_bestRoute != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                "Routes: ${_bestRoute!.routeNumbers.join(' → ')}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
