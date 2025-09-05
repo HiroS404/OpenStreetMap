@@ -192,10 +192,25 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
               ),
             ],
           ),
+
           SizedBox(height: isMobile ? 20 : 50),
           const Text(
             "©2025 MapaKaon P.O.C.G",
             style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/admin-login');
+                },
+                child: const Text(
+                  "Admin Access",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            ],
           ),
         ],
       ),
