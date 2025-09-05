@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_try/admin/pages/admin_dashboard.dart';
+import 'package:map_try/admin/pages/admin_login_page.dart';
 import 'package:map_try/firebase_options.dart';
 import 'package:map_try/pages/home_page.dart';
 import 'package:map_try/pages/openstreetmap.dart';
@@ -31,7 +33,7 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details); // prints the full stack trace
   };
-  // Catch any errors outside Flutter (e.g. async, platform channels)
+  // Catch any errors outside Flutter
   runApp(const MyApp());
   // runZonedGuarded(
   //   () {
@@ -57,6 +59,8 @@ class MyApp extends StatelessWidget {
             (context) => OpenstreetmapScreen(
               destinationNotifier: ValueNotifier<LatLng?>(null),
             ),
+        '/admin-login': (context) => const AdminLoginPage(),
+        '/admin': (context) => const AdminDashboard(),
       },
 
       onGenerateRoute: (settings) {
