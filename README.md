@@ -21,7 +21,8 @@ mic check
 - [ ] Top 4 best seller
 
 ## Show route model
-- [ ] Deatiled map guide (e.g. Walk towards x street, by y street, turn right, etc)
+- [x] Deatiled map guide (e.g. Walk towards x street, by y street, turn right, etc)
+- [x] Transferring of jeepney is somewhat possible
 
 ## Map Screen
 - [ ] If route is available to that destination ma gwa sa bavaw ka destination like floated modal parehas sa google maps, mas beeter if may unique ideas
