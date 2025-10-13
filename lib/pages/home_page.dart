@@ -99,7 +99,7 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withAlpha(20),
               borderRadius: BorderRadius.circular(15),
             ),
             child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 24),
@@ -148,12 +148,12 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.3) : Colors.transparent,
+            color: isSelected ? Colors.white.withAlpha(30) : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Icon(
             icon,
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+            color: isSelected ? Colors.white : Colors.white.withAlpha(70),
             size: 24,
           ),
         ),
@@ -177,7 +177,7 @@ Widget buildDesktopRestaurantCard({
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(50),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -973,7 +973,7 @@ class _HomePageState extends State<HomePage> {
           // handle nav selection
         },
         destinationNotifier: destinationNotifier, // ✅ pass this
-      ),
+        ),
 
           // Main Content Area
           Expanded(
@@ -1018,7 +1018,7 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withAlpha(50),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -1131,7 +1131,7 @@ class _HomePageState extends State<HomePage> {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Colors.white.withOpacity(0.1),
+                          Colors.white.withAlpha(10),
                           Colors.transparent,
                         ],
                       ),
