@@ -17,6 +17,9 @@ class RestoDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900; // 💻 threshold for desktop layout
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -24,6 +27,19 @@ class RestoDetailScreen extends StatelessWidget {
         title: const Text(
           'Restaurant Details',
           style: TextStyle(color: Colors.white, fontSize: 15),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
+          tooltip: 'Back to Home',
+          onPressed: () {
+            bottomNavIndexNotifier.value = 0;
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
         ),
       ),
       backgroundColor: _bg,
@@ -42,7 +58,6 @@ class RestoDetailScreen extends StatelessWidget {
           }
 
           final data = (snapshot.data!.data() as Map<String, dynamic>?) ?? {};
-
           final headerUrl = (data['headerImageUrl'] ?? '').toString();
           final name = (data['name'] ?? '').toString();
           final tags = (data['tags'] ?? '').toString();
@@ -50,12 +65,10 @@ class RestoDetailScreen extends StatelessWidget {
           final phone = (data['phoneNumber'] ?? '').toString();
           final address = (data['address'] ?? '').toString();
           final hours = (data['hours'] ?? 'N/A').toString();
-
-          // Menu (List<Map<String, dynamic>> expected, but we’ll be defensive)
           final List menuList =
               (data['menu'] is List) ? (data['menu'] as List) : const [];
 
-          // Optional images: support either list field `optionalImageUrl` or individual fields `optionalImageUrl1/2/3`
+          // Handle optional images
           List<String> optionalUrls = [];
           if (data['optionalImageUrl'] is List) {
             optionalUrls = List<String>.from(
@@ -73,51 +86,64 @@ class RestoDetailScreen extends StatelessWidget {
                   .toString(),
             ];
           }
-          //  3 slots
-          while (optionalUrls.length < 3) {
-            optionalUrls.add('');
-          }
-          if (optionalUrls.length > 3) {
+          while (optionalUrls.length < 3) optionalUrls.add('');
+          if (optionalUrls.length > 3)
             optionalUrls = optionalUrls.take(3).toList();
+
+          // ✅ Mobile View Layout
+          if (!isDesktop) {
+            return SingleChildScrollView(
+              child: _buildMobileLayout(
+                context,
+                headerUrl,
+                name,
+                tags,
+                description,
+                phone,
+                address,
+                hours,
+                menuList,
+                optionalUrls,
+                data,
+              ),
+            );
           }
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (headerUrl.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                    child: Image.network(
-                      headerUrl,
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+          // Desktop View Layout (Two Columns)
 
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // LEFT COLUMN — Info, Header, About, Directions
+              Expanded(
+                flex: 1,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name
+                      if (headerUrl.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            headerUrl,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      const SizedBox(height: 20),
                       Text(
                         name,
                         style: Theme.of(
                           context,
                         ).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 25,
+                          fontSize: 28,
                           color: _brand,
                         ),
                       ),
-                      const SizedBox(height: 4),
-
-                      // Tags
+                      const SizedBox(height: 6),
                       Text(
                         tags,
                         style: const TextStyle(
@@ -125,9 +151,7 @@ class RestoDetailScreen extends StatelessWidget {
                           color: Color(0xFF8c8c8c),
                         ),
                       ),
-                      const SizedBox(height: 12),
-
-                      // About (expandable)
+                      const SizedBox(height: 20),
                       const Text(
                         'About',
                         style: TextStyle(
@@ -137,27 +161,23 @@ class RestoDetailScreen extends StatelessWidget {
                       ),
                       ExpandableText(
                         description,
-                        trimLength: 120,
+                        trimLength: 200,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Color(0xFF8C8C8C),
                         ),
                       ),
-                      const SizedBox(height: 14),
-
-                      // Info rows (no edit buttons)
+                      const SizedBox(height: 20),
                       _infoRow(icon: Icons.phone, text: phone),
                       _infoRow(icon: Icons.location_on, text: address),
                       _infoRow(icon: Icons.access_time, text: hours),
-
-                      const SizedBox(height: 18),
-
-                      // Directions button
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: _brand),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -173,64 +193,189 @@ class RestoDetailScreen extends StatelessWidget {
                               location.latitude,
                               location.longitude,
                             );
-
-                            // update destination for existing map screen
                             destinationNotifier.value = restoLatLng;
-
-                            //close resto details screen
                             Navigator.pop(context);
-
                             bottomNavIndexNotifier.value = 1;
                           },
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
 
-                      const SizedBox(height: 20),
+              // 🧭 SUBTLE SEPARATOR
+              Container(
+                width: 1,
+                height: double.infinity,
+                color: Colors.grey.withAlpha(30),
+                margin: const EdgeInsets.symmetric(vertical: 24),
+              ),
 
-                      // Menu header
+              // RIGHT COLUMN — Menu & Optional Images
+              Expanded(
+                flex: 1,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       const Text(
                         'Menu',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 8),
-
-                      // Menu Grid in the same visual style as owner dashboard
+                      const SizedBox(height: 10),
                       buildMenuList(menuList),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Gallery',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          for (int i = 0; i < 3; i++) ...[
+                            Expanded(
+                              child: _optionalImageCard(
+                                context,
+                                optionalUrls[i],
+                              ),
+                            ),
+                            if (i < 2) const SizedBox(width: 10),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-                // Optional images row (modern elevated cards, tap -> fullscreen)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: _optionalImageCard(context, optionalUrls[0]),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _optionalImageCard(context, optionalUrls[1]),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _optionalImageCard(context, optionalUrls[2]),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+
+  /// Builds the mobile view (your original layout)
+  Widget _buildMobileLayout(
+    BuildContext context,
+    String headerUrl,
+    String name,
+    String tags,
+    String description,
+    String phone,
+    String address,
+    String hours,
+    List menuList,
+    List<String> optionalUrls,
+    Map<String, dynamic> data,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (headerUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            child: Image.network(
+              headerUrl,
+              width: double.infinity,
+              height: 250,
+              fit: BoxFit.cover,
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 25,
+                  color: _brand,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                tags,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF8c8c8c)),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'About',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              ExpandableText(
+                description,
+                trimLength: 120,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
+              ),
+              const SizedBox(height: 14),
+              _infoRow(icon: Icons.phone, text: phone),
+              _infoRow(icon: Icons.location_on, text: address),
+              _infoRow(icon: Icons.access_time, text: hours),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: _brand),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: const Icon(Icons.directions, color: _brand),
+                  label: const Text(
+                    'Go to directions',
+                    style: TextStyle(color: _brand),
+                  ),
+                  onPressed: () {
+                    final GeoPoint location = data['location'];
+                    final LatLng restoLatLng = LatLng(
+                      location.latitude,
+                      location.longitude,
+                    );
+                    destinationNotifier.value = restoLatLng;
+                    Navigator.pop(context);
+                    bottomNavIndexNotifier.value = 1;
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Menu',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              buildMenuList(menuList),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (int i = 0; i < 3; i++) ...[
+                Expanded(child: _optionalImageCard(context, optionalUrls[i])),
+                if (i < 2) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -276,10 +421,7 @@ class RestoDetailScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                            width: 1,
-                          ),
+                          border: Border.all(color: _brand, width: 1),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(20),

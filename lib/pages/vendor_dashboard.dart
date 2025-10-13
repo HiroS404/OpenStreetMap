@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:map_try/main.dart';
 import 'package:map_try/pages/menuManagementPage.dart';
 import 'package:map_try/pages/resto%20AddressMap/pick_address_map.dart';
 
@@ -244,22 +245,22 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: _buildImageCard(
-            _vendorData?['optionalImageUrl1'],
+          child: _buildImageCardSafe(
+            _vendorData?['optionalImageUrl1']?.toString() ?? '',
             'optionalImageUrl1',
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _buildImageCard(
-            _vendorData?['optionalImageUrl2'],
+          child: _buildImageCardSafe(
+            _vendorData?['optionalImageUrl2']?.toString() ?? '',
             'optionalImageUrl2',
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _buildImageCard(
-            _vendorData?['optionalImageUrl3'],
+          child: _buildImageCardSafe(
+            _vendorData?['optionalImageUrl3']?.toString() ?? '',
             'optionalImageUrl3',
           ),
         ),
@@ -267,99 +268,76 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
     );
   }
 
-  Widget _buildImageCard(String? imageUrl, String imageKey) {
-    return Stack(
-      children: [
-        Card(
+  Widget _buildImageCardSafe(String imageUrl, String tag) {
+    if (imageUrl.isEmpty) {
+      return Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          height: 120,
+          color: Colors.grey[200],
+          child: const Center(
+            child: Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: 40,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => Scaffold(
+                  backgroundColor: Colors.black,
+                  body: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Center(
+                      child: Hero(
+                        tag: tag,
+                        child: InteractiveViewer(
+                          child: Image.network(imageUrl, fit: BoxFit.contain),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+          ),
+        );
+      },
+      child: Hero(
+        tag: tag,
+        child: Card(
           elevation: 3,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Container(
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
             height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey[200],
-              image:
-                  (imageUrl != null && imageUrl.isNotEmpty)
-                      ? DecorationImage(
-                        image: NetworkImage(imageUrl),
-                        fit: BoxFit.cover,
-                      )
-                      : null,
-            ),
-            child:
-                (imageUrl == null || imageUrl.isEmpty)
-                    ? const Icon(Icons.image, size: 40, color: Colors.grey)
-                    : null,
-          ),
-        ),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => Scaffold(
-                      backgroundColor: Colors.black,
-                      body: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Center(
-                          child: InteractiveViewer(
-                            child: Image.network(imageUrl),
-                          ),
-                        ),
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder:
+                  (context, error, stackTrace) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                        size: 40,
                       ),
                     ),
-              ),
-            );
-          },
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl!),
-                  fit: BoxFit.cover,
-                ),
-              ),
+                  ),
             ),
           ),
         ),
-
-        if (_isEditing)
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black54,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: const Size(0, 36),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              icon: const Icon(Icons.edit, color: Colors.white, size: 16),
-              label: const Text(
-                "Change",
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-              onPressed: () {
-                // TODO: implement picker logic
-                // You can use `imageKey` (optionalImageUrl1, 2, or 3)
-                // to know which image to update.
-              },
-            ),
-          ),
-      ],
+      ),
     );
   }
 
@@ -482,25 +460,367 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
       );
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900; // 💻 Desktop threshold
+    const brandColor = Color(0xFFE85205);
+    const bgColor = Color(0xFFfcfcfc);
+
+    // HEADER IMAGE
+    final headerSection = Stack(
+      children: [
+        if ((_vendorData!['headerImageUrl'] as String?)?.isNotEmpty ?? false)
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            child: Image.network(
+              _vendorData!['headerImageUrl'],
+              width: double.infinity,
+              height: 250,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 250,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 250,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.grey,
+                      size: 40,
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        else
+          Container(
+            height: 250,
+            color: Colors.grey[100],
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: 40,
+            ),
+          ),
+
+        if (_isEditing)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black54,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.image, color: Colors.white),
+              label: const Text(
+                "Change Image",
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: () {
+                // TODO: implement picker logic
+              },
+            ),
+          ),
+      ],
+    );
+
+    // LEFT COLUMN (General Info)
+    final leftColumn = SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          headerSection, // ✅ always show header here (for both desktop & mobile)
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _vendorData!['name'] ?? '',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                    color: brandColor,
+                  ),
+                ),
+              ),
+              if (_isEditing)
+                _smallEditButton(() => _editField('name', 'Name')),
+            ],
+          ),
+          const SizedBox(height: 4),
+
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  (_vendorData!['tags'] as String?)?.trim().isNotEmpty == true
+                      ? _vendorData!['tags']
+                      : 'Put your tagline here',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF8c8c8c),
+                  ),
+                ),
+              ),
+              if (_isEditing)
+                _smallEditButton(() => _editField('tags', 'Tags')),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text(
+                'About',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const Spacer(),
+              if (_isEditing)
+                _smallEditButton(
+                  () => _editField('description', 'Description'),
+                ),
+            ],
+          ),
+          ExpandableText(
+            _vendorData!['description'] ?? '',
+            trimLength: 120,
+            style: const TextStyle(fontSize: 14, color: Color(0xFF8C8C8C)),
+          ),
+          const SizedBox(height: 14),
+
+          _expandableInfoRow(
+            Icons.phone,
+            _vendorData!['phoneNumber'] ?? '',
+            'phoneNumber',
+          ),
+
+          Row(
+            children: [
+              const Icon(Icons.location_on, color: brandColor, size: 20),
+              const SizedBox(width: 10),
+              Flexible(
+                fit: FlexFit.loose,
+                child: ExpandableText(
+                  _vendorData!['address'] ?? '',
+                  trimLength: 50,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF8C8C8C),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (_isEditing)
+                _smallEditButton(() {
+                  _editAddressWithMap();
+                }),
+            ],
+          ),
+
+          _expandableInfoRow(
+            Icons.access_time,
+            _vendorData!['hours'] ?? '12:00 PM – 12:00 AM',
+            'hours',
+          ),
+          const SizedBox(height: 18),
+        ],
+      ),
+    );
+
+    // RIGHT COLUMN (Menu + Gallery)
+    final rightColumn = SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Menu (Top 4 Best Seller)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const Spacer(),
+              if (_isEditing)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => MenuManagementPage(
+                              vendorData: _vendorData!,
+                              onMenuUpdated: (updatedMenu) {
+                                setState(() {
+                                  _vendorData!['menu'] = updatedMenu;
+                                });
+                              },
+                            ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: brandColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text("Add Menu"),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          LayoutBuilder(
+            builder: (context, constraints) {
+              int crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
+              double aspectRatio = constraints.maxWidth > 800 ? 6.5 : 5.5;
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount:
+                    (_vendorData!['menu'] as List).length > 4
+                        ? 4
+                        : (_vendorData!['menu'] as List).length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: aspectRatio,
+                ),
+                itemBuilder: (context, index) {
+                  final item = (_vendorData!['menu'] as List)[index];
+                  return GestureDetector(
+                    onTap: () => _editMenuItem(index),
+                    child: Card(
+                      color: const Color(0xFFecc39e),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                item['name'] ?? '',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '|',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                item['category'] ?? '',
+                                style: const TextStyle(
+                                  color: Color(0xFF8c8c8c),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '|',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                '₱${item['price']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: brandColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
+          const SizedBox(height: 20),
+          const Text(
+            'Gallery',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 10),
+          buildOptionalImagesRow(),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+
+    // ✅ FINAL LAYOUT
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFE85205),
+        backgroundColor: brandColor,
         title: const Text(
           'Your Restaurant Profile',
           style: TextStyle(color: Colors.white, fontSize: 15),
         ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            bottomNavIndexNotifier.value = 0;
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(
-              _isEditing ? Icons.check : Icons.edit, // toggle icon
+              _isEditing ? Icons.check : Icons.edit,
               color: Colors.white,
             ),
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing; // toggle edit mode
-              });
-            },
+            onPressed: () => setState(() => _isEditing = !_isEditing),
             tooltip: _isEditing ? 'Done Editing' : 'Edit Profile',
           ),
           IconButton(
@@ -510,341 +830,39 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFfcfcfc),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if ((_vendorData!['headerImageUrl'] as String?)?.isNotEmpty ??
-                false)
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                    child: Image.network(
-                      _vendorData!['headerImageUrl'],
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  if (_isEditing)
-                    Positioned(
-                      right: 16,
-                      bottom: 16,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black54,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.image, color: Colors.white),
-                        label: const Text(
-                          "Change Image",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onPressed: () {
-                          // TODO: implement picker logic
-                        },
-                      ),
-                    ),
-                ],
-              ),
-
-            // ✅ Show button overlay only when editing
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+      backgroundColor: bgColor,
+      body:
+          isDesktop
+              ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _vendorData!['name'] ?? '',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25,
-                            color: const Color(0xFFE85205),
-                          ),
-                        ),
-                      ),
-                      if (_isEditing)
-                        _smallEditButton(() => _editField('name', 'Name')),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          (_vendorData!['tags'] as String?)
-                                      ?.trim()
-                                      .isNotEmpty ==
-                                  true
-                              ? _vendorData!['tags']
-                              : 'Put your tagline here',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF8c8c8c),
-                          ),
-                        ),
-                      ),
-                      if (_isEditing)
-                        _smallEditButton(
-                          () => _editField('tags', 'Tags'),
-                        ), // ✅ now editable
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Text(
-                        'About',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_isEditing)
-                        _smallEditButton(
-                          () => _editField('description', 'Description'),
-                        ),
-                    ],
-                  ),
-                  ExpandableText(
-                    _vendorData!['description'] ?? '',
-                    trimLength: 120, // adjust cutoff length if needed
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF8C8C8C),
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24, right: 12),
+                      child: leftColumn,
                     ),
                   ),
-
-                  const SizedBox(height: 14),
-
-                  _expandableInfoRow(
-                    Icons.phone,
-                    _vendorData!['phoneNumber'] ??
-                        '', // ang ari mn wala mn ta actually contact pero nami mn nga idea ahh, finalize lng
-                    'phoneNumber',
+                  Container(
+                    width: 1,
+                    color: Colors.grey.withAlpha(25),
+                    margin: const EdgeInsets.symmetric(vertical: 24),
                   ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: const Color(0xFFE85205),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        fit: FlexFit.loose,
-                        child: ExpandableText(
-                          _vendorData!['address'] ?? '',
-                          trimLength: 50,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF8C8C8C),
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_isEditing)
-                        _smallEditButton(() {
-                          _editAddressWithMap();
-                        }),
-                    ],
-                  ),
-
-                  _expandableInfoRow(
-                    Icons.access_time,
-                    _vendorData!['hours'] ?? '12:00 PM – 12:00 AM',
-                    'hours',
-                  ),
-
-                  const SizedBox(height: 18),
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   child: OutlinedButton.icon(
-                  //     style: OutlinedButton.styleFrom(
-                  //       side: const BorderSide(color: Color(0xFFE85205)),
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius: BorderRadius.circular(8),
-                  //       ),
-                  //     ),
-                  //     icon: const Icon(
-                  //       Icons.directions,
-                  //       color: Color(0xFFE85205),
-                  //     ),
-                  //     label: const Text(
-                  //       'Go to directions',
-                  //       style: TextStyle(color: Color(0xFFE85205)),
-                  //     ),
-                  //     onPressed: () {},
-                  //   ),
-                  // ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      const Text(
-                        'Menu (Top 4 Best Seller)',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_isEditing)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => MenuManagementPage(
-                                      vendorData: _vendorData!,
-                                      onMenuUpdated: (updatedMenu) {
-                                        setState(() {
-                                          _vendorData!['menu'] = updatedMenu;
-                                        });
-                                      },
-                                    ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE85205),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                          ),
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text("Add Menu"),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  const SizedBox(height: 8),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      int crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
-                      double aspectRatio =
-                          constraints.maxWidth > 800 ? 6.5 : 5.5;
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount:
-                            (_vendorData!['menu'] as List).length > 4
-                                ? 4
-                                : (_vendorData!['menu'] as List).length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: aspectRatio,
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = (_vendorData!['menu'] as List)[index];
-                          return GestureDetector(
-                            onTap: () => _editMenuItem(index),
-                            child: Card(
-                              color: const Color(0xFFecc39e),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 12,
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      flex: 4,
-                                      child: Text(
-                                        item['name'] ?? '',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Center(
-                                      child: Text(
-                                        '|',
-                                        style: TextStyle(
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        item['category'] ?? '',
-                                        style: const TextStyle(
-                                          color: Color(0xFF8c8c8c),
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Center(
-                                      child: Text(
-                                        '|',
-                                        style: TextStyle(
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        '₱${item['price']}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFFE85205),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24, left: 12),
+                      child: rightColumn,
+                    ),
                   ),
                 ],
+              )
+              : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [leftColumn, rightColumn],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            //optional image card
-            buildOptionalImagesRow(),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
     );
   }
 

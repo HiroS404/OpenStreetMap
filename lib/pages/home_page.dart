@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
@@ -10,6 +11,7 @@ import 'package:map_try/pages/resto_detail_screen.dart';
 import 'package:map_try/pages/settings_page.dart';
 import 'package:map_try/services/restaurant_service.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:map_try/services/location_service.dart';
 
 import '../main.dart';
 
@@ -176,28 +178,29 @@ Widget buildDesktopRestaurantCard({
 class DesktopCategoryPills extends StatelessWidget {
   final String selectedCategory;
   final ValueChanged<String> onCategorySelected;
+  final List<String> allCategories; // Add this
 
   const DesktopCategoryPills({
     super.key,
     required this.selectedCategory,
     required this.onCategorySelected,
+    required this.allCategories, // Add this
   });
 
   @override
   Widget build(BuildContext context) {
-    final categories = ["All", "Meals", "Drinks", "Fast Food", "Snacks"];
-
-    final hiddenCategories = [
-      "Vegan",
-      "Desserts",
-      "Seafood",
-      "Breakfast",
-      "Buffet",
-      "Street Food",
-      "Healthy",
-      "International",
-      "Local",
+    final categories = [
+      "All",
+      "Nearby",
+      "Meals",
+      "Drinks",
+      "Fast Food",
+      "Snacks",
     ];
+
+    // Get hidden categories dynamically
+    final hiddenCategories =
+        allCategories.where((cat) => !categories.contains(cat)).toList();
 
     return Wrap(
       spacing: 12,
@@ -234,61 +237,62 @@ class DesktopCategoryPills extends StatelessWidget {
             ),
           ),
 
-        // 🟠 "More" button
-        GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text("More Categories"),
-                  content: SingleChildScrollView(
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children:
-                          hiddenCategories.map((label) {
-                            final bool isSelected = selectedCategory == label;
-                            return ChoiceChip(
-                              label: Text(label),
-                              selected: isSelected,
-                              selectedColor: AppColors.button,
-                              onSelected: (_) {
-                                onCategorySelected(label);
-                                Navigator.pop(context);
-                              },
-                            );
-                          }).toList(),
+        // "More" button - only show if there are hidden categories
+        if (hiddenCategories.isNotEmpty)
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("More Categories"),
+                    content: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            hiddenCategories.map((label) {
+                              final bool isSelected = selectedCategory == label;
+                              return ChoiceChip(
+                                label: Text(label),
+                                selected: isSelected,
+                                selectedColor: AppColors.button,
+                                onSelected: (_) {
+                                  onCategorySelected(label);
+                                  Navigator.pop(context);
+                                },
+                              );
+                            }).toList(),
+                      ),
                     ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Close"),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.sysBg,
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: AppColors.sysAccent, width: 1),
-            ),
-            child: const Text(
-              "More",
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Close"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.sysBg,
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: AppColors.sysAccent, width: 1),
+              ),
+              child: const Text(
+                "More",
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -524,84 +528,12 @@ Widget buildDesktopGrid(
 class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
   final String selectedCategory;
   final ValueChanged<String> onCategorySelected;
+  final List<String> hiddenCategories;
 
   DesktopCategoryChipsHeader({
     required this.selectedCategory,
     required this.onCategorySelected,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Colors.white,
-      child: Container(
-        height: maxExtent,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildCategoryChip("All"),
-            _buildCategoryChip("Meals"),
-            _buildCategoryChip("Drinks"),
-            _buildCategoryChip("Fast Food"),
-            _buildCategoryChip("Snacks"),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(String label) {
-    final bool isSelected = selectedCategory == label;
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: TextButton(
-        onPressed: () => onCategorySelected(label),
-        style: TextButton.styleFrom(
-          backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
-          foregroundColor: isSelected ? Colors.white : Colors.black87,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-            side: BorderSide(
-              color: isSelected ? AppColors.button : AppColors.sysAccent,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 80;
-
-  @override
-  double get minExtent => 80;
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      true;
-}
-
-/// Mobile Category Chips Header (unchanged)
-class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
-  final String selectedCategory;
-  final ValueChanged<String> onCategorySelected;
-
-  CategoryChipsHeader({
-    required this.selectedCategory,
-    required this.onCategorySelected,
+    required this.hiddenCategories,
   });
 
   @override
@@ -612,21 +544,18 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // ✅ Main categories always visible
-    final mainCategories = ["All", "Meals", "Drinks", "Fast Food", "Snacks"];
-
-    // ✅ Hidden categories for the popup
-    final hiddenCategories = [
-      "Vegan",
-      "Desserts",
-      "Seafood",
-      "Breakfast",
-      "Buffet",
-      "Street Food",
-      "Healthy",
-      "International",
-      "Local",
+    // Main categories always visible
+    final mainCategories = [
+      "All",
+      "Nearby",
+      "Meals",
+      "Drinks",
+      "Fast Food",
+      "Snacks",
     ];
+
+    // Get hidden categories dynamically - pass them from the state
+    // You'll need to add this as a parameter to CategoryChipsHeader
 
     return Container(
       color: Colors.white,
@@ -640,16 +569,19 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 🟢 Visible category chips
+                // Visible category chips
                 for (final category in mainCategories)
                   _buildCategoryChip(context, category),
 
-                // 🟠 “More” button chip
+                // "More" button chip
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: TextButton(
                     onPressed: () {
-                      // 🧩 Bottom popup for more categories
+                      // Get hidden categories here
+                      final hiddenCategories =
+                          this.hiddenCategories; // You'll pass this
+
                       showModalBottomSheet(
                         context: context,
                         backgroundColor: Colors.white,
@@ -729,7 +661,200 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
     );
   }
 
-  // 🧩 Updated helper to handle context (needed for bottom sheet)
+  Widget _buildCategoryChip(BuildContext context, String label) {
+    final bool isSelected = selectedCategory == label;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: TextButton(
+        onPressed: () => onCategorySelected(label),
+        style: TextButton.styleFrom(
+          backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
+          foregroundColor: isSelected ? Colors.white : Colors.black87,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: BorderSide(
+              color: isSelected ? AppColors.button : AppColors.sysAccent,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (label == "Nearby") ...[
+              Icon(
+                Icons.near_me,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.black87,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
+}
+
+/// Mobile Category Chips Header (unchanged)
+class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
+  final String selectedCategory;
+  final ValueChanged<String> onCategorySelected;
+  final List<String> hiddenCategories; // Add this parameter
+
+  CategoryChipsHeader({
+    required this.selectedCategory,
+    required this.onCategorySelected,
+    required this.hiddenCategories, // Add this to constructor
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Main categories always visible
+    final mainCategories = [
+      "All",
+      "Nearby",
+      "Meals",
+      "Drinks",
+      "Fast Food",
+      "Snacks",
+    ];
+
+    return Container(
+      color: Colors.white,
+      child: SizedBox(
+        height: maxExtent,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: screenWidth),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Visible category chips
+                for (final category in mainCategories)
+                  _buildCategoryChip(context, category),
+
+                // "More" button chip - only show if there are hidden categories
+                if (hiddenCategories.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: TextButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                          ),
+                          builder: (context) {
+                            return SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "More Categories",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // ✅ Wrap in Flexible + SingleChildScrollView to prevent overflow
+                                    Flexible(
+                                      child: SingleChildScrollView(
+                                        child: Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children:
+                                              hiddenCategories.map((label) {
+                                                final bool isSelected =
+                                                    selectedCategory == label;
+                                                return ChoiceChip(
+                                                  label: Text(label),
+                                                  selected: isSelected,
+                                                  selectedColor:
+                                                      AppColors.button,
+                                                  onSelected: (_) {
+                                                    onCategorySelected(label);
+                                                    Navigator.pop(context);
+                                                  },
+                                                );
+                                              }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.sysBg,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          side: BorderSide(
+                            color: AppColors.sysAccent,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        "More",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryChip(BuildContext context, String label) {
     final bool isSelected = selectedCategory == label;
     return Padding(
@@ -786,16 +911,141 @@ class _HomePageState extends State<HomePage> {
     viewportFraction: 1,
   );
   final TextEditingController _searchController = TextEditingController();
+  List<Restaurant> _mostBoughtRestaurants = [];
+  bool _isLoadingMostBought = true;
+  Timer? _autoSwipeTimer;
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
   String _selectedCategory = "All";
   String _searchQuery = "";
 
+  // User's current location
+  LatLng? _userLocation;
+
+  // Distance calculator
+  final Distance _distance = Distance();
+
   @override
   void initState() {
     super.initState();
     _loadRestaurants();
+    _getUserLocation();
+    _fetchMostBoughtRestaurants();
+  }
+
+  void _startAutoSwipe() {
+    _autoSwipeTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (_mostBoughtRestaurants.isNotEmpty &&
+          _mostBoughtPageController.hasClients) {
+        final nextPage = (_mostBoughtPageController.page?.toInt() ?? 0) + 1;
+        _mostBoughtPageController.animateToPage(
+          nextPage % _mostBoughtRestaurants.length,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _stopAutoSwipe() {
+    _autoSwipeTimer?.cancel();
+  }
+
+  Future<void> _fetchMostBoughtRestaurants() async {
+    try {
+      // Use your existing RestaurantService to get restaurants
+      final allRestaurants = await RestaurantService.fetchRestaurants();
+
+      if (allRestaurants.isNotEmpty) {
+        // Shuffle and take 4 random restaurants
+        final randomRestaurants = List<Restaurant>.from(allRestaurants);
+        randomRestaurants.shuffle();
+
+        final randomFour = randomRestaurants.take(4).toList();
+
+        if (mounted) {
+          setState(() {
+            _mostBoughtRestaurants = randomFour;
+            _isLoadingMostBought = false;
+          });
+          _startAutoSwipe(); // Start auto-swiping after data loads
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingMostBought = false;
+          });
+        }
+      }
+    } catch (e) {
+      // print('Error fetching most bought restaurants: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingMostBought = false;
+        });
+      }
+    }
+  }
+
+  // Get user's current location
+  Future<void> _getUserLocation() async {
+    final location = await LocationService.getCurrentLocation();
+    if (location != null && mounted) {
+      setState(() {
+        _userLocation = location;
+      });
+      print("📍 User location set in HomePage: $_userLocation");
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to get your location. Please check permissions.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  // Check if restaurant is nearby (within km by default)
+  bool _isRestaurantNearby(Restaurant restaurant, {double radiusKm = 3.0}) {
+    if (_userLocation == null ||
+        restaurant.latitude == null ||
+        restaurant.longitude == null) {
+      return false;
+    }
+
+    final restoLocation = LatLng(restaurant.latitude!, restaurant.longitude!);
+    final distanceInMeters = _distance.as(
+      LengthUnit.Meter,
+      _userLocation!,
+      restoLocation,
+    );
+    final distanceInKm = distanceInMeters / 1000;
+
+    return distanceInKm <= radiusKm;
+  }
+
+  // Get nearby restaurants count (optional, for badges)
+  int _getNearbyRestaurantsCount() {
+    if (_userLocation == null) return 0;
+    return _restaurants.where((resto) => _isRestaurantNearby(resto)).length;
+  }
+
+  List<String> _getAllCategories() {
+    final Set<String> allCategories = {};
+
+    for (final restaurant in _restaurants) {
+      for (final menuItem in restaurant.menu) {
+        final category = menuItem['category'] as String?;
+        if (category != null && category.isNotEmpty) {
+          allCategories.add(category);
+        }
+      }
+    }
+    allCategories.remove("Nearby");
+    return allCategories.toList()..sort();
   }
 
   Future<void> _loadRestaurants() async {
@@ -872,19 +1122,31 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 20),
               // logo
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(20),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Icon(
-                  Icons.restaurant_menu,
-                  color: Colors.white,
-                  size: 24,
+              InkWell(
+                borderRadius: BorderRadius.circular(15),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CreateRestoAccPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(20),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
+
               const SizedBox(height: 40),
 
               _desktopNavButton(Icons.home_rounded, 0, index == 0, 'Home'),
@@ -896,14 +1158,13 @@ class _HomePageState extends State<HomePage> {
                 'Explore',
               ),
               const SizedBox(height: 30),
+
               _desktopNavButton(
                 Icons.settings_rounded,
-                2,
-                index == 2,
+                3,
+                index == 3,
                 'Settings',
               ),
-              const SizedBox(height: 30),
-              _desktopNavButton(Icons.search_rounded, 3, index == 3, 'Search'),
             ],
           ),
         );
@@ -964,6 +1225,7 @@ class _HomePageState extends State<HomePage> {
                     // Explore / Map (reuse mobile map widget)
                     OpenstreetmapScreen(
                       destinationNotifier: widget.destinationNotifier,
+                      isDesktop: true, // ✅ ensures sidebar stays visible
                     ),
 
                     // Settings (reuse mobile settings widget)
@@ -1083,6 +1345,7 @@ class _HomePageState extends State<HomePage> {
                   onCategorySelected: (category) {
                     setState(() => _selectedCategory = category);
                   },
+                  allCategories: _getAllCategories(),
                 ),
                 const SizedBox(height: 40),
 
@@ -1134,13 +1397,32 @@ class _HomePageState extends State<HomePage> {
   Widget _buildRestaurantList() {
     final filteredRestaurants =
         _restaurants.where((resto) {
+          // Handle "Nearby" category first
+          if (_selectedCategory == "Nearby") {
+            if (_userLocation == null) return false;
+            return _isRestaurantNearby(resto);
+          }
+
           if (_searchQuery.isNotEmpty) {
-            return resto.menu.any((item) {
+            // Check restaurant name
+            final restoNameMatch = resto.name.toLowerCase().contains(
+              _searchQuery,
+            );
+
+            // Check address
+            final addressMatch = (resto.address ?? '').toLowerCase().contains(
+              _searchQuery,
+            );
+
+            // Check menu items
+            final menuMatch = resto.menu.any((item) {
               final menuName = (item['name'] as String).toLowerCase();
               final category = (item['category'] as String).toLowerCase();
               return menuName.contains(_searchQuery) ||
                   category.contains(_searchQuery);
             });
+
+            return restoNameMatch || addressMatch || menuMatch;
           } else {
             return _selectedCategory == "All"
                 ? true
@@ -1152,6 +1434,27 @@ class _HomePageState extends State<HomePage> {
           }
         }).toList();
 
+    // Sort by distance if "Nearby" is selected
+    if (_selectedCategory == "Nearby" && _userLocation != null) {
+      filteredRestaurants.sort((a, b) {
+        if (a.latitude == null || a.longitude == null) return 1;
+        if (b.latitude == null || b.longitude == null) return -1;
+
+        final distA = _distance.as(
+          LengthUnit.Meter,
+          _userLocation!,
+          LatLng(a.latitude!, a.longitude!),
+        );
+        final distB = _distance.as(
+          LengthUnit.Meter,
+          _userLocation!,
+          LatLng(b.latitude!, b.longitude!),
+        );
+
+        return distA.compareTo(distB);
+      });
+    }
+
     if (filteredRestaurants.isEmpty) {
       return Center(
         child: Column(
@@ -1160,7 +1463,11 @@ class _HomePageState extends State<HomePage> {
             Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No results found',
+              _selectedCategory == "Nearby"
+                  ? (_userLocation == null
+                      ? 'Unable to get your location'
+                      : 'No nearby restaurants found')
+                  : 'No results found ',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -1169,9 +1476,13 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              _searchQuery.isNotEmpty
-                  ? 'Try searching for something else'
-                  : 'No restaurants in this category',
+              _selectedCategory == "Nearby"
+                  ? (_userLocation == null
+                      ? 'Please enable location services'
+                      : 'No Restaurant Found Within 3km')
+                  : (_searchQuery.isNotEmpty
+                      ? 'Try searching for something else'
+                      : 'No restaurants in this category'),
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
@@ -1631,6 +1942,19 @@ class _HomePageState extends State<HomePage> {
               onCategorySelected: (category) {
                 setState(() => _selectedCategory = category);
               },
+              hiddenCategories:
+                  _getAllCategories()
+                      .where(
+                        (cat) =>
+                            ![
+                              "All",
+                              "Meals",
+                              "Drinks",
+                              "Fast Food",
+                              "Snacks",
+                            ].contains(cat),
+                      )
+                      .toList(),
             ),
           ),
 
@@ -1659,8 +1983,25 @@ class _HomePageState extends State<HomePage> {
                       builder: (context) {
                         final filteredRestaurants =
                             _restaurants.where((resto) {
+                              // Handle "Nearby" category first
+                              if (_selectedCategory == "Nearby") {
+                                if (_userLocation == null) return false;
+                                return _isRestaurantNearby(resto);
+                              }
+
                               if (_searchQuery.isNotEmpty) {
-                                return resto.menu.any((item) {
+                                // Check restaurant name
+                                final restoNameMatch = resto.name
+                                    .toLowerCase()
+                                    .contains(_searchQuery);
+
+                                // Check address
+                                final addressMatch = (resto.address ?? '')
+                                    .toLowerCase()
+                                    .contains(_searchQuery);
+
+                                // Check menu items
+                                final menuMatch = resto.menu.any((item) {
                                   final menuName =
                                       (item['name'] as String).toLowerCase();
                                   final category =
@@ -1670,6 +2011,10 @@ class _HomePageState extends State<HomePage> {
                                   return menuName.contains(_searchQuery) ||
                                       category.contains(_searchQuery);
                                 });
+
+                                return restoNameMatch ||
+                                    addressMatch ||
+                                    menuMatch;
                               } else {
                                 return _selectedCategory == "All"
                                     ? true
@@ -1682,14 +2027,67 @@ class _HomePageState extends State<HomePage> {
                               }
                             }).toList();
 
+                        // Sort by distance if "Nearby" is selected
+                        if (_selectedCategory == "Nearby" &&
+                            _userLocation != null) {
+                          filteredRestaurants.sort((a, b) {
+                            if (a.latitude == null || a.longitude == null) {
+                              return 1;
+                            }
+                            if (b.latitude == null || b.longitude == null) {
+                              return -1;
+                            }
+
+                            final distA = _distance.as(
+                              LengthUnit.Meter,
+                              _userLocation!,
+                              LatLng(a.latitude!, a.longitude!),
+                            );
+                            final distB = _distance.as(
+                              LengthUnit.Meter,
+                              _userLocation!,
+                              LatLng(b.latitude!, b.longitude!),
+                            );
+
+                            return distA.compareTo(distB);
+                          });
+                        }
                         if (filteredRestaurants.isEmpty) {
                           return Center(
-                            child: Text(
-                              "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _selectedCategory == "Nearby"
+                                      ? Icons.location_off
+                                      : Icons.search_off,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _selectedCategory == "Nearby"
+                                      ? "No restaurants found within 3 km"
+                                      : "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                if (_selectedCategory == "Nearby" &&
+                                    _userLocation == null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      "Please enable location services",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           );
                         }
@@ -1764,66 +2162,88 @@ class _HomePageState extends State<HomePage> {
 
                   const SizedBox(height: 16),
 
-                  // Most Bought Carousel (placeholder for mobile)
-                  sectionHeader("Most Bought"),
+                  // Random Carousel
+                  sectionHeader("Random"),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 280,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ScrollConfiguration(
-                            behavior: const MaterialScrollBehavior().copyWith(
-                              dragDevices: {
-                                PointerDeviceKind.touch,
-                                PointerDeviceKind.mouse,
-                              },
-                            ),
-                            child: PageView(
-                              controller: _mostBoughtPageController,
-                              padEnds: false,
-                              physics: const BouncingScrollPhysics(),
+                    child:
+                        _isLoadingMostBought
+                            ? const Center(child: CircularProgressIndicator())
+                            : _mostBoughtRestaurants.isEmpty
+                            ? const Center(
+                              child: Text('No restaurants available'),
+                            )
+                            : Column(
                               children: [
-                                restoCard(
-                                  headerImageUrl: '',
-                                  name: '-------------',
-                                  address: '-------------',
+                                Expanded(
+                                  child: ScrollConfiguration(
+                                    behavior: const MaterialScrollBehavior()
+                                        .copyWith(
+                                          dragDevices: {
+                                            PointerDeviceKind.touch,
+                                            PointerDeviceKind.mouse,
+                                          },
+                                        ),
+                                    child: PageView.builder(
+                                      controller: _mostBoughtPageController,
+                                      padEnds: false,
+                                      physics: const BouncingScrollPhysics(),
+                                      itemCount: _mostBoughtRestaurants.length,
+                                      itemBuilder: (context, index) {
+                                        final resto =
+                                            _mostBoughtRestaurants[index];
+                                        return GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (
+                                                      context,
+                                                    ) => RestoDetailScreen(
+                                                      restoId: resto.id,
+                                                      destinationNotifier:
+                                                          widget
+                                                              .destinationNotifier,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          child: restoCard(
+                                            headerImageUrl:
+                                                resto.headerImageUrl,
+                                            name: resto.name,
+                                            address: resto.address ?? '',
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                                 ),
-                                restoCard(
-                                  headerImageUrl: '',
-                                  name: '-------------',
-                                  address: '-------------',
-                                ),
-                                restoCard(
-                                  headerImageUrl: '',
-                                  name: '-------------',
-                                  address: '-------------',
+                                const SizedBox(height: 8),
+                                SmoothPageIndicator(
+                                  controller: _mostBoughtPageController,
+                                  count: _mostBoughtRestaurants.length,
+                                  effect: const WormEffect(
+                                    activeDotColor: AppColors.button,
+                                    dotColor: Colors.grey,
+                                    dotHeight: 10,
+                                    dotWidth: 10,
+                                    spacing: 8,
+                                  ),
+                                  onDotClicked: (index) {
+                                    _mostBoughtPageController.animateToPage(
+                                      index,
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SmoothPageIndicator(
-                          controller: _mostBoughtPageController,
-                          count: 3,
-                          effect: const WormEffect(
-                            activeDotColor: AppColors.button,
-                            dotColor: Colors.grey,
-                            dotHeight: 10,
-                            dotWidth: 10,
-                            spacing: 8,
-                          ),
-                          onDotClicked: (index) {
-                            _mostBoughtPageController.animateToPage(
-                              index,
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),
