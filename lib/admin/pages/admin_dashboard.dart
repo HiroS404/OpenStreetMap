@@ -193,55 +193,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         child: StreamBuilder<List<admin_models.JeepneyRoute>>(
                           stream: _routeServices.getRoutes(),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             }
                             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Center(
-                                child: Text("No routes found"),
-                              );
+                              return const Center(child: Text("No routes found"));
                             }
-                            final routes = snapshot.data!;
+
+                            // ✅ Copy and sort routes by routeNumber
+                            final routes = List<admin_models.JeepneyRoute>.from(snapshot.data!)
+                              ..sort((a, b) => a.routeNumber.compareTo(b.routeNumber));
+
                             return ListView.builder(
                               itemCount: routes.length,
                               itemBuilder: (context, index) {
                                 final route = routes[index];
                                 return Card(
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                    horizontal: 4,
-                                  ),
+                                  margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                                   child: ListTile(
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     title: Text(
                                       'Route ${route.routeNumber}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     subtitle: Text(route.direction),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                          ),
+                                          icon: const Icon(Icons.edit, color: Colors.blue),
                                           onPressed: () => _loadForEdit(route),
                                         ),
                                         IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed:
-                                              () => _deleteRoute(route.id),
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () => _deleteRoute(route.id),
                                         ),
                                       ],
                                     ),
@@ -254,6 +241,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                     ),
                   ),
+
                 ],
               ),
             ),
