@@ -7,7 +7,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:map_try/admin/pages/admin_dashboard.dart';
 import 'package:map_try/admin/pages/admin_login_page.dart';
 import 'package:map_try/firebase_options.dart';
-import 'package:map_try/pages/OneTImeUpload/reverse.dart';
 import 'package:map_try/pages/home_page.dart';
 import 'package:map_try/pages/openstreetmap.dart';
 import 'package:map_try/pages/vendo_profile.dart';

@@ -4,11 +4,12 @@ import 'package:badges/badges.dart' as badges;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_try/model/restaurant_model.dart';
+import 'package:map_try/pages/openstreetmap.dart';
 import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/pages/resto_detail_screen.dart';
+import 'package:map_try/pages/settings_page.dart';
 import 'package:map_try/services/restaurant_service.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:map_try/widgets/search_modal.dart';
 
 import '../main.dart';
 
@@ -62,106 +63,6 @@ Widget categoryChip(String label, [bool isSelected = false]) {
 }
 
 // Desktop Header
-class DesktopSidebar extends StatefulWidget {
-  final String selectedNav;
-  final ValueChanged<String> onNavSelected;
-  final ValueNotifier<LatLng?> destinationNotifier; // pass this to search
-
-  const DesktopSidebar({
-    Key? key,
-    required this.selectedNav,
-    required this.onNavSelected,
-    required this.destinationNotifier, // new
-  }) : super(key: key);
-
-  @override
-  State<DesktopSidebar> createState() => _DesktopSidebarState();
-}
-
-class _DesktopSidebarState extends State<DesktopSidebar> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      height: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.primary, AppColors.secondary],
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          // Logo
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(20),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 40),
-          _buildNavItem(Icons.home_rounded, 'home', 'Home'),
-          const SizedBox(height: 30),
-          _buildNavItem(Icons.explore_rounded, 'explore', 'Explore'),
-          const SizedBox(height: 30),
-          _buildNavItem(Icons.settings_rounded, 'settings', 'Settings'),
-          const SizedBox(height: 30),
-          _buildNavItem(Icons.search_rounded, 'search', 'Search'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String value, String tooltip) {
-    final isSelected = widget.selectedNav == value;
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: () {
-          widget.onNavSelected(value);
-
-          if (value == 'home') {
-            bottomNavIndexNotifier.value = 0;
-          } else if (value == 'explore') {
-            bottomNavIndexNotifier.value = 1;
-          } else if (value == 'settings') {
-            bottomNavIndexNotifier.value = 3;
-          } else if (value == 'search') {
-            // ✅ Show SearchModal
-            showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding: const EdgeInsets.all(16),
-                child: SearchModal(destinationNotifier: widget.destinationNotifier),
-              ),
-            );
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withAlpha(30) : Colors.transparent,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(
-            icon,
-            color: isSelected ? Colors.white : Colors.white.withAlpha(70),
-            size: 24,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 
 Widget buildDesktopRestaurantCard({
   required Restaurant restaurant,
@@ -244,7 +145,7 @@ Widget buildDesktopRestaurantCard({
                           Icon(Icons.star, size: 12, color: Colors.white),
                           SizedBox(width: 4),
                           Text(
-                            '4.5',
+                            '0',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -277,10 +178,10 @@ class DesktopCategoryPills extends StatelessWidget {
   final ValueChanged<String> onCategorySelected;
 
   const DesktopCategoryPills({
-    Key? key,
+    super.key,
     required this.selectedCategory,
     required this.onCategorySelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -310,20 +211,22 @@ class DesktopCategoryPills extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                gradient: selectedCategory == category
-                    ? const LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
-                )
-                    : null,
+                gradient:
+                    selectedCategory == category
+                        ? const LinearGradient(
+                          colors: [AppColors.primary, AppColors.secondary],
+                        )
+                        : null,
                 color: selectedCategory == category ? null : AppColors.sysBg,
                 borderRadius: BorderRadius.circular(25),
               ),
               child: Text(
                 category,
                 style: TextStyle(
-                  color: selectedCategory == category
-                      ? Colors.white
-                      : Colors.black87,
+                  color:
+                      selectedCategory == category
+                          ? Colors.white
+                          : Colors.black87,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -343,18 +246,19 @@ class DesktopCategoryPills extends StatelessWidget {
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: hiddenCategories.map((label) {
-                        final bool isSelected = selectedCategory == label;
-                        return ChoiceChip(
-                          label: Text(label),
-                          selected: isSelected,
-                          selectedColor: AppColors.button,
-                          onSelected: (_) {
-                            onCategorySelected(label);
-                            Navigator.pop(context);
-                          },
-                        );
-                      }).toList(),
+                      children:
+                          hiddenCategories.map((label) {
+                            final bool isSelected = selectedCategory == label;
+                            return ChoiceChip(
+                              label: Text(label),
+                              selected: isSelected,
+                              selectedColor: AppColors.button,
+                              onSelected: (_) {
+                                onCategorySelected(label);
+                                Navigator.pop(context);
+                              },
+                            );
+                          }).toList(),
                     ),
                   ),
                   actions: [
@@ -389,11 +293,6 @@ class DesktopCategoryPills extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
 
 Widget sectionHeader(String title, {bool isDesktop = false}) {
   return Row(
@@ -707,10 +606,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context,
-      double shrinkOffset,
-      bool overlapsContent,
-      ) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     // ✅ Main categories always visible
@@ -777,19 +676,20 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                 Wrap(
                                   spacing: 8,
                                   runSpacing: 8,
-                                  children: hiddenCategories.map((label) {
-                                    final bool isSelected =
-                                        selectedCategory == label;
-                                    return ChoiceChip(
-                                      label: Text(label),
-                                      selected: isSelected,
-                                      selectedColor: AppColors.button,
-                                      onSelected: (_) {
-                                        onCategorySelected(label);
-                                        Navigator.pop(context);
-                                      },
-                                    );
-                                  }).toList(),
+                                  children:
+                                      hiddenCategories.map((label) {
+                                        final bool isSelected =
+                                            selectedCategory == label;
+                                        return ChoiceChip(
+                                          label: Text(label),
+                                          selected: isSelected,
+                                          selectedColor: AppColors.button,
+                                          onSelected: (_) {
+                                            onCategorySelected(label);
+                                            Navigator.pop(context);
+                                          },
+                                        );
+                                      }).toList(),
                                 ),
                                 const SizedBox(height: 16),
                               ],
@@ -809,10 +709,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
-                        side: BorderSide(
-                          color: AppColors.sysAccent,
-                          width: 1,
-                        ),
+                        side: BorderSide(color: AppColors.sysAccent, width: 1),
                       ),
                     ),
                     child: const Text(
@@ -855,10 +752,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
         ),
       ),
     );
@@ -874,7 +768,6 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
 }
-
 
 class HomePage extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -898,7 +791,6 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String _selectedCategory = "All";
   String _searchQuery = "";
-  String _selectedNav = "home";
 
   @override
   void initState() {
@@ -961,188 +853,281 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Place this inside _HomePageState
+  Widget _buildDesktopNavBar() {
+    return ValueListenableBuilder<int>(
+      valueListenable: bottomNavIndexNotifier,
+      builder: (context, index, _) {
+        return Container(
+          width: 80,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primary, AppColors.secondary],
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              // logo
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(20),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  Icons.restaurant_menu,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              _desktopNavButton(Icons.home_rounded, 0, index == 0, 'Home'),
+              const SizedBox(height: 30),
+              _desktopNavButton(
+                Icons.explore_rounded,
+                1,
+                index == 1,
+                'Explore',
+              ),
+              const SizedBox(height: 30),
+              _desktopNavButton(
+                Icons.settings_rounded,
+                2,
+                index == 2,
+                'Settings',
+              ),
+              const SizedBox(height: 30),
+              _desktopNavButton(Icons.search_rounded, 3, index == 3, 'Search'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _desktopNavButton(
+    IconData icon,
+    int navIndex,
+    bool selected,
+    String tooltip,
+  ) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: () {
+          // Tap writes to the same notifier the mobile bottom nav uses
+          bottomNavIndexNotifier.value = navIndex;
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: selected ? Colors.white.withAlpha(30) : Colors.transparent,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Icon(
+            icon,
+            color: selected ? Colors.white : Colors.white.withAlpha(70),
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDesktopLayout() {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
         children: [
-          // Left Sidebar
-        DesktopSidebar(
-        selectedNav: 'home',
-        onNavSelected: (value) {
-          // handle nav selection
-        },
-        destinationNotifier: destinationNotifier, // ✅ pass this
-        ),
+          // left nav placeholder (we'll replace this later with vertical navbar)
+          SizedBox(width: 80, child: _buildDesktopNavBar()),
 
-          // Main Content Area
+          // main content area: depends on bottomNavIndexNotifier (same as mobile)
           Expanded(
-            child: Row(
-              children: [
-                // Left Content Panel
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.all(40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header Section
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'MapaKaon',
-                              style: GoogleFonts.poppins(
-                                fontSize: 48,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                letterSpacing: -1,
-                              ),
-                            ),
-                            Text(
-                              'Hungry? We\'ll lead the way',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 40),
+            child: ValueListenableBuilder<int>(
+              valueListenable: bottomNavIndexNotifier,
+              builder: (context, index, _) {
+                return IndexedStack(
+                  index: index,
+                  children: [
+                    // Home (desktop content)
+                    _buildDesktopHomeContent(),
 
-                        // Search Section
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(50),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) {
-                              setState(
-                                () => _searchQuery = value.toLowerCase(),
-                              );
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'What would you like to eat?',
-                              hintStyle: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 16,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey[500],
-                                size: 20,
-                              ),
-                              suffixIcon:
-                                  _searchQuery.isNotEmpty
-                                      ? IconButton(
-                                        icon: const Icon(Icons.clear),
-                                        onPressed: () {
-                                          setState(() {
-                                            _searchController.clear();
-                                            _searchQuery = "";
-                                          });
-                                        },
-                                      )
-                                      : null,
-                              filled: true,
-                              fillColor: const Color(0xFFFAFAFA),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                  width: 2,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: const BorderSide(
-                                  color: AppColors.secondary,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-
-                        // Category Pills
-                        DesktopCategoryPills(
-                          selectedCategory: _selectedCategory,
-                          onCategorySelected: (category) {
-                            setState(() => _selectedCategory = category);
-                          },
-                        ),
-                        const SizedBox(height: 40),
-
-                        // Section Title
-                        Text(
-                          _searchQuery.isNotEmpty
-                              ? 'Search Results'
-                              : (_selectedCategory == 'All'
-                                  ? 'Hot Deals'
-                                  : _selectedCategory),
-                          style: GoogleFonts.poppins(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Restaurant List
-                        Expanded(child: _buildRestaurantList()),
-                      ],
+                    // Explore / Map (reuse mobile map widget)
+                    OpenstreetmapScreen(
+                      destinationNotifier: widget.destinationNotifier,
                     ),
-                  ),
-                ),
-                // Right Food Image Panel
-                Container(
-                  width: 400,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('Assets/route_pics/imageiloilo.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.white.withAlpha(10),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+
+                    // Settings (reuse mobile settings widget)
+                    SettingsPage(),
+
+                    // If your mobile has more tabs, add them here as placeholders:
+                    // Container(), // index 3 ...
+                  ],
+                );
+              },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDesktopHomeContent() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: Container(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MapaKaon',
+                      style: GoogleFonts.poppins(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    Text(
+                      'Hungry? We\'ll lead the way',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                // Search Bar
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(50),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value.toLowerCase());
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'What would you like to eat?',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                      suffixIcon:
+                          _searchQuery.isNotEmpty
+                              ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = "";
+                                  });
+                                },
+                              )
+                              : null,
+                      filled: true,
+                      fillColor: const Color(0xFFFAFAFA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: BorderSide(
+                          color: Colors.grey[200]!,
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Category Pills
+                DesktopCategoryPills(
+                  selectedCategory: _selectedCategory,
+                  onCategorySelected: (category) {
+                    setState(() => _selectedCategory = category);
+                  },
+                ),
+                const SizedBox(height: 40),
+
+                // Section Title
+                Text(
+                  _searchQuery.isNotEmpty
+                      ? 'Search Results'
+                      : (_selectedCategory == 'All'
+                          ? 'Hot Deals'
+                          : _selectedCategory),
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Restaurant List
+                Expanded(child: _buildRestaurantList()),
+              ],
+            ),
+          ),
+        ),
+
+        // Right Food Image
+        Container(
+          width: 400,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('Assets/route_pics/imageiloilo.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Colors.white.withAlpha(10), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1664,7 +1649,7 @@ class _HomePageState extends State<HomePage> {
                         ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} Results"
                         : (_selectedCategory == "All"
                             ? "Hot Deals"
-                            : "$_selectedCategory"),
+                            : _selectedCategory),
                   ),
 
                   const SizedBox(height: 8),
