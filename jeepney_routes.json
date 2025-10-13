@@ -1172,7 +1172,7 @@
     },
     {
       "route_number": 8,
-      "direction": "Iloilo-Guimaras Ferry Terminal (City Mall Parola)-2 to City Mall Parola",
+      "direction": "PAROLA TO SM CITY VIA INFANTE LOOP",
       "coordinates": [
         {"lat": 10.69235,"lng": 122.5833
         },
@@ -2454,7 +2454,7 @@
     },
     {
       "route_number": 10,
-      "direction": "Mc Arthur Dr., Before WESVIARC driveway to Mc Arthur Dr., Spousal of Mary & Joseph Parish Church",
+      "direction": "BUNTATALA / TAGBAK TERMINAL TO CITY PROPER LOOP",
       "coordinates": [
         {"lat": 10.77198,"lng": 122.58415
         },

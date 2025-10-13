@@ -9,6 +9,7 @@ class Restaurant {
   final String? description;
   final List<Map<String, dynamic>> menu;
   final List<String> categories;
+  final GeoPoint? location;
 
   Restaurant({
     required this.id, //
@@ -19,7 +20,11 @@ class Restaurant {
     this.description,
     required this.menu,
     required this.categories,
+    this.location,
   });
+
+  double? get latitude => location?.latitude;
+  double? get longitude => location?.longitude;
 
   // Build from a Firestore document
   factory Restaurant.fromDoc(DocumentSnapshot doc) {
@@ -49,6 +54,7 @@ class Restaurant {
 
       optionalImageUrl: data['optionalImageUrl'] ?? '',
       categories: (data['category'] as List?)?.cast<String>() ?? [],
+      location: data['location'] as GeoPoint?,
     );
   }
 
@@ -61,6 +67,7 @@ class Restaurant {
       'description': description,
       'menu': menu,
       'optionalImageUrl': optionalImageUrl,
+      'location': location,
     };
   }
 }

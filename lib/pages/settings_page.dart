@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:map_try/main.dart';
+import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,9 +17,9 @@ class _SettingsPageState extends State<SettingsPage> {
   // ===== Notification function =====
   void showNotification(String message) {
     if (!notificationsEnabled.value) return; // skip if notifications disabled
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ===== Location function =====
@@ -34,10 +36,31 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
+          tooltip: 'Back to Home',
+          onPressed: () {
+            // Always go back to Home
+            bottomNavIndexNotifier.value = 0;
+
+            // Pop the current route if possible (mobile)
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+        title: const Text(
+          "Settings",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.orangeAccent,
+        backgroundColor: Colors.deepOrangeAccent,
+        elevation: 0,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -66,39 +89,43 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(height: 30),
 
             // ===== Account Settings =====
-
             const SizedBox(height: 10),
-            SettingsTile(
-              icon: Icons.account_circle,
-              title: "Profile",
-              subtitle: "Update your profile details",
-              onTap: () => showNotification("Opening Profile"),
-            ),
-            SettingsTile(
-              icon: Icons.lock,
-              title: "Privacy & Security",
-              subtitle: "Manage your privacy settings",
-              onTap: () => showNotification("Opening Privacy & Security"),
-            ),
-            SettingsTile(
-              icon: Icons.password,
-              title: "Change Password",
-              subtitle: "Update your account password",
-              onTap: () => showNotification("Opening Change Password"),
-            ),
-            SettingsTile(
-              icon: Icons.delete_forever,
-              title: "Delete Account",
-              subtitle: "Permanently remove your account",
-              onTap: () => showNotification("Opening Delete Account"),
-            ),
+
+            // SettingsTile(
+            //   icon: Icons.account_circle,
+            //   title: "Profile",
+            //   subtitle: "Update your profile details",
+            //   onTap: () => showNotification("Opening Profile"),
+            // ),
+            // SettingsTile(
+            //   icon: Icons.lock,
+            //   title: "Privacy & Security",
+            //   subtitle: "Manage your privacy settings",
+            //   onTap: () => showNotification("Opening Privacy & Security"),
+            // ),
+            // SettingsTile(
+            //   icon: Icons.password,
+            //   title: "Change Password",
+            //   subtitle: "Update your account password",
+            //   onTap: () => showNotification("Opening Change Password"),
+            // ),
+            // SettingsTile(
+            //   icon: Icons.delete_forever,
+            //   title: "Delete Account",
+            //   subtitle: "Permanently remove your account",
+            //   onTap: () => showNotification("Opening Delete Account"),
+            // ),
             SettingsTile(
               icon: Icons.logout,
-              title: "Logout",
-              subtitle: "Sign out of your account",
-              onTap: () => showNotification("Logging out..."),
+              title: "Login",
+              subtitle: "Sign in as Resto Owner",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateRestoAccPage()),
+                );
+              },
             ),
-
             const Divider(height: 30),
 
             // ===== App Info =====
@@ -130,15 +157,16 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // ===== Sample Action Buttons =====
             ElevatedButton(
-              onPressed: () =>
-                  showNotification("This is a sample notification"),
+              onPressed:
+                  () => showNotification("This is a sample notification"),
               child: const Text("Send Notification"),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: locationEnabled.value
-                  ? () => performLocationAction("Get Current Location")
-                  : null, // disable button when location is off
+              onPressed:
+                  locationEnabled.value
+                      ? () => performLocationAction("Get Current Location")
+                      : null, // disable button when location is off
               child: const Text("Perform Location Action"),
             ),
           ],
@@ -170,7 +198,7 @@ class SettingsTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blue),
+        leading: Icon(icon, color: Colors.deepOrange),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),

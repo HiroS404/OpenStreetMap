@@ -134,6 +134,8 @@ class PickAddressMapScreenState extends State<PickAddressMapScreen> {
           selectedLatLng != null
               ? FloatingActionButton(
                 onPressed: _confirmSelection,
+
+                backgroundColor: Colors.green,
                 child: Icon(Icons.check),
               )
               : null,

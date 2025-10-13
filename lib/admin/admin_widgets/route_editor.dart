@@ -27,7 +27,6 @@ class _RouteEditorState extends State<RouteEditor> {
   bool _isMoveMode = false;
   Offset? _toolbarPosition;
 
-  // History for undo
   final List<List<LatLng>> _history = [];
 
   @override
@@ -111,9 +110,10 @@ class _RouteEditorState extends State<RouteEditor> {
   }
 
   void _finishDrawing() {
-    final points = _tempPoints
-        .map((p) => RoutePoint(lat: p.latitude, lng: p.longitude))
-        .toList();
+    final points =
+        _tempPoints
+            .map((p) => RoutePoint(lat: p.latitude, lng: p.longitude))
+            .toList();
     widget.onSave(points);
   }
 
@@ -137,14 +137,18 @@ class _RouteEditorState extends State<RouteEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pointCount = _tempPoints.length;
+
     return Stack(
       children: [
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: _tempPoints.isNotEmpty
-                ? _tempPoints.last
-                : LatLng(10.69645, 122.56902),
+            initialCenter:
+                _tempPoints.isNotEmpty
+                    ? _tempPoints.last
+                    : LatLng(10.69645, 122.56902),
             initialZoom: 14,
             onTap: (tapPos, latlng) {
               _onTapMap(latlng);
@@ -168,130 +172,347 @@ class _RouteEditorState extends State<RouteEditor> {
                   Polyline(
                     points: _tempPoints,
                     strokeWidth: 4,
-                    color: Colors.blue,
+                    color: const Color(0xFF6366F1),
                   ),
                 ],
               ),
             if (_tempPoints.isNotEmpty)
               MarkerLayer(
-                markers: _tempPoints.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final point = entry.value;
-                  final isSelected = _selectedIndex == index;
+                markers:
+                    _tempPoints.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final point = entry.value;
+                      final isSelected = _selectedIndex == index;
 
-                  return Marker(
-                    point: point,
-                    width: 40,
-                    height: 40,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                          _isMoveMode = false;
-                        });
-                        _showToolbarAboveMarker(point);
-                      },
-                      onPanUpdate: _isMoveMode
-                          ? (details) {
-                        final renderBox =
-                        context.findRenderObject() as RenderBox?;
-                        if (renderBox == null) return;
-                        final localPosition = renderBox
-                            .globalToLocal(details.globalPosition);
-                        final mapPoint =
-                        Point(localPosition.dx, localPosition.dy);
-                        final latlng =
-                        _mapController.camera.pointToLatLng(mapPoint);
-                        setState(() {
-                          _tempPoints[index] = latlng;
-                        });
-                      }
-                          : null,
-                      child: Icon(
-                        Icons.circle_rounded,
-                        color: isSelected
-                            ? Colors.green
-                            : Colors.deepOrangeAccent,
-                        size: isSelected ? 40 : 20,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      return Marker(
+                        point: point,
+                        width: 40,
+                        height: 40,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = index;
+                              _isMoveMode = false;
+                            });
+                            _showToolbarAboveMarker(point);
+                          },
+                          onPanUpdate:
+                              _isMoveMode
+                                  ? (details) {
+                                    final renderBox =
+                                        context.findRenderObject()
+                                            as RenderBox?;
+                                    if (renderBox == null) return;
+                                    final localPosition = renderBox
+                                        .globalToLocal(details.globalPosition);
+                                    final mapPoint = Point(
+                                      localPosition.dx,
+                                      localPosition.dy,
+                                    );
+                                    final latlng = _mapController.camera
+                                        .pointToLatLng(mapPoint);
+                                    setState(() {
+                                      _tempPoints[index] = latlng;
+                                    });
+                                  }
+                                  : null,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(30),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.circle_rounded,
+                              color:
+                                  isSelected
+                                      ? const Color(0xFF10B981)
+                                      : const Color(0xFF6366F1),
+                              size: isSelected ? 40 : 28,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
               ),
           ],
         ),
 
-        // ✅ Floating toolbar above selected marker
+        // Top status bar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              color:
+                  isDark
+                      ? Colors.grey[900]?.withAlpha(240)
+                      : Colors.white.withAlpha(240),
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Route Editor',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      pointCount == 0
+                          ? 'Tap to add points'
+                          : '$pointCount ${pointCount == 1 ? 'point' : 'points'} added',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                if (_isMoveMode)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withAlpha(20),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF3B82F6),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      'Move Mode',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: const Color(0xFF3B82F6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        // Floating toolbar above selected marker
         if (_selectedIndex != null && _toolbarPosition != null)
           Positioned(
-            left: _toolbarPosition!.dx - 90,
-            top: _toolbarPosition!.dy,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
+            left: (_toolbarPosition!.dx - 80).clamp(16.0, double.infinity),
+            top: (_toolbarPosition!.dy - 50).clamp(80.0, double.infinity),
+            child: Material(
+              borderRadius: BorderRadius.circular(10),
+              elevation: 8,
+              shadowColor: Colors.black.withAlpha(40),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    width: 1,
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.open_with, color: Colors.blue),
-                    tooltip: "Move",
-                    onPressed: () {
-                      setState(() => _isMoveMode = !_isMoveMode);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    tooltip: "Delete",
-                    onPressed: _deleteSelectedPoint,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black54),
-                    tooltip: "Cancel",
-                    onPressed: () {
-                      setState(() {
-                        _selectedIndex = null;
-                        _toolbarPosition = null;
-                        _isMoveMode = false;
-                      });
-                    },
-                  ),
-                ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _toolbarIconButton(
+                      icon: Icons.pan_tool_rounded,
+                      label: 'Move',
+                      isActive: _isMoveMode,
+                      onPressed: () {
+                        setState(() => _isMoveMode = !_isMoveMode);
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    _toolbarIconButton(
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Delete',
+                      color: const Color(0xFFEF4444),
+                      onPressed: _deleteSelectedPoint,
+                    ),
+                    const SizedBox(width: 4),
+                    _toolbarIconButton(
+                      icon: Icons.close_rounded,
+                      label: 'Close',
+                      color: Colors.grey[600]!,
+                      onPressed: () {
+                        setState(() {
+                          _selectedIndex = null;
+                          _toolbarPosition = null;
+                          _isMoveMode = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
-        // Drawing buttons (bottom)
+        // Bottom action bar
         if (widget.isDrawing)
           Positioned(
-            bottom: 20,
-            left: 20,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color:
+                    isDark
+                        ? Colors.grey[900]?.withAlpha(240)
+                        : Colors.white.withAlpha(240),
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  _actionButton(
+                    icon: Icons.undo_rounded,
+                    label: 'Undo',
+                    onPressed: _undoPoint,
+                    enabled: _history.isNotEmpty,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(width: 12),
+                  _actionButton(
+                    icon: Icons.refresh_rounded,
+                    label: 'Clear',
+                    onPressed: _clearPoints,
+                    enabled: pointCount > 0,
+                    isDark: isDark,
+                  ),
+                  const Spacer(),
+                  _actionButton(
+                    icon: Icons.check_rounded,
+                    label: 'Save Route',
+                    onPressed: _finishDrawing,
+                    enabled: pointCount >= 2,
+                    isPrimary: true,
+                    isDark: isDark,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _toolbarIconButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    Color? color,
+    bool isActive = false,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final finalColor =
+        color ?? (isActive ? const Color(0xFF10B981) : const Color(0xFF6366F1));
+
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, color: finalColor, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool enabled = true,
+    bool isPrimary = false,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: Material(
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: enabled ? onPressed : null,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color:
+                  enabled
+                      ? (isPrimary
+                          ? const Color(0xFF10B981)
+                          : (isDark ? Colors.grey[800] : Colors.grey[100]))
+                      : (isDark ? Colors.grey[900] : Colors.grey[50]),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color:
+                    enabled
+                        ? (isPrimary
+                            ? const Color(0xFF10B981)
+                            : (isDark ? Colors.grey[700]! : Colors.grey[300]!))
+                        : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                width: 1,
+              ),
+            ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: _undoPoint, child: const Text("Undo")),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                    onPressed: _clearPoints, child: const Text("Clear")),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _finishDrawing,
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green),
-                  child: const Text("Add This Route"),
+                Icon(
+                  icon,
+                  color:
+                      enabled
+                          ? (isPrimary
+                              ? Colors.white
+                              : (isDark ? Colors.grey[300] : Colors.grey[700]))
+                          : (isDark ? Colors.grey[700] : Colors.grey[400]),
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color:
+                        enabled
+                            ? (isPrimary
+                                ? Colors.white
+                                : (isDark
+                                    ? Colors.grey[300]
+                                    : Colors.grey[700]))
+                            : (isDark ? Colors.grey[700] : Colors.grey[400]),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }

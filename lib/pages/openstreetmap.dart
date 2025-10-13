@@ -6,7 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+import 'package:map_try/main.dart';
 import 'package:map_try/model/route_loader.dart';
 import 'package:map_try/services/mapbox_service.dart';
 import 'package:map_try/services/ors_service.dart';
@@ -16,8 +16,13 @@ import 'package:map_try/utils/route_finder/multi_jeepney_route_finder.dart';
 
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
+  final bool isDesktop;
 
-  const OpenstreetmapScreen({super.key, required this.destinationNotifier});
+  const OpenstreetmapScreen({
+    super.key,
+    required this.destinationNotifier,
+    this.isDesktop = false,
+  });
 
   @override
   State<OpenstreetmapScreen> createState() => _OpenstreetmapScreenState();
@@ -94,7 +99,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       }
     });
   }
-
 
   void _clearRouteData() {
     setState(() {
@@ -264,7 +268,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         await _updateAllWalkingPolylinesWithDirections();
       }
     }
-//-----------------------debug for cached routes data----------------
+    //-----------------------debug for cached routes data----------------
     var routes = await getRoutes(); // <-- your function
     print("All cached routes: ${routes.map((r) => r.routeNumber).toList()}");
   }
@@ -1098,235 +1102,257 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: AppBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'MAPAkaon',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepOrangeAccent,
-                    ),
+    // 🗺️ Core map widget (used in both mobile & desktop)
+    final mapBody = Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
+            initialZoom: 14.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate:
+                  'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
+              tileProvider: CancellableNetworkTileProvider(),
+            ),
+
+            // Start walking polyline
+            if (_startWalkingPolylines.isNotEmpty)
+              PolylineLayer(polylines: _startWalkingPolylines),
+
+            // End walking polyline
+            if (_endWalkingPolylines.isNotEmpty)
+              PolylineLayer(polylines: _endWalkingPolylines),
+
+            // First jeepney route (for multi-route)
+            if (_isMultiRoute && _firstJeepneyPolylines.isNotEmpty)
+              PolylineLayer(polylines: _firstJeepneyPolylines),
+
+            // Transfer walking polyline
+            if (_isMultiRoute && _transferWalkPolylines.isNotEmpty)
+              PolylineLayer(polylines: _transferWalkPolylines),
+
+            // Second jeepney route (for multi-route)
+            if (_isMultiRoute && _secondJeepneyPolylines.isNotEmpty)
+              PolylineLayer(polylines: _secondJeepneyPolylines),
+
+            // Jeepney route (single route)
+            if (_route.isNotEmpty)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: _route,
+                    color: const Color.fromARGB(255, 255, 143, 0),
+                    strokeWidth: 4,
                   ),
-                  // Debug indicator
-                  if (DebugLocations.isDebugStartActive ||
-                      DebugLocations.isDebugDestinationActive)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'DEBUG',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
                 ],
               ),
-              centerTitle: true,
-              backgroundColor: const Color.fromRGBO(255, 255, 255, 0.01),
-              elevation: 0,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.map, color: Colors.deepOrangeAccent),
-                  onPressed: () {},
-                ),
-              ],
-            ),
+
+            // Current location marker
+            if (_currentLocation != null)
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: _currentLocation!,
+                    width: 40,
+                    height: 40,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_pin_circle_outlined,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                        if (DebugLocations.isDebugStartActive)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'D',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+            // Destination marker
+            if (_destinationNotifier.value != null)
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    width: 50.0,
+                    height: 50.0,
+                    point: _destinationNotifier.value!,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Icons.location_pin,
+                          size: 40,
+                          color: Colors.redAccent,
+                        ),
+                        if (DebugLocations.isDebugDestinationActive)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'D',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+
+        // 🧭 Floating buttons (bottom right)
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            heroTag: 'user-location-fab',
+            onPressed: _userCurrentLocation,
+            backgroundColor: Colors.orangeAccent,
+            child: const Icon(Icons.my_location, size: 30, color: Colors.white),
           ),
         ),
-      ),
-      body: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: _currentLocation ?? const LatLng(10.7202, 122.5621),
-          initialZoom: 14.0,
-        ),
-        children: [
-          TileLayer(
-            urlTemplate:
-                'https://api.mapbox.com/styles/v1/$styleId/tiles/256/{z}/{x}/{y}@2x?access_token=$mapboxAccess',
-            tileProvider: CancellableNetworkTileProvider(),
-          ),
-
-          // Start walking polyline
-          if (_startWalkingPolylines.isNotEmpty)
-            PolylineLayer(polylines: _startWalkingPolylines),
-
-          // End walking polyline
-          if (_endWalkingPolylines.isNotEmpty)
-            PolylineLayer(polylines: _endWalkingPolylines),
-
-          // First jeepney route (for multi-route)
-          if (_isMultiRoute && _firstJeepneyPolylines.isNotEmpty)
-            PolylineLayer(polylines: _firstJeepneyPolylines),
-
-          // Transfer walking polyline
-          if (_isMultiRoute && _transferWalkPolylines.isNotEmpty)
-            PolylineLayer(polylines: _transferWalkPolylines),
-
-          // Second jeepney route (for multi-route)
-          if (_isMultiRoute && _secondJeepneyPolylines.isNotEmpty)
-            PolylineLayer(polylines: _secondJeepneyPolylines),
-
-          // Jeepney route
-          if (_route.isNotEmpty)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: _route,
-                  color: const Color.fromARGB(255, 255, 143, 0),
-                  strokeWidth: 4,
-                ),
-              ],
+        if (_matchedRoute != null && _route.isNotEmpty)
+          Positioned(
+            bottom: 80,
+            right: 16,
+            child: FloatingActionButton.extended(
+              label: const Text('Route'),
+              icon: const Icon(Icons.route),
+              backgroundColor: Colors.white,
+              onPressed: () {
+                if (!_isModalOpen) {
+                  showRouteModal(context);
+                }
+              },
             ),
+          ),
+      ],
+    );
 
-          // Current location marker
-          if (_currentLocation != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _currentLocation!,
-                  width: 40,
-                  height: 40,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Icons.person_pin_circle_outlined,
-                        size: 40,
+    // 🧱 App bar (for mobile only)
+    final blurredAppBar = PreferredSize(
+      preferredSize: const Size.fromHeight(kToolbarHeight),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: AppBar(
+            leading: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.deepOrangeAccent,
+              ),
+              tooltip: 'Back to Home',
+              onPressed: () {
+                // Always go to Home
+                bottomNavIndexNotifier.value = 0;
+
+                // Also pop current route if mobile (safe check)
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'MAPAkaon',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrangeAccent,
+                  ),
+                ),
+                if (DebugLocations.isDebugStartActive ||
+                    DebugLocations.isDebugDestinationActive)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'DEBUG',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
-                      // Debug indicator on marker
-                      if (DebugLocations.isDebugStartActive)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: Colors.orange,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'D',
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
               ],
             ),
-
-          // Destination marker
-          if (_destinationNotifier.value != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  width: 50.0,
-                  height: 50.0,
-                  point: _destinationNotifier.value!,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Icons.location_pin,
-                        size: 40,
-                        color: Colors.redAccent,
-                      ),
-                      // Debug indicator on destination marker
-                      if (DebugLocations.isDebugDestinationActive)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: Colors.orange,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'D',
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      floatingActionButton: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'user-location-fab',
-              onPressed: _userCurrentLocation,
-              backgroundColor: Colors.orangeAccent,
-              child: const Icon(
-                Icons.my_location,
-                size: 30,
-                color: Colors.white,
+            centerTitle: true,
+            backgroundColor: const Color.fromRGBO(255, 255, 255, 0.01),
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.map, color: Colors.deepOrangeAccent),
+                tooltip: 'Map Settings',
+                onPressed: () {},
               ),
-            ),
+            ],
           ),
-          if (_matchedRoute != null && _route.isNotEmpty)
-            Positioned(
-              bottom: 80,
-              right: 16,
-              child: FloatingActionButton.extended(
-                label: const Text('Route'),
-                icon: const Icon(Icons.route),
-                backgroundColor: Colors.white,
-                onPressed: () {
-                  if (!_isModalOpen) {
-                    showRouteModal(context);
-                  }
-                },
-              ),
-            ),
-        ],
+        ),
       ),
     );
+
+    // 🖥️ Desktop: show only the map (no Scaffold)
+    // 📱 Mobile: show map + appbar + FAB inside Scaffold
+    return widget.isDesktop
+        ? mapBody
+        : Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: blurredAppBar,
+          body: mapBody,
+        );
   }
 }
 

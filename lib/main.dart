@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:map_try/admin/pages/admin_dashboard.dart';
 import 'package:map_try/admin/pages/admin_login_page.dart';
 import 'package:map_try/firebase_options.dart';
+import 'package:map_try/pages/OneTImeUpload/onetimeuploadtofirebase.dart';
 import 'package:map_try/pages/OneTImeUpload/reverse.dart';
 import 'package:map_try/pages/home_page.dart';
 import 'package:map_try/pages/openstreetmap.dart';
@@ -35,17 +36,17 @@ DeviceType getDeviceType(double width) {
   return DeviceType.desktop;
 }
 
-void main() async  {
-// -------------FOR ONE TIME UPLOAD
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Firebase.initializeApp(
-//     options: DefaultFirebaseOptions.currentPlatform,
-//   );
-//   runApp(const MaterialApp(
-//     debugShowCheckedModeBanner: false,
-//     home: OneTimeUploadPage(),
-//     // home: FirestoreRoutesSyncWeb(),
-//   ));
+void main() async {
+  // -------------FOR ONE TIME UPLOAD
+  // WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // runApp(
+  //   const MaterialApp(
+  //     debugShowCheckedModeBanner: false,
+  //     home: OneTimeUploadPage(),
+  //     home: FirestoreRoutesSyncWeb(),
+  //   ),
+  // );
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
@@ -53,7 +54,7 @@ void main() async  {
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled:
-    true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
+        true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -83,8 +84,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/map':
             (context) => OpenstreetmapScreen(
-          destinationNotifier: ValueNotifier<LatLng?>(null),
-        ),
+              destinationNotifier: ValueNotifier<LatLng?>(null),
+            ),
         '/admin-login': (context) => const AdminLoginPage(),
         '/admin': (context) => const AdminDashboard(),
       },
@@ -95,12 +96,12 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder:
                 (context) => VendorProfileScreen(
-              name: args['name'],
-              description: args['description'],
-              photoUrl: args['photoUrl'],
-              latitude: args['latitude'],
-              longitude: args['longitude'],
-            ),
+                  name: args['name'],
+                  description: args['description'],
+                  photoUrl: args['photoUrl'],
+                  latitude: args['latitude'],
+                  longitude: args['longitude'],
+                ),
           );
         }
         return null;
@@ -160,32 +161,33 @@ class BottomNavBarState extends State<BottomNavBar> {
             return Scaffold(
               body: IndexedStack(index: selectedIndex, children: _pages),
               // Conditionally hide bottom navigation bar on desktop
-              bottomNavigationBar: isDesktop
-                  ? null
-                  : BottomNavigationBar(
-                currentIndex: selectedIndex,
-                selectedItemColor: Colors.deepOrangeAccent,
-                unselectedItemColor: Colors.black54,
-                onTap: _onItemTapped,
-                items: const [
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.home),
-                      label: "Home"
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.directions),
-                    label: "Directions",
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search),
-                    label: "Search",
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.settings),
-                    label: "Settings",
-                  ),
-                ],
-              ),
+              bottomNavigationBar:
+                  isDesktop
+                      ? null
+                      : BottomNavigationBar(
+                        currentIndex: selectedIndex,
+                        selectedItemColor: Colors.deepOrangeAccent,
+                        unselectedItemColor: Colors.black54,
+                        onTap: _onItemTapped,
+                        items: const [
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.home),
+                            label: "Home",
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.directions),
+                            label: "Directions",
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.search),
+                            label: "Search",
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.settings),
+                            label: "Settings",
+                          ),
+                        ],
+                      ),
             );
           },
         );
