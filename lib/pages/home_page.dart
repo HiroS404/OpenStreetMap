@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_try/model/restaurant_model.dart';
@@ -9,6 +8,9 @@ import 'package:map_try/pages/owner_logIn/vendor_create_resto_acc.dart';
 import 'package:map_try/pages/resto_detail_screen.dart';
 import 'package:map_try/services/restaurant_service.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:map_try/widgets/search_modal.dart';
+
+import '../main.dart';
 
 class AppColors {
   // Gradient stops
@@ -63,11 +65,13 @@ Widget categoryChip(String label, [bool isSelected = false]) {
 class DesktopSidebar extends StatefulWidget {
   final String selectedNav;
   final ValueChanged<String> onNavSelected;
+  final ValueNotifier<LatLng?> destinationNotifier; // pass this to search
 
   const DesktopSidebar({
     Key? key,
     required this.selectedNav,
     required this.onNavSelected,
+    required this.destinationNotifier, // new
   }) : super(key: key);
 
   @override
@@ -90,7 +94,7 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          // Logo Section
+          // Logo
           Container(
             width: 50,
             height: 50,
@@ -98,14 +102,9 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: const Icon(
-              Icons.restaurant_menu,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 24),
           ),
           const SizedBox(height: 40),
-          // Navigation Items
           _buildNavItem(Icons.home_rounded, 'home', 'Home'),
           const SizedBox(height: 30),
           _buildNavItem(Icons.explore_rounded, 'explore', 'Explore'),
@@ -123,14 +122,33 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
-        onTap: () => widget.onNavSelected(value),
+        onTap: () {
+          widget.onNavSelected(value);
+
+          if (value == 'home') {
+            bottomNavIndexNotifier.value = 0;
+          } else if (value == 'explore') {
+            bottomNavIndexNotifier.value = 1;
+          } else if (value == 'settings') {
+            bottomNavIndexNotifier.value = 3;
+          } else if (value == 'search') {
+            // ✅ Show SearchModal
+            showDialog(
+              context: context,
+              builder: (context) => Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.all(16),
+                child: SearchModal(destinationNotifier: widget.destinationNotifier),
+              ),
+            );
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color:
-                isSelected ? Colors.white.withOpacity(0.3) : Colors.transparent,
+            color: isSelected ? Colors.white.withOpacity(0.3) : Colors.transparent,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Icon(
@@ -143,6 +161,7 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
     );
   }
 }
+
 
 Widget buildDesktopRestaurantCard({
   required Restaurant restaurant,
@@ -267,54 +286,114 @@ class DesktopCategoryPills extends StatelessWidget {
   Widget build(BuildContext context) {
     final categories = ["All", "Meals", "Drinks", "Fast Food", "Snacks"];
 
+    final hiddenCategories = [
+      "Vegan",
+      "Desserts",
+      "Seafood",
+      "Breakfast",
+      "Buffet",
+      "Street Food",
+      "Healthy",
+      "International",
+      "Local",
+    ];
+
     return Wrap(
       spacing: 12,
       runSpacing: 8,
-      children:
-          categories.map((category) {
-            final isSelected = selectedCategory == category;
-            return GestureDetector(
-              onTap: () => onCategorySelected(category),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  gradient:
-                      isSelected
-                          ? const LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
-                          )
-                          : null,
-                  color: isSelected ? null : AppColors.sysBg,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow:
-                      isSelected
-                          ? [
-                            BoxShadow(
-                              color: AppColors.secondary.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                          : null,
-                ),
-                child: Text(
-                  category,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+      children: [
+        // main category chips
+        for (final category in categories)
+          GestureDetector(
+            onTap: () => onCategorySelected(category),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: selectedCategory == category
+                    ? const LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
+                )
+                    : null,
+                color: selectedCategory == category ? null : AppColors.sysBg,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Text(
+                category,
+                style: TextStyle(
+                  color: selectedCategory == category
+                      ? Colors.white
+                      : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+            ),
+          ),
+
+        // 🟠 "More" button
+        GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("More Categories"),
+                  content: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: hiddenCategories.map((label) {
+                        final bool isSelected = selectedCategory == label;
+                        return ChoiceChip(
+                          label: Text(label),
+                          selected: isSelected,
+                          selectedColor: AppColors.button,
+                          onSelected: (_) {
+                            onCategorySelected(label);
+                            Navigator.pop(context);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close"),
+                    ),
+                  ],
+                );
+              },
             );
-          }).toList(),
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.sysBg,
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: AppColors.sysAccent, width: 1),
+            ),
+            child: const Text(
+              "More",
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
+
+
+
+
 
 Widget sectionHeader(String title, {bool isDesktop = false}) {
   return Row(
@@ -628,11 +707,27 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+      BuildContext context,
+      double shrinkOffset,
+      bool overlapsContent,
+      ) {
     final screenWidth = MediaQuery.of(context).size.width;
+
+    // ✅ Main categories always visible
+    final mainCategories = ["All", "Meals", "Drinks", "Fast Food", "Snacks"];
+
+    // ✅ Hidden categories for the popup
+    final hiddenCategories = [
+      "Vegan",
+      "Desserts",
+      "Seafood",
+      "Breakfast",
+      "Buffet",
+      "Street Food",
+      "Healthy",
+      "International",
+      "Local",
+    ];
 
     return Container(
       color: Colors.white,
@@ -646,11 +741,89 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildCategoryChip("All"),
-                _buildCategoryChip("Meals"),
-                _buildCategoryChip("Drinks"),
-                _buildCategoryChip("Fast Food"),
-                _buildCategoryChip("Snacks"),
+                // 🟢 Visible category chips
+                for (final category in mainCategories)
+                  _buildCategoryChip(context, category),
+
+                // 🟠 “More” button chip
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton(
+                    onPressed: () {
+                      // 🧩 Bottom popup for more categories
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                        ),
+                        builder: (context) {
+                          return Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "More Categories",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: hiddenCategories.map((label) {
+                                    final bool isSelected =
+                                        selectedCategory == label;
+                                    return ChoiceChip(
+                                      label: Text(label),
+                                      selected: isSelected,
+                                      selectedColor: AppColors.button,
+                                      onSelected: (_) {
+                                        onCategorySelected(label);
+                                        Navigator.pop(context);
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.sysBg,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: BorderSide(
+                          color: AppColors.sysAccent,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: const Text(
+                      "More",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -659,7 +832,8 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
     );
   }
 
-  Widget _buildCategoryChip(String label) {
+  // 🧩 Updated helper to handle context (needed for bottom sheet)
+  Widget _buildCategoryChip(BuildContext context, String label) {
     final bool isSelected = selectedCategory == label;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -681,7 +855,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
         ),
       ),
     );
@@ -697,6 +874,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
 }
+
 
 class HomePage extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -789,12 +967,14 @@ class _HomePageState extends State<HomePage> {
       body: Row(
         children: [
           // Left Sidebar
-          DesktopSidebar(
-            selectedNav: _selectedNav,
-            onNavSelected: (nav) {
-              setState(() => _selectedNav = nav);
-            },
-          ),
+        DesktopSidebar(
+        selectedNav: 'home',
+        onNavSelected: (value) {
+          // handle nav selection
+        },
+        destinationNotifier: destinationNotifier, // ✅ pass this
+      ),
+
           // Main Content Area
           Expanded(
             child: Row(

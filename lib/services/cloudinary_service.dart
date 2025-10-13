@@ -24,10 +24,10 @@ Future<String?> uploadImageToCloudinary(
     String fileName = filePickerResult.files.single.name;
 
     if (kIsWeb) {
-      // ✅ Web: file picker already provides bytes
+      //  Web: file picker already provides bytes
       fileBytes = filePickerResult.files.single.bytes!;
     } else {
-      // ✅ Mobile/Desktop: need to read from path
+      //  Mobile/Desktop: need to read from path
       final path = filePickerResult.files.single.path;
       if (path == null) return null; // safety check
       File file = File(path);
@@ -54,12 +54,12 @@ Future<String?> uploadImageToCloudinary(
       return data['secure_url'] as String;
     } else {
       debugPrint(
-        "❌ Cloudinary upload failed: ${response.statusCode} - $responseBody",
+        " Cloudinary upload failed: ${response.statusCode} - $responseBody",
       );
       return null;
     }
   } catch (e, stack) {
-    debugPrint("⚠️ Exception during upload: $e\n$stack");
+    debugPrint(" Exception during upload: $e\n$stack");
     return null;
   }
 }

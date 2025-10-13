@@ -19,7 +19,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 final ValueNotifier<int> bottomNavIndexNotifier = ValueNotifier<int>(0);
 final ValueNotifier<LatLng?> destinationNotifier = ValueNotifier<LatLng?>(null);
 
-void main() async {
+// Responsive breakpoints
+class ResponsiveBreakpoints {
+  static const double mobile = 768;
+  static const double tablet = 1024;
+  static const double desktop = 1200;
+}
+
+enum DeviceType { mobile, tablet, desktop }
+
+DeviceType getDeviceType(double width) {
+  if (width < ResponsiveBreakpoints.mobile) return DeviceType.mobile;
+  if (width < ResponsiveBreakpoints.desktop) return DeviceType.tablet;
+  return DeviceType.desktop;
+}
+
+void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
@@ -27,7 +42,7 @@ void main() async {
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled:
-        true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
+    true, // This enables local caching (to avoid over use of freeplan firebase huhuhu)
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED, // Optional: unlimited cache
   );
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -40,7 +55,7 @@ void main() async {
   //     runApp(const MyApp());
   //   },
   //   (error, stack) {
-  //     debugPrint('❌ Caught by runZonedGuarded: $error');
+  //     debugPrint('⚠️ Caught by runZonedGuarded: $error');
   //     debugPrintStack(stackTrace: stack);
   //   },
 }
@@ -57,8 +72,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/map':
             (context) => OpenstreetmapScreen(
-              destinationNotifier: ValueNotifier<LatLng?>(null),
-            ),
+          destinationNotifier: ValueNotifier<LatLng?>(null),
+        ),
         '/admin-login': (context) => const AdminLoginPage(),
         '/admin': (context) => const AdminDashboard(),
       },
@@ -69,12 +84,12 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder:
                 (context) => VendorProfileScreen(
-                  name: args['name'],
-                  description: args['description'],
-                  photoUrl: args['photoUrl'],
-                  latitude: args['latitude'],
-                  longitude: args['longitude'],
-                ),
+              name: args['name'],
+              description: args['description'],
+              photoUrl: args['photoUrl'],
+              latitude: args['latitude'],
+              longitude: args['longitude'],
+            ),
           );
         }
         return null;
@@ -126,29 +141,42 @@ class BottomNavBarState extends State<BottomNavBar> {
     return ValueListenableBuilder<int>(
       valueListenable: bottomNavIndexNotifier,
       builder: (context, selectedIndex, _) {
-        return Scaffold(
-          body: IndexedStack(index: selectedIndex, children: _pages),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: selectedIndex,
-            selectedItemColor: Colors.deepOrangeAccent,
-            unselectedItemColor: Colors.black54,
-            onTap: _onItemTapped,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.directions),
-                label: "Directions",
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final deviceType = getDeviceType(constraints.maxWidth);
+            final isDesktop = deviceType == DeviceType.desktop;
+
+            return Scaffold(
+              body: IndexedStack(index: selectedIndex, children: _pages),
+              // Conditionally hide bottom navigation bar on desktop
+              bottomNavigationBar: isDesktop
+                  ? null
+                  : BottomNavigationBar(
+                currentIndex: selectedIndex,
+                selectedItemColor: Colors.deepOrangeAccent,
+                unselectedItemColor: Colors.black54,
+                onTap: _onItemTapped,
+                items: const [
+                  BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: "Home"
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.directions),
+                    label: "Directions",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.search),
+                    label: "Search",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.settings),
+                    label: "Settings",
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                label: "Search",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: "Settings",
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

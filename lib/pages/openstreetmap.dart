@@ -95,6 +95,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     });
   }
 
+
   void _clearRouteData() {
     setState(() {
       _route = [];
@@ -263,6 +264,9 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
         await _updateAllWalkingPolylinesWithDirections();
       }
     }
+//-----------------------debug for cached routes data----------------
+    var routes = await getRoutes(); // <-- your function
+    print("All cached routes: ${routes.map((r) => r.routeNumber).toList()}");
   }
 
   // NEW METHOD: Handle multi-route results
