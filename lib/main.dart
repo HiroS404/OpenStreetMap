@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:map_try/admin/pages/admin_dashboard.dart';
 import 'package:map_try/admin/pages/admin_login_page.dart';
 import 'package:map_try/firebase_options.dart';
+import 'package:map_try/pages/OneTImeUpload/reverse.dart';
 import 'package:map_try/pages/home_page.dart';
 import 'package:map_try/pages/openstreetmap.dart';
 import 'package:map_try/pages/vendo_profile.dart';
@@ -35,6 +36,16 @@ DeviceType getDeviceType(double width) {
 }
 
 void main() async  {
+// -------------FOR ONE TIME UPLOAD
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp(
+//     options: DefaultFirebaseOptions.currentPlatform,
+//   );
+//   runApp(const MaterialApp(
+//     debugShowCheckedModeBanner: false,
+//     home: OneTimeUploadPage(),
+//     // home: FirestoreRoutesSyncWeb(),
+//   ));
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
