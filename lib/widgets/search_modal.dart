@@ -99,9 +99,10 @@ class _SearchModalState extends State<SearchModal> {
           }
         }
 
-        // Also check restaurant name
         final restoName = (data['name'] ?? '').toString().toLowerCase();
-        if (restoName.contains(lowerQuery)) {
+        final restoAddress = (data['address'] ?? '').toString().toLowerCase();
+
+        if (restoName.contains(lowerQuery) || restoAddress.contains(lowerQuery)) {
           hasMatchingItem = true;
         }
 

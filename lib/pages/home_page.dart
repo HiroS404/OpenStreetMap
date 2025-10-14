@@ -324,9 +324,31 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
               borderRadius: BorderRadius.circular(20),
             ),
           ),
-          child: Text(
-            "← Swipe",
-            style: TextStyle(fontSize: isDesktop ? 14 : 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.arrow_back_ios_new,
+                size: isDesktop ? 18 : 16,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 4),
+              Text(
+                "Swipe",
+                style: TextStyle(
+                  fontSize: isDesktop ? 14 : 12,
+                  color: Colors.grey[700],
+                  fontStyle: FontStyle.normal,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: isDesktop ? 18 : 16,
+                color: Colors.grey[600],
+              ),
+            ],
           ),
         ),
       ),
@@ -890,18 +912,60 @@ class _HomePageState extends State<HomePage> {
   List<Restaurant> _mostBoughtRestaurants = [];
   bool _isLoadingMostBought = true;
   Timer? _autoSwipeTimer;
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+  String _searchQuery = "";
+  List<Restaurant> _filteredRestaurants = [];
 
   List<Restaurant> _restaurants = [];
   bool _isLoading = true;
   String _selectedCategory = "All";
-  String _searchQuery = "";
 
-  // User's current location
   LatLng? _userLocation;
 
-  // Distance calculator
   final Distance _distance = Distance();
   final ScrollController _indicatorScrollController = ScrollController();
+
+  void _updateFilteredRestaurants() {
+    final query = _searchQuery.toLowerCase();
+
+    _filteredRestaurants = _restaurants.where((resto) {
+      if (_selectedCategory == "Nearby") {
+        if (_userLocation == null) return false;
+        return _isRestaurantNearby(resto);
+      }
+
+      if (query.isNotEmpty) {
+        final nameMatch = resto.name.toLowerCase().contains(query);
+        final addressMatch = (resto.address ?? '').toLowerCase().contains(query);
+        final menuMatch = resto.menu.any((item) {
+          final itemName = (item['name'] as String).toLowerCase();
+          final category = (item['category'] as String).toLowerCase();
+          return itemName.contains(query) || category.contains(query);
+        });
+
+        return nameMatch || addressMatch || menuMatch;
+      } else {
+        return _selectedCategory == "All"
+            ? true
+            : resto.menu.any((item) =>
+        (item['category'] as String).toLowerCase() ==
+            _selectedCategory.toLowerCase());
+      }
+    }).toList();
+
+    if (_selectedCategory == "Nearby" && _userLocation != null) {
+      _filteredRestaurants.sort((a, b) {
+        final distA = _distance.as(
+            LengthUnit.Meter, _userLocation!, LatLng(a.latitude!, a.longitude!));
+        final distB = _distance.as(
+            LengthUnit.Meter, _userLocation!, LatLng(b.latitude!, b.longitude!));
+        return distA.compareTo(distB);
+      });
+    }
+
+    setState(() {});
+  }
 
 
   @override
@@ -910,8 +974,8 @@ class _HomePageState extends State<HomePage> {
     _loadRestaurants();
     _getUserLocation();
     _fetchMostBoughtRestaurants();
-    super.initState();
   }
+
 
   void _startAutoSwipe() {
     _autoSwipeTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -1033,6 +1097,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() {
         _restaurants = data;
+        _filteredRestaurants = List.from(_restaurants);
         _isLoading = false;
       });
     } catch (e) {
@@ -1083,7 +1148,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Place this inside _HomePageState
   Widget _buildDesktopNavBar() {
     return ValueListenableBuilder<int>(
       valueListenable: bottomNavIndexNotifier,
@@ -1162,7 +1226,6 @@ class _HomePageState extends State<HomePage> {
       message: tooltip,
       child: GestureDetector(
         onTap: () {
-          // Tap writes to the same notifier the mobile bottom nav uses
           bottomNavIndexNotifier.value = navIndex;
         },
         child: AnimatedContainer(
@@ -1205,7 +1268,7 @@ class _HomePageState extends State<HomePage> {
                     // Explore / Map (reuse mobile map widget)
                     OpenstreetmapScreen(
                       destinationNotifier: widget.destinationNotifier,
-                      isDesktop: true, // ✅ ensures sidebar stays visible
+                      isDesktop: true,
                     ),
 
                     // Settings (reuse mobile settings widget)
@@ -1806,33 +1869,30 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         child: TextField(
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value.toLowerCase();
-                            });
-                          },
                           controller: _searchController,
+                          onChanged: (value) {
+                            _searchQuery = value;
+                            _updateFilteredRestaurants();
+                          },
                           decoration: InputDecoration(
-                            hintText: "Let's find the food you want...",
+                            hintText: "Search for food or restaurants...",
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon:
-                                _searchQuery.isNotEmpty
-                                    ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        setState(() {
-                                          _searchController.clear();
-                                          _searchQuery = "";
-                                        });
-                                      },
-                                    )
-                                    : null,
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                _searchQuery = "";
+                                _updateFilteredRestaurants();
+                              },
+                            )
+                                : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
                           ),
-                        ),
+                        )
                       ),
                     ),
 
@@ -2112,18 +2172,11 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: PageView.builder(
                                   controller: _hotDealsPageController,
-                                  itemCount: filteredRestaurants.length,
+                                  itemCount: _filteredRestaurants.length,
                                   padEnds: false,
                                   physics: const BouncingScrollPhysics(),
-                                  onPageChanged: (index) {
-                                    _indicatorScrollController.animateTo(
-                                      (index * 24).toDouble() - 90,
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  },
                                   itemBuilder: (context, index) {
-                                    final resto = filteredRestaurants[index];
+                                    final resto = _filteredRestaurants[index];
                                     return GestureDetector(
                                       onTap: () {
                                         Navigator.push(
@@ -2174,8 +2227,9 @@ class _HomePageState extends State<HomePage> {
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.black12, width: 1),
+                                      border: Border.all(color: Colors.black54, width: 1),
                                     ),
+
                                     child: SingleChildScrollView(
                                       controller: _indicatorScrollController,
                                       scrollDirection: Axis.horizontal,
