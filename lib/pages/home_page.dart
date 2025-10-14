@@ -538,13 +538,11 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+      BuildContext context,
+      double shrinkOffset,
+      bool overlapsContent,
+      ) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    // Main categories always visible
     final mainCategories = [
       "All",
       "Nearby",
@@ -554,9 +552,6 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
       "Snacks",
     ];
 
-    // Get hidden categories dynamically - pass them from the state
-    // You'll need to add this as a parameter to CategoryChipsHeader
-
     return Container(
       color: Colors.white,
       child: SizedBox(
@@ -564,68 +559,80 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: screenWidth),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Visible category chips
-                for (final category in mainCategories)
-                  _buildCategoryChip(context, category),
-
-                // "More" button chip
+          child: Row(
+            children: [
+              for (final category in mainCategories)
+                _buildCategoryChip(context, category),
+              if (hiddenCategories.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: TextButton(
                     onPressed: () {
-                      // Get hidden categories here
-                      final hiddenCategories =
-                          this.hiddenCategories; // You'll pass this
-
                       showModalBottomSheet(
                         context: context,
-                        backgroundColor: Colors.white,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                        ),
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
                         builder: (context) {
-                          return Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "More Categories",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                          return GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                          behavior: HitTestBehavior.opaque,
+                          child: Stack(
+                          children: [
+                          Align(
+                          alignment: Alignment.bottomCenter,
+                          child: DraggableScrollableSheet(
+                          initialChildSize: 0.5,
+                          minChildSize: 0.3,
+                          maxChildSize: 0.8,
+                          expand: false,
+                            builder: (context, scrollController) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16),
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children:
-                                      hiddenCategories.map((label) {
-                                        final bool isSelected =
-                                            selectedCategory == label;
-                                        return ChoiceChip(
-                                          label: Text(label),
-                                          selected: isSelected,
-                                          selectedColor: AppColors.button,
-                                          onSelected: (_) {
-                                            onCategorySelected(label);
-                                            Navigator.pop(context);
-                                          },
-                                        );
-                                      }).toList(),
+                                padding: const EdgeInsets.all(16),
+                                child: SingleChildScrollView(
+                                  controller: scrollController,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "More Categories",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: hiddenCategories.map((label) {
+                                          final bool isSelected = selectedCategory == label;
+                                          return ChoiceChip(
+                                            label: Text(label),
+                                            selected: isSelected,
+                                            selectedColor: AppColors.button,
+                                            onSelected: (_) {
+                                              onCategorySelected(label);
+                                              Navigator.pop(context);
+                                            },
+                                          );
+                                        }).toList(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 16),
-                              ],
-                            ),
+                              );
+                            },
+                          ),
+                          ),
+                          ],
+                          ),
                           );
                         },
                       );
@@ -633,10 +640,7 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.sysBg,
                       foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -653,202 +657,7 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(BuildContext context, String label) {
-    final bool isSelected = selectedCategory == label;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: TextButton(
-        onPressed: () => onCategorySelected(label),
-        style: TextButton.styleFrom(
-          backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
-          foregroundColor: isSelected ? Colors.white : Colors.black87,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-            side: BorderSide(
-              color: isSelected ? AppColors.button : AppColors.sysAccent,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (label == "Nearby") ...[
-              Icon(
-                Icons.near_me,
-                size: 16,
-                color: isSelected ? Colors.white : Colors.black87,
-              ),
-              const SizedBox(width: 4),
             ],
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 60;
-
-  @override
-  double get minExtent => 60;
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      true;
-}
-
-/// Mobile Category Chips Header (unchanged)
-class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
-  final String selectedCategory;
-  final ValueChanged<String> onCategorySelected;
-  final List<String> hiddenCategories; // Add this parameter
-
-  CategoryChipsHeader({
-    required this.selectedCategory,
-    required this.onCategorySelected,
-    required this.hiddenCategories, // Add this to constructor
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Main categories always visible
-    final mainCategories = [
-      "All",
-      "Nearby",
-      "Meals",
-      "Drinks",
-      "Fast Food",
-      "Snacks",
-    ];
-
-    return Container(
-      color: Colors.white,
-      child: SizedBox(
-        height: maxExtent,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: screenWidth),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Visible category chips
-                for (final category in mainCategories)
-                  _buildCategoryChip(context, category),
-
-                // "More" button chip - only show if there are hidden categories
-                if (hiddenCategories.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: TextButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.white,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                          ),
-                          builder: (context) {
-                            return SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "More Categories",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    // ✅ Wrap in Flexible + SingleChildScrollView to prevent overflow
-                                    Flexible(
-                                      child: SingleChildScrollView(
-                                        child: Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children:
-                                              hiddenCategories.map((label) {
-                                                final bool isSelected =
-                                                    selectedCategory == label;
-                                                return ChoiceChip(
-                                                  label: Text(label),
-                                                  selected: isSelected,
-                                                  selectedColor:
-                                                      AppColors.button,
-                                                  onSelected: (_) {
-                                                    onCategorySelected(label);
-                                                    Navigator.pop(context);
-                                                  },
-                                                );
-                                              }).toList(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: AppColors.sysBg,
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          side: BorderSide(
-                            color: AppColors.sysAccent,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: const Text(
-                        "More",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
           ),
         ),
       ),
@@ -890,9 +699,176 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   double get minExtent => 60;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      true;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
 }
+
+
+class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
+  final String selectedCategory;
+  final ValueChanged<String> onCategorySelected;
+  final List<String> hiddenCategories;
+
+  CategoryChipsHeader({
+    required this.selectedCategory,
+    required this.onCategorySelected,
+    required this.hiddenCategories, required SingleChildScrollView Function(dynamic categories) childBuilder,
+  });
+
+  @override
+  Widget build(
+      BuildContext context,
+      double shrinkOffset,
+      bool overlapsContent,
+      ) {
+    final mainCategories = [
+      "All",
+      "Nearby",
+      "Meals",
+      "Drinks",
+      "Fast Food",
+      "Snacks",
+    ];
+
+    return Container(
+      color: Colors.white,
+      child: SizedBox(
+        height: maxExtent,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              for (final category in mainCategories)
+                _buildCategoryChip(context, category),
+              if (hiddenCategories.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return DraggableScrollableSheet(
+                            initialChildSize: 0.6,
+                            minChildSize: 0.3,
+                            maxChildSize: 0.8,
+                            expand: false,
+                            builder: (context, scrollController) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16),
+                                  ),
+                                ),
+                                child: SingleChildScrollView(
+                                  controller: scrollController,
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "More Categories",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: hiddenCategories.map((label) {
+                                          final bool isSelected = selectedCategory == label;
+                                          return ChoiceChip(
+                                            label: Text(label),
+                                            selected: isSelected,
+                                            selectedColor: AppColors.button,
+                                            onSelected: (_) {
+                                              onCategorySelected(label);
+                                              Navigator.pop(context);
+                                            },
+                                          );
+                                        }).toList(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.sysBg,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: BorderSide(color: AppColors.sysAccent, width: 1),
+                      ),
+                    ),
+                    child: const Text(
+                      "More",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(BuildContext context, String label) {
+    final bool isSelected = selectedCategory == label;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: TextButton(
+        onPressed: () => onCategorySelected(label),
+        style: TextButton.styleFrom(
+          backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
+          foregroundColor: isSelected ? Colors.white : Colors.black87,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: BorderSide(
+              color: isSelected ? AppColors.button : AppColors.sysAccent,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+}
+
+
 
 class HomePage extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -925,6 +901,8 @@ class _HomePageState extends State<HomePage> {
 
   // Distance calculator
   final Distance _distance = Distance();
+  final ScrollController _indicatorScrollController = ScrollController();
+
 
   @override
   void initState() {
@@ -932,6 +910,7 @@ class _HomePageState extends State<HomePage> {
     _loadRestaurants();
     _getUserLocation();
     _fetchMostBoughtRestaurants();
+    super.initState();
   }
 
   void _startAutoSwipe() {
@@ -1074,6 +1053,7 @@ class _HomePageState extends State<HomePage> {
     _hotDealsPageController.dispose();
     _mostBoughtPageController.dispose();
     _searchController.dispose();
+    _indicatorScrollController.dispose();
     super.dispose();
   }
 
@@ -1625,21 +1605,21 @@ class _HomePageState extends State<HomePage> {
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.sysAccent.withAlpha(40),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            //   const SizedBox(width: 6),
+                            //   Container(
+                            //     width: 38,
+                            //     height: 38,
+                            //     decoration: BoxDecoration(
+                            //       shape: BoxShape.circle,
+                            //       boxShadow: [
+                            //         BoxShadow(
+                            //           color: AppColors.sysAccent.withAlpha(40),
+                            //           blurRadius: 6,
+                            //           offset: const Offset(0, 2),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
                             ],
                           ),
                         ],
@@ -1833,7 +1813,7 @@ class _HomePageState extends State<HomePage> {
                           },
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: "Let's find food you want...",
+                            hintText: "Let's find the food you want...",
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon:
                                 _searchQuery.isNotEmpty
@@ -1856,7 +1836,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // Collapsed Title "MapaKaon" fading in at the very top
                     Positioned(
                       top: 15,
                       left: 0,
@@ -1942,19 +1921,34 @@ class _HomePageState extends State<HomePage> {
               onCategorySelected: (category) {
                 setState(() => _selectedCategory = category);
               },
-              hiddenCategories:
-                  _getAllCategories()
-                      .where(
-                        (cat) =>
-                            ![
-                              "All",
-                              "Meals",
-                              "Drinks",
-                              "Fast Food",
-                              "Snacks",
-                            ].contains(cat),
-                      )
-                      .toList(),
+              hiddenCategories: _getAllCategories()
+                  .where(
+                    (cat) =>
+                ![
+                  "All",
+                  "Meals",
+                  "Drinks",
+                  "Fast Food",
+                  "Snacks",
+                ].contains(cat),
+              )
+                  .toList(),
+              childBuilder: (categories) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: categories.map((category) {
+                    final isSelected = category == _selectedCategory;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: ChoiceChip(
+                        label: Text(category),
+                        selected: isSelected,
+                        onSelected: (_) => setState(() => _selectedCategory = category),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
           ),
 
@@ -2091,23 +2085,43 @@ class _HomePageState extends State<HomePage> {
                             ),
                           );
                         }
+                        _hotDealsPageController.addListener(() {
+                          if (!_indicatorScrollController.hasClients) return;
+
+                          final double page = _hotDealsPageController.page ?? 0.0;
+                          final int totalDots = filteredRestaurants.length;
+                          const double dotSpacing = 18.0;
+                          const double visibleWidth = 180.0;
+
+                          final double contentWidth = totalDots * dotSpacing;
+                          final double maxScroll =
+                          (contentWidth - visibleWidth).clamp(0.0, double.infinity);
+
+                          double target = (page * dotSpacing) - (visibleWidth / 2);
+                          target = target.clamp(0.0, maxScroll);
+
+                          _indicatorScrollController.jumpTo(target);
+                        });
 
                         return Column(
                           children: [
                             Expanded(
                               child: ScrollConfiguration(
-                                behavior: const MaterialScrollBehavior()
-                                    .copyWith(
-                                      dragDevices: {
-                                        PointerDeviceKind.touch,
-                                        PointerDeviceKind.mouse,
-                                      },
-                                    ),
+                                behavior: const MaterialScrollBehavior().copyWith(
+                                  dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                                ),
                                 child: PageView.builder(
                                   controller: _hotDealsPageController,
                                   itemCount: filteredRestaurants.length,
                                   padEnds: false,
                                   physics: const BouncingScrollPhysics(),
+                                  onPageChanged: (index) {
+                                    _indicatorScrollController.animateTo(
+                                      (index * 24).toDouble() - 90,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
                                   itemBuilder: (context, index) {
                                     final resto = filteredRestaurants[index];
                                     return GestureDetector(
@@ -2115,13 +2129,10 @@ class _HomePageState extends State<HomePage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder:
-                                                (context) => RestoDetailScreen(
-                                                  restoId: resto.id,
-                                                  destinationNotifier:
-                                                      widget
-                                                          .destinationNotifier,
-                                                ),
+                                            builder: (context) => RestoDetailScreen(
+                                              restoId: resto.id,
+                                              destinationNotifier: widget.destinationNotifier,
+                                            ),
                                           ),
                                         );
                                       },
@@ -2136,23 +2147,60 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            SmoothPageIndicator(
-                              controller: _hotDealsPageController,
-                              count: filteredRestaurants.length,
-                              effect: const WormEffect(
-                                activeDotColor: AppColors.button,
-                                dotColor: Colors.grey,
-                                dotHeight: 10,
-                                dotWidth: 10,
-                                spacing: 8,
+                            const SizedBox(height: 8),
+                            Center(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final totalDots = filteredRestaurants.length;
+                                  const double dotSpacing = 18.0;
+                                  const double visibleWidth = 180.0;
+                                  final double contentWidth = totalDots * dotSpacing;
+                                  final double maxScroll = (contentWidth - visibleWidth).clamp(0.0, double.infinity);
+
+                                  _hotDealsPageController.addListener(() {
+                                    final double page = _hotDealsPageController.page ?? 0.0;
+                                    double target = (page * dotSpacing) - (visibleWidth / 2);
+                                    target = target.clamp(0.0, maxScroll);
+
+                                    if (_indicatorScrollController.hasClients) {
+                                      _indicatorScrollController.jumpTo(target);
+                                    }
+                                  });
+
+                                  return Container(
+                                    height: 32,
+                                    width: visibleWidth,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.black12, width: 1),
+                                    ),
+                                    child: SingleChildScrollView(
+                                      controller: _indicatorScrollController,
+                                      scrollDirection: Axis.horizontal,
+                                      child: SmoothPageIndicator(
+                                        controller: _hotDealsPageController,
+                                        count: totalDots,
+                                        effect: const WormEffect(
+                                          activeDotColor: AppColors.button,
+                                          dotColor: Colors.grey,
+                                          dotHeight: 10,
+                                          dotWidth: 10,
+                                          spacing: 8,
+                                        ),
+                                        onDotClicked: (index) {
+                                          _hotDealsPageController.animateToPage(
+                                            index,
+                                            duration: const Duration(milliseconds: 300),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                              onDotClicked: (index) {
-                                _hotDealsPageController.animateToPage(
-                                  index,
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
                             ),
                           ],
                         );
