@@ -60,7 +60,6 @@ class Restaurant {
 
   Map<String, dynamic> toMap() {
     return {
-      // Intentionally NOT storing 'id' in the doc body
       'name': name,
       'headerImageUrl': headerImageUrl,
       'address': address,

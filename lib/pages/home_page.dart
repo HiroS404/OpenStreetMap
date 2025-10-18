@@ -314,12 +314,13 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
         child: TextButton(
           onPressed: () {},
           style: TextButton.styleFrom(
-            backgroundColor: AppColors.button,
+            backgroundColor: Colors.orange.shade100,
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 16 : 12,
+              horizontal: isDesktop ? 16 : 10,
               vertical: isDesktop ? 6 : 3,
             ),
+
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -329,14 +330,14 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
             children: [
               Icon(
                 Icons.arrow_back_ios_new,
-                size: isDesktop ? 18 : 16,
+                size: isDesktop ? 18 : 14,
                 color: Colors.grey[600],
               ),
               const SizedBox(width: 4),
               Text(
                 "Swipe",
                 style: TextStyle(
-                  fontSize: isDesktop ? 14 : 12,
+                  fontSize: isDesktop ? 14 : 10,
                   color: Colors.grey[700],
                   fontStyle: FontStyle.normal,
                   fontWeight: FontWeight.bold,
@@ -345,7 +346,7 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
               const SizedBox(width: 4),
               Icon(
                 Icons.arrow_forward_ios,
-                size: isDesktop ? 18 : 16,
+                size: isDesktop ? 18 : 14,
                 color: Colors.grey[600],
               ),
             ],
@@ -1120,6 +1121,19 @@ class _HomePageState extends State<HomePage> {
     return allCategories.toList()..sort();
   }
 
+  //refresh handler
+  Future<void> _handleRefresh() async {
+    setState(() => _isLoading = true);
+
+    await Future.wait([
+      _loadRestaurants(),
+      _fetchMostBoughtRestaurants(),
+      _getUserLocation(),
+    ]);
+
+    setState(() => _isLoading = false);
+  }
+
   Future<void> _loadRestaurants() async {
     try {
       final data = await RestaurantService.fetchRestaurants();
@@ -1588,831 +1602,851 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 260,
-            collapsedHeight: 120,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            flexibleSpace: LayoutBuilder(
-              builder: (context, constraints) {
-                final percent = ((constraints.maxHeight - kToolbarHeight) /
-                        (260 - kToolbarHeight))
-                    .clamp(0.0, 1.0);
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Background image
-                    Opacity(
-                      opacity: 0.6,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                              'Assets/route_pics/imageiloilo.png',
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: AppColors.button,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: 260,
+              collapsedHeight: 120,
+              backgroundColor: Colors.white,
+              elevation: 0,
+              flexibleSpace: LayoutBuilder(
+                builder: (context, constraints) {
+                  final percent = ((constraints.maxHeight - kToolbarHeight) /
+                          (260 - kToolbarHeight))
+                      .clamp(0.0, 1.0);
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Background image
+                      Opacity(
+                        opacity: 0.6,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(
+                                'Assets/route_pics/imageiloilo.png',
+                              ),
+                              fit: BoxFit.cover,
                             ),
-                            fit: BoxFit.cover,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(34),
+                              bottomRight: Radius.circular(34),
+                            ),
                           ),
-                          borderRadius: BorderRadius.only(
+                        ),
+                      ),
+                      // Gradient overlay (brand colors)
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
                             bottomLeft: Radius.circular(34),
                             bottomRight: Radius.circular(34),
                           ),
-                        ),
-                      ),
-                    ),
-                    // Gradient overlay (brand colors)
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(34),
-                          bottomRight: Radius.circular(34),
-                        ),
-                        gradient: LinearGradient(
-                          colors:
-                              const [
-                                Colors.transparent,
-                                AppColors.gradientSoft,
-                                AppColors.secondary,
-                              ].map((c) => c.withAlpha(80)).toList(),
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                    // Top Row (registration, icons)
-                    Positioned(
-                      top: 10 + 10 * percent,
-                      left: 16,
-                      right: 16,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Create Resto (CTA style icon chip)
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: const BoxDecoration(
-                              color: Colors.deepOrange,
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.restaurant,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              onPressed: () async {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const CreateRestoAccPage(),
-                                  ),
-                                );
-                              },
-                              tooltip: 'Register your Resto',
-                            ),
+                          gradient: LinearGradient(
+                            colors:
+                                const [
+                                  Colors.transparent,
+                                  AppColors.gradientSoft,
+                                  AppColors.secondary,
+                                ].map((c) => c.withAlpha(80)).toList(),
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
-                          Row(
-                            children: [
-                              badges.Badge(
-                                position: badges.BadgePosition.topEnd(
-                                  top: -1,
-                                  end: -1,
-                                ),
-                                badgeStyle: const badges.BadgeStyle(
-                                  padding: EdgeInsets.all(0),
-                                  badgeColor: AppColors.button,
-                                ),
-                                badgeContent: const Text(
-                                  '0',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.notifications_none,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              //   const SizedBox(width: 6),
-                              //   Container(
-                              //     width: 38,
-                              //     height: 38,
-                              //     decoration: BoxDecoration(
-                              //       shape: BoxShape.circle,
-                              //       boxShadow: [
-                              //         BoxShadow(
-                              //           color: AppColors.sysAccent.withAlpha(40),
-                              //           blurRadius: 6,
-                              //           offset: const Offset(0, 2),
-                              //         ),
-                              //       ],
-                              //     ),
-                              //   ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-
-                    // Location, Title, Subtitle (only visible when header is expanded)
-                    if (percent > 0.5)
+                      // Top Row (registration, icons)
                       Positioned(
+                        top: 10 + 10 * percent,
                         left: 16,
                         right: 16,
-                        top: 10 + 40 * percent,
-                        child: Opacity(
-                          opacity: percent,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Icon(
-                                    Icons.location_on,
-                                    color: AppColors.primary,
-                                    size: 20,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Create Resto (CTA style icon chip)
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: const BoxDecoration(
+                                color: Colors.deepOrange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.restaurant,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => const CreateRestoAccPage(),
+                                    ),
+                                  );
+                                },
+                                tooltip: 'Register your Resto',
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                badges.Badge(
+                                  position: badges.BadgePosition.topEnd(
+                                    top: -1,
+                                    end: -1,
                                   ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Iloilo City, Philippines',
+                                  badgeStyle: const badges.BadgeStyle(
+                                    padding: EdgeInsets.all(0),
+                                    badgeColor: AppColors.button,
+                                  ),
+                                  badgeContent: const Text(
+                                    '0',
                                     style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      fontSize: 10,
                                     ),
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 15 * percent),
-
-                              // Brand title chip with gradient
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 11 * percent,
-                                  vertical: 4 * percent,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.secondary,
-                                      AppColors.gradientSoft,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                    8 * percent,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.secondary.withAlpha(50),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  'MapaKaon',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 31 * percent,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1.2,
-                                    color: Colors.black,
+                                  child: const Icon(
+                                    Icons.notifications_none,
+                                    color: Colors.white,
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: 7 * percent),
-
-                              if (percent > 0.5)
-                                Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            AppColors.primary,
-                                            AppColors.secondary,
-                                            AppColors.gradientSoft,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary.withAlpha(
-                                              30,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Text.rich(
-                                        TextSpan(
-                                          text: 'Hungry? We\'ll lead the ',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.black,
-                                          ),
-                                          children: [
-                                            WidgetSpan(
-                                              alignment:
-                                                  PlaceholderAlignment.baseline,
-                                              baseline: TextBaseline.alphabetic,
-                                              child: Stack(
-                                                children: [
-                                                  // Outline
-                                                  Text(
-                                                    'way',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      foreground:
-                                                          Paint()
-                                                            ..style =
-                                                                PaintingStyle
-                                                                    .stroke
-                                                            ..strokeWidth = 2
-                                                            ..color =
-                                                                Colors.black,
-                                                    ),
-                                                  ),
-                                                  // Fill
-                                                  Text(
-                                                    'way',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                  ],
-                                ),
-                              SizedBox(height: 16 * percent),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                    // Search Bar (always visible)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 12,
-                      height: 50,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: AppColors.sysAccent.withAlpha(70),
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.sysAccent.withAlpha(30),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                                //   const SizedBox(width: 6),
+                                //   Container(
+                                //     width: 38,
+                                //     height: 38,
+                                //     decoration: BoxDecoration(
+                                //       shape: BoxShape.circle,
+                                //       boxShadow: [
+                                //         BoxShadow(
+                                //           color: AppColors.sysAccent.withAlpha(40),
+                                //           blurRadius: 6,
+                                //           offset: const Offset(0, 2),
+                                //         ),
+                                //       ],
+                                //     ),
+                                //   ),
+                              ],
                             ),
                           ],
                         ),
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) {
-                            _searchQuery = value;
-                            _updateFilteredRestaurants();
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Search for food or restaurants...",
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon:
-                                _searchQuery.isNotEmpty
-                                    ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _searchQuery = "";
-                                        _updateFilteredRestaurants();
-                                      },
-                                    )
-                                    : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
+                      ),
+
+                      // Location, Title, Subtitle (only visible when header is expanded)
+                      if (percent > 0.5)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          top: 10 + 40 * percent,
+                          child: Opacity(
+                            opacity: percent,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(
+                                      Icons.location_on,
+                                      color: AppColors.primary,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Iloilo City, Philippines',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 15 * percent),
+
+                                // Brand title chip with gradient
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 11 * percent,
+                                    vertical: 4 * percent,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        AppColors.primary,
+                                        AppColors.secondary,
+                                        AppColors.gradientSoft,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      8 * percent,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.secondary.withAlpha(
+                                          50,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    'MapaKaon',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 31 * percent,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.2,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 7 * percent),
+
+                                if (percent > 0.5)
+                                  Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              AppColors.primary,
+                                              AppColors.secondary,
+                                              AppColors.gradientSoft,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary
+                                                  .withAlpha(30),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text.rich(
+                                          TextSpan(
+                                            text: 'Hungry? We\'ll lead the ',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.black,
+                                            ),
+                                            children: [
+                                              WidgetSpan(
+                                                alignment:
+                                                    PlaceholderAlignment
+                                                        .baseline,
+                                                baseline:
+                                                    TextBaseline.alphabetic,
+                                                child: Stack(
+                                                  children: [
+                                                    // Outline
+                                                    Text(
+                                                      'way',
+                                                      style: GoogleFonts.poppins(
+                                                        fontSize: 18,
+                                                        fontWeight:
+                                                            FontWeight.w900,
+                                                        foreground:
+                                                            Paint()
+                                                              ..style =
+                                                                  PaintingStyle
+                                                                      .stroke
+                                                              ..strokeWidth = 2
+                                                              ..color =
+                                                                  Colors.black,
+                                                      ),
+                                                    ),
+                                                    // Fill
+                                                    Text(
+                                                      'way',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.w900,
+                                                            color: Colors.white,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                  ),
+                                SizedBox(height: 16 * percent),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    Positioned(
-                      top: 15,
-                      left: 0,
-                      right: 0,
-                      child: Opacity(
-                        opacity: percent < 0.5 ? 1 : 0,
-                        child: Center(
-                          child: Stack(
-                            children: [
-                              // Stroke (Outline)
-                              Text.rich(
-                                TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: 'Mapa',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.2,
-                                        foreground:
-                                            Paint()
-                                              ..style = PaintingStyle.stroke
-                                              ..strokeWidth = 2
-                                              ..color = Colors.black,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: 'Kaon',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.2,
-                                        foreground:
-                                            Paint()
-                                              ..style = PaintingStyle.stroke
-                                              ..strokeWidth = 2
-                                              ..color = Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Fill
-                              Text.rich(
-                                TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: 'Mapa',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.2,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: 'Kaon',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.2,
-                                        color: AppColors.button,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                      // Search Bar (always visible)
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 12,
+                        height: 50,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                              color: AppColors.sysAccent.withAlpha(70),
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.sysAccent.withAlpha(30),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              _searchQuery = value;
+                              _updateFilteredRestaurants();
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Search for food or restaurants...",
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon:
+                                  _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          _searchQuery = "";
+                                          _updateFilteredRestaurants();
+                                        },
+                                      )
+                                      : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
 
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: CategoryChipsHeader(
-              selectedCategory: _selectedCategory,
-              onCategorySelected: (category) {
-                setState(() => _selectedCategory = category);
-              },
-              hiddenCategories:
-                  _getAllCategories()
-                      .where(
-                        (cat) =>
-                            ![
-                              "All",
-                              "Meals",
-                              "Drinks",
-                              "Fast Food",
-                              "Snacks",
-                            ].contains(cat),
-                      )
-                      .toList(),
-              childBuilder:
-                  (categories) => SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children:
-                          categories.map((category) {
-                            final isSelected = category == _selectedCategory;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              child: ChoiceChip(
-                                label: Text(category),
-                                selected: isSelected,
-                                onSelected:
-                                    (_) => setState(
-                                      () => _selectedCategory = category,
-                                    ),
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  ),
-            ),
-          ),
-
-          // Mobile Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12, right: 1, bottom: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 16),
-
-                  // Hot Deals Carousel
-                  sectionHeader(
-                    _searchQuery.isNotEmpty
-                        ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} Results"
-                        : (_selectedCategory == "All"
-                            ? "Hot Deals"
-                            : _selectedCategory),
-                  ),
-
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 280,
-                    child: Builder(
-                      builder: (context) {
-                        final filteredRestaurants =
-                            _restaurants.where((resto) {
-                              // Handle "Nearby" category first
-                              if (_selectedCategory == "Nearby") {
-                                if (_userLocation == null) return false;
-                                return _isRestaurantNearby(resto);
-                              }
-
-                              if (_searchQuery.isNotEmpty) {
-                                // Check restaurant name
-                                final restoNameMatch = resto.name
-                                    .toLowerCase()
-                                    .contains(_searchQuery);
-
-                                // Check address
-                                final addressMatch = (resto.address ?? '')
-                                    .toLowerCase()
-                                    .contains(_searchQuery);
-
-                                // Check menu items
-                                final menuMatch = resto.menu.any((item) {
-                                  final menuName =
-                                      (item['name'] as String).toLowerCase();
-                                  final category =
-                                      (item['category'] as String)
-                                          .toLowerCase();
-
-                                  return menuName.contains(_searchQuery) ||
-                                      category.contains(_searchQuery);
-                                });
-
-                                return restoNameMatch ||
-                                    addressMatch ||
-                                    menuMatch;
-                              } else {
-                                return _selectedCategory == "All"
-                                    ? true
-                                    : resto.menu.any(
-                                      (item) =>
-                                          (item['category'] as String)
-                                              .toLowerCase() ==
-                                          _selectedCategory.toLowerCase(),
-                                    );
-                              }
-                            }).toList();
-
-                        // Sort by distance if "Nearby" is selected
-                        if (_selectedCategory == "Nearby" &&
-                            _userLocation != null) {
-                          filteredRestaurants.sort((a, b) {
-                            if (a.latitude == null || a.longitude == null) {
-                              return 1;
-                            }
-                            if (b.latitude == null || b.longitude == null) {
-                              return -1;
-                            }
-
-                            final distA = _distance.as(
-                              LengthUnit.Meter,
-                              _userLocation!,
-                              LatLng(a.latitude!, a.longitude!),
-                            );
-                            final distB = _distance.as(
-                              LengthUnit.Meter,
-                              _userLocation!,
-                              LatLng(b.latitude!, b.longitude!),
-                            );
-
-                            return distA.compareTo(distB);
-                          });
-                        }
-                        if (filteredRestaurants.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                      Positioned(
+                        top: 15,
+                        left: 0,
+                        right: 0,
+                        child: Opacity(
+                          opacity: percent < 0.5 ? 1 : 0,
+                          child: Center(
+                            child: Stack(
                               children: [
-                                Icon(
-                                  _selectedCategory == "Nearby"
-                                      ? Icons.location_off
-                                      : Icons.search_off,
-                                  size: 48,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  _selectedCategory == "Nearby"
-                                      ? "No restaurants found within 3 km"
-                                      : "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (_selectedCategory == "Nearby" &&
-                                    _userLocation == null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      "Please enable location services",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
+                                // Stroke (Outline)
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Mapa',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.2,
+                                          foreground:
+                                              Paint()
+                                                ..style = PaintingStyle.stroke
+                                                ..strokeWidth = 2
+                                                ..color = Colors.black,
+                                        ),
                                       ),
-                                    ),
+                                      TextSpan(
+                                        text: 'Kaon',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.2,
+                                          foreground:
+                                              Paint()
+                                                ..style = PaintingStyle.stroke
+                                                ..strokeWidth = 2
+                                                ..color = Colors.black,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                ),
+                                // Fill
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Mapa',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'Kaon',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.2,
+                                          color: AppColors.button,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          );
-                        }
-                        _hotDealsPageController.addListener(() {
-                          if (!_indicatorScrollController.hasClients) return;
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
 
-                          final double page =
-                              _hotDealsPageController.page ?? 0.0;
-                          final int totalDots = filteredRestaurants.length;
-                          const double dotSpacing = 18.0;
-                          const double visibleWidth = 180.0;
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: CategoryChipsHeader(
+                selectedCategory: _selectedCategory,
+                onCategorySelected: (category) {
+                  setState(() => _selectedCategory = category);
+                },
+                hiddenCategories:
+                    _getAllCategories()
+                        .where(
+                          (cat) =>
+                              ![
+                                "All",
+                                "Meals",
+                                "Drinks",
+                                "Fast Food",
+                                "Snacks",
+                              ].contains(cat),
+                        )
+                        .toList(),
+                childBuilder:
+                    (categories) => SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children:
+                            categories.map((category) {
+                              final isSelected = category == _selectedCategory;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: ChoiceChip(
+                                  label: Text(category),
+                                  selected: isSelected,
+                                  onSelected:
+                                      (_) => setState(
+                                        () => _selectedCategory = category,
+                                      ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+              ),
+            ),
 
-                          final double contentWidth = totalDots * dotSpacing;
-                          final double maxScroll = (contentWidth - visibleWidth)
-                              .clamp(0.0, double.infinity);
+            // Mobile Content
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 1, bottom: 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 16),
 
-                          double target =
-                              (page * dotSpacing) - (visibleWidth / 2);
-                          target = target.clamp(0.0, maxScroll);
+                    // Hot Deals Carousel
+                    sectionHeader(
+                      _searchQuery.isNotEmpty
+                          ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} Results"
+                          : (_selectedCategory == "All"
+                              ? "Hot Deals"
+                              : _selectedCategory),
+                    ),
 
-                          _indicatorScrollController.jumpTo(target);
-                        });
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 280,
+                      child: Builder(
+                        builder: (context) {
+                          final filteredRestaurants =
+                              _restaurants.where((resto) {
+                                // Handle "Nearby" category first
+                                if (_selectedCategory == "Nearby") {
+                                  if (_userLocation == null) return false;
+                                  return _isRestaurantNearby(resto);
+                                }
 
-                        return Column(
-                          children: [
-                            Expanded(
-                              child: ScrollConfiguration(
-                                behavior: const MaterialScrollBehavior()
-                                    .copyWith(
-                                      dragDevices: {
-                                        PointerDeviceKind.touch,
-                                        PointerDeviceKind.mouse,
-                                      },
+                                if (_searchQuery.isNotEmpty) {
+                                  // Check restaurant name
+                                  final restoNameMatch = resto.name
+                                      .toLowerCase()
+                                      .contains(_searchQuery);
+
+                                  // Check address
+                                  final addressMatch = (resto.address ?? '')
+                                      .toLowerCase()
+                                      .contains(_searchQuery);
+
+                                  // Check menu items
+                                  final menuMatch = resto.menu.any((item) {
+                                    final menuName =
+                                        (item['name'] as String).toLowerCase();
+                                    final category =
+                                        (item['category'] as String)
+                                            .toLowerCase();
+
+                                    return menuName.contains(_searchQuery) ||
+                                        category.contains(_searchQuery);
+                                  });
+
+                                  return restoNameMatch ||
+                                      addressMatch ||
+                                      menuMatch;
+                                } else {
+                                  return _selectedCategory == "All"
+                                      ? true
+                                      : resto.menu.any(
+                                        (item) =>
+                                            (item['category'] as String)
+                                                .toLowerCase() ==
+                                            _selectedCategory.toLowerCase(),
+                                      );
+                                }
+                              }).toList();
+
+                          // Sort by distance if "Nearby" is selected
+                          if (_selectedCategory == "Nearby" &&
+                              _userLocation != null) {
+                            filteredRestaurants.sort((a, b) {
+                              if (a.latitude == null || a.longitude == null) {
+                                return 1;
+                              }
+                              if (b.latitude == null || b.longitude == null) {
+                                return -1;
+                              }
+
+                              final distA = _distance.as(
+                                LengthUnit.Meter,
+                                _userLocation!,
+                                LatLng(a.latitude!, a.longitude!),
+                              );
+                              final distB = _distance.as(
+                                LengthUnit.Meter,
+                                _userLocation!,
+                                LatLng(b.latitude!, b.longitude!),
+                              );
+
+                              return distA.compareTo(distB);
+                            });
+                          }
+                          if (filteredRestaurants.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _selectedCategory == "Nearby"
+                                        ? Icons.location_off
+                                        : Icons.search_off,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _selectedCategory == "Nearby"
+                                        ? "No restaurants found within 3 km"
+                                        : "No results found for '${_searchQuery.isNotEmpty ? _searchQuery : _selectedCategory}'",
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                child: PageView.builder(
-                                  controller: _hotDealsPageController,
-                                  itemCount: _filteredRestaurants.length,
-                                  padEnds: false,
-                                  physics: const BouncingScrollPhysics(),
-                                  itemBuilder: (context, index) {
-                                    final resto = _filteredRestaurants[index];
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => RestoDetailScreen(
-                                                  restoId: resto.id,
-                                                  destinationNotifier:
-                                                      widget
-                                                          .destinationNotifier,
-                                                ),
-                                          ),
+                                  ),
+                                  if (_selectedCategory == "Nearby" &&
+                                      _userLocation == null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        "Please enable location services",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          }
+                          _hotDealsPageController.addListener(() {
+                            if (!_indicatorScrollController.hasClients) return;
+
+                            final double page =
+                                _hotDealsPageController.page ?? 0.0;
+                            final int totalDots = filteredRestaurants.length;
+                            const double dotSpacing = 18.0;
+                            const double visibleWidth = 180.0;
+
+                            final double contentWidth = totalDots * dotSpacing;
+                            final double maxScroll = (contentWidth -
+                                    visibleWidth)
+                                .clamp(0.0, double.infinity);
+
+                            double target =
+                                (page * dotSpacing) - (visibleWidth / 2);
+                            target = target.clamp(0.0, maxScroll);
+
+                            _indicatorScrollController.jumpTo(target);
+                          });
+
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: ScrollConfiguration(
+                                  behavior: const MaterialScrollBehavior()
+                                      .copyWith(
+                                        dragDevices: {
+                                          PointerDeviceKind.touch,
+                                          PointerDeviceKind.mouse,
+                                        },
+                                      ),
+                                  child: PageView.builder(
+                                    controller: _hotDealsPageController,
+                                    itemCount: _filteredRestaurants.length,
+                                    padEnds: false,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemBuilder: (context, index) {
+                                      final resto = _filteredRestaurants[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (
+                                                    context,
+                                                  ) => RestoDetailScreen(
+                                                    restoId: resto.id,
+                                                    destinationNotifier:
+                                                        widget
+                                                            .destinationNotifier,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        child: restoCard(
+                                          headerImageUrl: resto.headerImageUrl,
+                                          name: resto.name,
+                                          address: resto.address ?? '',
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const SizedBox(height: 8),
+                              Center(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final totalDots =
+                                        filteredRestaurants.length;
+                                    const double dotSpacing = 18.0;
+                                    const double visibleWidth = 180.0;
+                                    final double contentWidth =
+                                        totalDots * dotSpacing;
+                                    final double maxScroll = (contentWidth -
+                                            visibleWidth)
+                                        .clamp(0.0, double.infinity);
+
+                                    _hotDealsPageController.addListener(() {
+                                      final double page =
+                                          _hotDealsPageController.page ?? 0.0;
+                                      double target =
+                                          (page * dotSpacing) -
+                                          (visibleWidth / 2);
+                                      target = target.clamp(0.0, maxScroll);
+
+                                      if (_indicatorScrollController
+                                          .hasClients) {
+                                        _indicatorScrollController.jumpTo(
+                                          target,
                                         );
-                                      },
-                                      child: restoCard(
-                                        headerImageUrl: resto.headerImageUrl,
-                                        name: resto.name,
-                                        address: resto.address ?? '',
+                                      }
+                                    });
+
+                                    return Container(
+                                      height: 32,
+                                      width: visibleWidth,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.black54,
+                                          width: 1,
+                                        ),
+                                      ),
+
+                                      child: SingleChildScrollView(
+                                        controller: _indicatorScrollController,
+                                        scrollDirection: Axis.horizontal,
+                                        child: SmoothPageIndicator(
+                                          controller: _hotDealsPageController,
+                                          count: totalDots,
+                                          effect: const WormEffect(
+                                            activeDotColor: AppColors.button,
+                                            dotColor: Colors.grey,
+                                            dotHeight: 10,
+                                            dotWidth: 10,
+                                            spacing: 8,
+                                          ),
+                                          onDotClicked: (index) {
+                                            _hotDealsPageController
+                                                .animateToPage(
+                                                  index,
+                                                  duration: const Duration(
+                                                    milliseconds: 300,
+                                                  ),
+                                                  curve: Curves.easeInOut,
+                                                );
+                                          },
+                                        ),
                                       ),
                                     );
                                   },
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            const SizedBox(height: 8),
-                            Center(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final totalDots = filteredRestaurants.length;
-                                  const double dotSpacing = 18.0;
-                                  const double visibleWidth = 180.0;
-                                  final double contentWidth =
-                                      totalDots * dotSpacing;
-                                  final double maxScroll = (contentWidth -
-                                          visibleWidth)
-                                      .clamp(0.0, double.infinity);
+                            ],
+                          );
+                        },
+                      ),
+                    ),
 
-                                  _hotDealsPageController.addListener(() {
-                                    final double page =
-                                        _hotDealsPageController.page ?? 0.0;
-                                    double target =
-                                        (page * dotSpacing) -
-                                        (visibleWidth / 2);
-                                    target = target.clamp(0.0, maxScroll);
+                    const SizedBox(height: 16),
 
-                                    if (_indicatorScrollController.hasClients) {
-                                      _indicatorScrollController.jumpTo(target);
-                                    }
-                                  });
-
-                                  return Container(
-                                    height: 32,
-                                    width: visibleWidth,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.black54,
-                                        width: 1,
-                                      ),
-                                    ),
-
-                                    child: SingleChildScrollView(
-                                      controller: _indicatorScrollController,
-                                      scrollDirection: Axis.horizontal,
-                                      child: SmoothPageIndicator(
-                                        controller: _hotDealsPageController,
-                                        count: totalDots,
-                                        effect: const WormEffect(
-                                          activeDotColor: AppColors.button,
-                                          dotColor: Colors.grey,
-                                          dotHeight: 10,
-                                          dotWidth: 10,
-                                          spacing: 8,
-                                        ),
-                                        onDotClicked: (index) {
-                                          _hotDealsPageController.animateToPage(
-                                            index,
-                                            duration: const Duration(
-                                              milliseconds: 300,
+                    // Random Carousel
+                    sectionHeader("Random"),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 280,
+                      child:
+                          _isLoadingMostBought
+                              ? const Center(child: CircularProgressIndicator())
+                              : _mostBoughtRestaurants.isEmpty
+                              ? const Center(
+                                child: Text('No restaurants available'),
+                              )
+                              : Column(
+                                children: [
+                                  Expanded(
+                                    child: ScrollConfiguration(
+                                      behavior: const MaterialScrollBehavior()
+                                          .copyWith(
+                                            dragDevices: {
+                                              PointerDeviceKind.touch,
+                                              PointerDeviceKind.mouse,
+                                            },
+                                          ),
+                                      child: PageView.builder(
+                                        controller: _mostBoughtPageController,
+                                        padEnds: false,
+                                        physics: const BouncingScrollPhysics(),
+                                        itemCount:
+                                            _mostBoughtRestaurants.length,
+                                        itemBuilder: (context, index) {
+                                          final resto =
+                                              _mostBoughtRestaurants[index];
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (
+                                                        context,
+                                                      ) => RestoDetailScreen(
+                                                        restoId: resto.id,
+                                                        destinationNotifier:
+                                                            widget
+                                                                .destinationNotifier,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            child: restoCard(
+                                              headerImageUrl:
+                                                  resto.headerImageUrl,
+                                              name: resto.name,
+                                              address: resto.address ?? '',
                                             ),
-                                            curve: Curves.easeInOut,
                                           );
                                         },
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Random Carousel
-                  sectionHeader("Random"),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 280,
-                    child:
-                        _isLoadingMostBought
-                            ? const Center(child: CircularProgressIndicator())
-                            : _mostBoughtRestaurants.isEmpty
-                            ? const Center(
-                              child: Text('No restaurants available'),
-                            )
-                            : Column(
-                              children: [
-                                Expanded(
-                                  child: ScrollConfiguration(
-                                    behavior: const MaterialScrollBehavior()
-                                        .copyWith(
-                                          dragDevices: {
-                                            PointerDeviceKind.touch,
-                                            PointerDeviceKind.mouse,
-                                          },
-                                        ),
-                                    child: PageView.builder(
-                                      controller: _mostBoughtPageController,
-                                      padEnds: false,
-                                      physics: const BouncingScrollPhysics(),
-                                      itemCount: _mostBoughtRestaurants.length,
-                                      itemBuilder: (context, index) {
-                                        final resto =
-                                            _mostBoughtRestaurants[index];
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (
-                                                      context,
-                                                    ) => RestoDetailScreen(
-                                                      restoId: resto.id,
-                                                      destinationNotifier:
-                                                          widget
-                                                              .destinationNotifier,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                          child: restoCard(
-                                            headerImageUrl:
-                                                resto.headerImageUrl,
-                                            name: resto.name,
-                                            address: resto.address ?? '',
-                                          ),
-                                        );
-                                      },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SmoothPageIndicator(
+                                    controller: _mostBoughtPageController,
+                                    count: _mostBoughtRestaurants.length,
+                                    effect: const WormEffect(
+                                      activeDotColor: AppColors.button,
+                                      dotColor: Colors.grey,
+                                      dotHeight: 10,
+                                      dotWidth: 10,
+                                      spacing: 8,
                                     ),
+                                    onDotClicked: (index) {
+                                      _mostBoughtPageController.animateToPage(
+                                        index,
+                                        duration: const Duration(
+                                          milliseconds: 400,
+                                        ),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    },
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                SmoothPageIndicator(
-                                  controller: _mostBoughtPageController,
-                                  count: _mostBoughtRestaurants.length,
-                                  effect: const WormEffect(
-                                    activeDotColor: AppColors.button,
-                                    dotColor: Colors.grey,
-                                    dotHeight: 10,
-                                    dotWidth: 10,
-                                    spacing: 8,
-                                  ),
-                                  onDotClicked: (index) {
-                                    _mostBoughtPageController.animateToPage(
-                                      index,
-                                      duration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                  ),
-                ],
+                                ],
+                              ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
