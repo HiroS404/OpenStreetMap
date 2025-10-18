@@ -10,4 +10,3 @@ class RestaurantService {
     return snap.docs.map((doc) => Restaurant.fromDoc(doc)).toList();
   }
 }
-

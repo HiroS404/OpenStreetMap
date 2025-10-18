@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:map_try/admin/pages/admin_Registered_resto_page.dart';
+import 'package:map_try/admin/pages/admin_home.dart';
 import 'package:map_try/admin/pages/admin_routeeditor_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -13,8 +15,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   // List of page widgets
   final List<Widget> _pages = [
-    const AdminEditor(), // Your existing Route Editor page
-    // const RegisteredRestaurantPage(), // Placeholder for now
+    const DashboardPage(), // Dashboard Overview
+    const AdminEditor(), // Route Editor
+    const RegisteredRestaurantPage(), // Registered Restaurants
   ];
 
   @override
@@ -26,10 +29,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           Container(
             width: 250,
             decoration: BoxDecoration(
-              color: Colors.blue.shade700,
+              color: Colors.black87,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withAlpha(20),
                   blurRadius: 4,
                   offset: const Offset(2, 0),
                 ),
@@ -51,7 +54,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'Admin Dashboard',
+                        'MapaKaon \nAdmin',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -66,14 +69,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                 // Menu Items
                 _buildMenuItem(
+                  icon: Icons.dashboard,
+                  title: 'Dashboard',
+                  index: 0,
+                ),
+                _buildMenuItem(
                   icon: Icons.route,
                   title: 'Route Editor',
-                  index: 0,
+                  index: 1,
                 ),
                 _buildMenuItem(
                   icon: Icons.restaurant,
                   title: 'Registered Restaurant',
-                  index: 1,
+                  index: 2,
                 ),
               ],
             ),
@@ -108,12 +116,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color:
-                  isSelected ? Colors.white.withAlpha(30) : Colors.transparent,
+                  isSelected
+                      ? Colors.deepOrangeAccent.withAlpha(70)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color:
                     isSelected
-                        ? Colors.white.withAlpha(30)
+                        ? Colors.deepOrangeAccent.withAlpha(70)
                         : Colors.transparent,
                 width: 1,
               ),
@@ -139,21 +149,3 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 }
-
-// // Placeholder page for Registered Restaurant
-// class RegisteredRestaurantPage extends StatelessWidget {
-//   const RegisteredRestaurantPage({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Registered Restaurant')),
-//       body: const Center(
-//         child: Text(
-//           'Restaurant management coming soon...',
-//           style: TextStyle(fontSize: 18, color: Colors.grey),
-//         ),
-//       ),
-//     );
-//   }
-// }
