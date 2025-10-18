@@ -110,9 +110,9 @@ class _AdminEditorState extends State<AdminEditor> {
           Container(
             width: 320,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Colors.white.withAlpha(80),
               border: Border(
-                right: BorderSide(color: Colors.grey.shade300, width: 1),
+                right: BorderSide(color: Colors.white.withAlpha(90), width: 1),
               ),
             ),
             child: Padding(

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_try/admin/pages/admin_dashboard.dart';
 import 'package:map_try/admin/pages/admin_routeeditor_page.dart';
 import 'package:map_try/admin/pages/admin_login_page.dart';
 import 'package:map_try/firebase_options.dart';
@@ -87,7 +88,7 @@ class MyApp extends StatelessWidget {
               destinationNotifier: ValueNotifier<LatLng?>(null),
             ),
         '/admin-login': (context) => const AdminLoginPage(),
-        '/admin': (context) => const AdminEditor(),
+        '/admin': (context) => const AdminDashboardPage(),
       },
 
       onGenerateRoute: (settings) {
