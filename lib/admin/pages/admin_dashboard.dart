@@ -1,292 +1,159 @@
 import 'package:flutter/material.dart';
-import 'package:map_try/admin/admin_services/route_services.dart';
-import 'package:map_try/admin/admin_widgets/route_editor.dart';
-import 'package:map_try/admin/models/jeepney_route.dart' as admin_models;
-import 'package:map_try/admin/models/jeepney_route.dart';
+import 'package:map_try/admin/pages/admin_routeeditor_page.dart';
 
-class AdminDashboard extends StatefulWidget {
-  const AdminDashboard({super.key});
+class AdminDashboardPage extends StatefulWidget {
+  const AdminDashboardPage({super.key});
 
   @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
-  final RouteService _routeServices = RouteService();
-  final TextEditingController _routeNumCtrl = TextEditingController();
-  final TextEditingController _directionCtrl = TextEditingController();
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  int _selectedIndex = 0;
 
-  String? _editingRouteId;
-  List<RoutePoint> _editingPoints = [];
-  bool _isDrawing = false;
+  // List of page widgets
+  final List<Widget> _pages = [
+    const AdminEditor(), // Your existing Route Editor page
+    // const RegisteredRestaurantPage(), // Placeholder for now
+  ];
 
-  void _startNewRoute() {
-    setState(() {
-      _editingRouteId = null;
-      _editingPoints = [];
-      _routeNumCtrl.clear();
-      _directionCtrl.clear();
-      _isDrawing = true;
-    });
-  }
-
-  void _loadForEdit(admin_models.JeepneyRoute route) {
-    setState(() {
-      _editingRouteId = route.id;
-      _editingPoints = route.coordinates;
-      _routeNumCtrl.text = route.routeNumber.toString();
-      _directionCtrl.text = route.direction;
-      _isDrawing = true;
-    });
-  }
-
-  Future<void> _saveRoute(List<RoutePoint> points) async {
-    if (points.length < 2) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Need at least 2 points')));
-      return;
-    }
-
-    final route = admin_models.JeepneyRoute(
-      id: _editingRouteId ?? '',
-      routeNumber: int.tryParse(_routeNumCtrl.text.trim()) ?? 0,
-      direction: _directionCtrl.text.trim(),
-      coordinates: points,
-    );
-
-    if (_editingRouteId == null) {
-      await _routeServices.addRoute(route);
-    } else {
-      await _routeServices.updateRoute(route);
-    }
-
-    setState(() {
-      _isDrawing = false;
-      _editingRouteId = null;
-      _editingPoints = [];
-      _routeNumCtrl.clear();
-      _directionCtrl.clear();
-    });
-  }
-
-  Future<void> _deleteRoute(String routeId) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text("Delete Route"),
-            content: const Text("Are you sure you want to delete this route?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text("Delete"),
-              ),
-            ],
-          ),
-    );
-    if (confirm == true) {
-      await _routeServices.deleteRoute(routeId);
-    }
-  }
-
-  //admin edit map screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin (Route Editor)'),
-        actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _startNewRoute),
-        ],
-      ),
       body: Row(
-        children: [ 
-          // Sidebar
+        children: [
+          // Side Panel
           Container(
-            width: 320,
+            width: 250,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(
-                right: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
+              color: Colors.blue.shade700,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(2, 0),
+                ),
+              ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Form fields
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _routeNumCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Route Number',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _directionCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Direction',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: _startNewRoute,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('Add Route'),
-                                ),
-                              ),
-                              if (_isDrawing) ...[
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isDrawing = false;
-                                        _editingPoints = [];
-                                        _editingRouteId = null;
-                                      });
-                                    },
-                                    icon: const Icon(Icons.cancel),
-                                    label: const Text('Cancel'),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(24.0),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.white,
+                        size: 40,
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Routes List
-                  Expanded(
-                    child: Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: StreamBuilder<List<admin_models.JeepneyRoute>>(
-                          stream: _routeServices.getRoutes(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Center(
-                                child: Text("No routes found"),
-                              );
-                            }
-
-                            // ✅ Copy and sort routes by routeNumber
-                            final routes = List<admin_models.JeepneyRoute>.from(
-                              snapshot.data!,
-                            )..sort(
-                              (a, b) => a.routeNumber.compareTo(b.routeNumber),
-                            );
-
-                            return ListView.builder(
-                              itemCount: routes.length,
-                              itemBuilder: (context, index) {
-                                final route = routes[index];
-                                return Card(
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                    horizontal: 4,
-                                  ),
-                                  child: ListTile(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    title: Text(
-                                      'Route ${route.routeNumber}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    subtitle: Text(route.direction),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                          ),
-                                          onPressed: () => _loadForEdit(route),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed:
-                                              () => _deleteRoute(route.id),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                      SizedBox(height: 12),
+                      Text(
+                        'Admin Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Divider(color: Colors.white24, height: 1),
+                const SizedBox(height: 8),
+
+                // Menu Items
+                _buildMenuItem(
+                  icon: Icons.route,
+                  title: 'Route Editor',
+                  index: 0,
+                ),
+                _buildMenuItem(
+                  icon: Icons.restaurant,
+                  title: 'Registered Restaurant',
+                  index: 1,
+                ),
+              ],
             ),
           ),
 
-          // Main editor area (map)
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                clipBehavior: Clip.hardEdge,
-                child: RouteEditor(
-                  isDrawing: _isDrawing,
-                  initialPoints: _editingPoints,
-                  onSave: _saveRoute,
-                ),
-              ),
-            ),
-          ),
+          // Main Content Area
+          Expanded(child: _pages[_selectedIndex]),
         ],
       ),
     );
   }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color:
+                  isSelected ? Colors.white.withAlpha(30) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color:
+                    isSelected
+                        ? Colors.white.withAlpha(30)
+                        : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 22),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+// // Placeholder page for Registered Restaurant
+// class RegisteredRestaurantPage extends StatelessWidget {
+//   const RegisteredRestaurantPage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Registered Restaurant')),
+//       body: const Center(
+//         child: Text(
+//           'Restaurant management coming soon...',
+//           style: TextStyle(fontSize: 18, color: Colors.grey),
+//         ),
+//       ),
+//     );
+//   }
+// }

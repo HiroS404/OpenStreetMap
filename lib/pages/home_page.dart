@@ -560,10 +560,10 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context,
-      double shrinkOffset,
-      bool overlapsContent,
-      ) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final mainCategories = [
       "All",
@@ -596,65 +596,76 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                         backgroundColor: Colors.transparent,
                         builder: (context) {
                           return GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                          behavior: HitTestBehavior.opaque,
-                          child: Stack(
-                          children: [
-                          Align(
-                          alignment: Alignment.bottomCenter,
-                          child: DraggableScrollableSheet(
-                          initialChildSize: 0.5,
-                          minChildSize: 0.3,
-                          maxChildSize: 0.8,
-                          expand: false,
-                            builder: (context, scrollController) {
-                              return Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16),
-                                  ),
-                                ),
-                                padding: const EdgeInsets.all(16),
-                                child: SingleChildScrollView(
-                                  controller: scrollController,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "More Categories",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
+                            onTap: () => Navigator.of(context).pop(),
+                            behavior: HitTestBehavior.opaque,
+                            child: Stack(
+                              children: [
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: DraggableScrollableSheet(
+                                    initialChildSize: 0.5,
+                                    minChildSize: 0.3,
+                                    maxChildSize: 0.8,
+                                    expand: false,
+                                    builder: (context, scrollController) {
+                                      return Container(
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(16),
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 8,
-                                        children: hiddenCategories.map((label) {
-                                          final bool isSelected = selectedCategory == label;
-                                          return ChoiceChip(
-                                            label: Text(label),
-                                            selected: isSelected,
-                                            selectedColor: AppColors.button,
-                                            onSelected: (_) {
-                                              onCategorySelected(label);
-                                              Navigator.pop(context);
-                                            },
-                                          );
-                                        }).toList(),
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
+                                        padding: const EdgeInsets.all(16),
+                                        child: SingleChildScrollView(
+                                          controller: scrollController,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "More Categories",
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Wrap(
+                                                spacing: 8,
+                                                runSpacing: 8,
+                                                children:
+                                                    hiddenCategories.map((
+                                                      label,
+                                                    ) {
+                                                      final bool isSelected =
+                                                          selectedCategory ==
+                                                          label;
+                                                      return ChoiceChip(
+                                                        label: Text(label),
+                                                        selected: isSelected,
+                                                        selectedColor:
+                                                            AppColors.button,
+                                                        onSelected: (_) {
+                                                          onCategorySelected(
+                                                            label,
+                                                          );
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                      );
+                                                    }).toList(),
+                                              ),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                          ),
-                          ],
-                          ),
+                              ],
+                            ),
                           );
                         },
                       );
@@ -662,7 +673,10 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.sysBg,
                       foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -721,9 +735,9 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
   double get minExtent => 60;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
 }
-
 
 class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   final String selectedCategory;
@@ -733,15 +747,16 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   CategoryChipsHeader({
     required this.selectedCategory,
     required this.onCategorySelected,
-    required this.hiddenCategories, required SingleChildScrollView Function(dynamic categories) childBuilder,
+    required this.hiddenCategories,
+    required SingleChildScrollView Function(dynamic categories) childBuilder,
   });
 
   @override
   Widget build(
-      BuildContext context,
-      double shrinkOffset,
-      bool overlapsContent,
-      ) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final mainCategories = [
       "All",
       "Nearby",
@@ -789,7 +804,8 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                   controller: scrollController,
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Text(
                                         "More Categories",
@@ -802,18 +818,20 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                       Wrap(
                                         spacing: 8,
                                         runSpacing: 8,
-                                        children: hiddenCategories.map((label) {
-                                          final bool isSelected = selectedCategory == label;
-                                          return ChoiceChip(
-                                            label: Text(label),
-                                            selected: isSelected,
-                                            selectedColor: AppColors.button,
-                                            onSelected: (_) {
-                                              onCategorySelected(label);
-                                              Navigator.pop(context);
-                                            },
-                                          );
-                                        }).toList(),
+                                        children:
+                                            hiddenCategories.map((label) {
+                                              final bool isSelected =
+                                                  selectedCategory == label;
+                                              return ChoiceChip(
+                                                label: Text(label),
+                                                selected: isSelected,
+                                                selectedColor: AppColors.button,
+                                                onSelected: (_) {
+                                                  onCategorySelected(label);
+                                                  Navigator.pop(context);
+                                                },
+                                              );
+                                            }).toList(),
                                       ),
                                       const SizedBox(height: 16),
                                     ],
@@ -828,7 +846,10 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.sysBg,
                       foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -887,10 +908,9 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
   double get minExtent => 60;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
 }
-
-
 
 class HomePage extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -912,8 +932,8 @@ class _HomePageState extends State<HomePage> {
   List<Restaurant> _mostBoughtRestaurants = [];
   bool _isLoadingMostBought = true;
   Timer? _autoSwipeTimer;
-  List<Map<String, dynamic>> _searchResults = [];
-  bool _isSearching = false;
+  final List<Map<String, dynamic>> _searchResults = [];
+  final bool _isSearching = false;
   String _searchQuery = "";
   List<Restaurant> _filteredRestaurants = [];
 
@@ -929,44 +949,54 @@ class _HomePageState extends State<HomePage> {
   void _updateFilteredRestaurants() {
     final query = _searchQuery.toLowerCase();
 
-    _filteredRestaurants = _restaurants.where((resto) {
-      if (_selectedCategory == "Nearby") {
-        if (_userLocation == null) return false;
-        return _isRestaurantNearby(resto);
-      }
+    _filteredRestaurants =
+        _restaurants.where((resto) {
+          if (_selectedCategory == "Nearby") {
+            if (_userLocation == null) return false;
+            return _isRestaurantNearby(resto);
+          }
 
-      if (query.isNotEmpty) {
-        final nameMatch = resto.name.toLowerCase().contains(query);
-        final addressMatch = (resto.address ?? '').toLowerCase().contains(query);
-        final menuMatch = resto.menu.any((item) {
-          final itemName = (item['name'] as String).toLowerCase();
-          final category = (item['category'] as String).toLowerCase();
-          return itemName.contains(query) || category.contains(query);
-        });
+          if (query.isNotEmpty) {
+            final nameMatch = resto.name.toLowerCase().contains(query);
+            final addressMatch = (resto.address ?? '').toLowerCase().contains(
+              query,
+            );
+            final menuMatch = resto.menu.any((item) {
+              final itemName = (item['name'] as String).toLowerCase();
+              final category = (item['category'] as String).toLowerCase();
+              return itemName.contains(query) || category.contains(query);
+            });
 
-        return nameMatch || addressMatch || menuMatch;
-      } else {
-        return _selectedCategory == "All"
-            ? true
-            : resto.menu.any((item) =>
-        (item['category'] as String).toLowerCase() ==
-            _selectedCategory.toLowerCase());
-      }
-    }).toList();
+            return nameMatch || addressMatch || menuMatch;
+          } else {
+            return _selectedCategory == "All"
+                ? true
+                : resto.menu.any(
+                  (item) =>
+                      (item['category'] as String).toLowerCase() ==
+                      _selectedCategory.toLowerCase(),
+                );
+          }
+        }).toList();
 
     if (_selectedCategory == "Nearby" && _userLocation != null) {
       _filteredRestaurants.sort((a, b) {
         final distA = _distance.as(
-            LengthUnit.Meter, _userLocation!, LatLng(a.latitude!, a.longitude!));
+          LengthUnit.Meter,
+          _userLocation!,
+          LatLng(a.latitude!, a.longitude!),
+        );
         final distB = _distance.as(
-            LengthUnit.Meter, _userLocation!, LatLng(b.latitude!, b.longitude!));
+          LengthUnit.Meter,
+          _userLocation!,
+          LatLng(b.latitude!, b.longitude!),
+        );
         return distA.compareTo(distB);
       });
     }
 
     setState(() {});
   }
-
 
   @override
   void initState() {
@@ -975,7 +1005,6 @@ class _HomePageState extends State<HomePage> {
     _getUserLocation();
     _fetchMostBoughtRestaurants();
   }
-
 
   void _startAutoSwipe() {
     _autoSwipeTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -1668,21 +1697,21 @@ class _HomePageState extends State<HomePage> {
                                   color: Colors.white,
                                 ),
                               ),
-                            //   const SizedBox(width: 6),
-                            //   Container(
-                            //     width: 38,
-                            //     height: 38,
-                            //     decoration: BoxDecoration(
-                            //       shape: BoxShape.circle,
-                            //       boxShadow: [
-                            //         BoxShadow(
-                            //           color: AppColors.sysAccent.withAlpha(40),
-                            //           blurRadius: 6,
-                            //           offset: const Offset(0, 2),
-                            //         ),
-                            //       ],
-                            //     ),
-                            //   ),
+                              //   const SizedBox(width: 6),
+                              //   Container(
+                              //     width: 38,
+                              //     height: 38,
+                              //     decoration: BoxDecoration(
+                              //       shape: BoxShape.circle,
+                              //       boxShadow: [
+                              //         BoxShadow(
+                              //           color: AppColors.sysAccent.withAlpha(40),
+                              //           blurRadius: 6,
+                              //           offset: const Offset(0, 2),
+                              //         ),
+                              //       ],
+                              //     ),
+                              //   ),
                             ],
                           ),
                         ],
@@ -1877,22 +1906,23 @@ class _HomePageState extends State<HomePage> {
                           decoration: InputDecoration(
                             hintText: "Search for food or restaurants...",
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                _searchQuery = "";
-                                _updateFilteredRestaurants();
-                              },
-                            )
-                                : null,
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _searchQuery = "";
+                                        _updateFilteredRestaurants();
+                                      },
+                                    )
+                                    : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
                           ),
-                        )
+                        ),
                       ),
                     ),
 
@@ -1981,34 +2011,42 @@ class _HomePageState extends State<HomePage> {
               onCategorySelected: (category) {
                 setState(() => _selectedCategory = category);
               },
-              hiddenCategories: _getAllCategories()
-                  .where(
-                    (cat) =>
-                ![
-                  "All",
-                  "Meals",
-                  "Drinks",
-                  "Fast Food",
-                  "Snacks",
-                ].contains(cat),
-              )
-                  .toList(),
-              childBuilder: (categories) => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: categories.map((category) {
-                    final isSelected = category == _selectedCategory;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: ChoiceChip(
-                        label: Text(category),
-                        selected: isSelected,
-                        onSelected: (_) => setState(() => _selectedCategory = category),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+              hiddenCategories:
+                  _getAllCategories()
+                      .where(
+                        (cat) =>
+                            ![
+                              "All",
+                              "Meals",
+                              "Drinks",
+                              "Fast Food",
+                              "Snacks",
+                            ].contains(cat),
+                      )
+                      .toList(),
+              childBuilder:
+                  (categories) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children:
+                          categories.map((category) {
+                            final isSelected = category == _selectedCategory;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: ChoiceChip(
+                                label: Text(category),
+                                selected: isSelected,
+                                onSelected:
+                                    (_) => setState(
+                                      () => _selectedCategory = category,
+                                    ),
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  ),
             ),
           ),
 
@@ -2148,16 +2186,18 @@ class _HomePageState extends State<HomePage> {
                         _hotDealsPageController.addListener(() {
                           if (!_indicatorScrollController.hasClients) return;
 
-                          final double page = _hotDealsPageController.page ?? 0.0;
+                          final double page =
+                              _hotDealsPageController.page ?? 0.0;
                           final int totalDots = filteredRestaurants.length;
                           const double dotSpacing = 18.0;
                           const double visibleWidth = 180.0;
 
                           final double contentWidth = totalDots * dotSpacing;
-                          final double maxScroll =
-                          (contentWidth - visibleWidth).clamp(0.0, double.infinity);
+                          final double maxScroll = (contentWidth - visibleWidth)
+                              .clamp(0.0, double.infinity);
 
-                          double target = (page * dotSpacing) - (visibleWidth / 2);
+                          double target =
+                              (page * dotSpacing) - (visibleWidth / 2);
                           target = target.clamp(0.0, maxScroll);
 
                           _indicatorScrollController.jumpTo(target);
@@ -2167,9 +2207,13 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                               child: ScrollConfiguration(
-                                behavior: const MaterialScrollBehavior().copyWith(
-                                  dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-                                ),
+                                behavior: const MaterialScrollBehavior()
+                                    .copyWith(
+                                      dragDevices: {
+                                        PointerDeviceKind.touch,
+                                        PointerDeviceKind.mouse,
+                                      },
+                                    ),
                                 child: PageView.builder(
                                   controller: _hotDealsPageController,
                                   itemCount: _filteredRestaurants.length,
@@ -2182,10 +2226,13 @@ class _HomePageState extends State<HomePage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => RestoDetailScreen(
-                                              restoId: resto.id,
-                                              destinationNotifier: widget.destinationNotifier,
-                                            ),
+                                            builder:
+                                                (context) => RestoDetailScreen(
+                                                  restoId: resto.id,
+                                                  destinationNotifier:
+                                                      widget
+                                                          .destinationNotifier,
+                                                ),
                                           ),
                                         );
                                       },
@@ -2207,12 +2254,18 @@ class _HomePageState extends State<HomePage> {
                                   final totalDots = filteredRestaurants.length;
                                   const double dotSpacing = 18.0;
                                   const double visibleWidth = 180.0;
-                                  final double contentWidth = totalDots * dotSpacing;
-                                  final double maxScroll = (contentWidth - visibleWidth).clamp(0.0, double.infinity);
+                                  final double contentWidth =
+                                      totalDots * dotSpacing;
+                                  final double maxScroll = (contentWidth -
+                                          visibleWidth)
+                                      .clamp(0.0, double.infinity);
 
                                   _hotDealsPageController.addListener(() {
-                                    final double page = _hotDealsPageController.page ?? 0.0;
-                                    double target = (page * dotSpacing) - (visibleWidth / 2);
+                                    final double page =
+                                        _hotDealsPageController.page ?? 0.0;
+                                    double target =
+                                        (page * dotSpacing) -
+                                        (visibleWidth / 2);
                                     target = target.clamp(0.0, maxScroll);
 
                                     if (_indicatorScrollController.hasClients) {
@@ -2223,11 +2276,17 @@ class _HomePageState extends State<HomePage> {
                                   return Container(
                                     height: 32,
                                     width: visibleWidth,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.black54, width: 1),
+                                      border: Border.all(
+                                        color: Colors.black54,
+                                        width: 1,
+                                      ),
                                     ),
 
                                     child: SingleChildScrollView(
@@ -2246,7 +2305,9 @@ class _HomePageState extends State<HomePage> {
                                         onDotClicked: (index) {
                                           _hotDealsPageController.animateToPage(
                                             index,
-                                            duration: const Duration(milliseconds: 300),
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
                                             curve: Curves.easeInOut,
                                           );
                                         },
