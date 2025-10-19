@@ -18,7 +18,7 @@ class DebugLocations {
     // return LatLng(10.715609, 122.562715); // ColdZone West
     // return LatLng(10.716225933976629, 122.56377696990968); // Somewhere further ColdZone West
     // return LatLng(10.733472, 122.548947); // Tubang CPU
-    return LatLng(10.732610, 122.548220); // CPU (Alternative) - MT Building
+    // return LatLng(10.732610, 122.548220); // CPU (Alternative) - MT Building
     // return LatLng(10.696694, 122.545582); // Molo Plaza
     // return LatLng(10.694928, 122.564686); // Rob Main
     // return LatLng(10.753623, 122.538430); // GT Mall
@@ -29,7 +29,7 @@ class DebugLocations {
     // return LatLng(10.725203, 122.556715); // Jaro Plaza
     
     // If all commented out, return null to use actual GPS
-    // return null;
+    return null;
   }
 
   // ============================================
@@ -52,13 +52,13 @@ class DebugLocations {
     // return LatLng(10.694928, 122.564686); // Rob Main
     // return LatLng(10.753623, 122.538430); // GT Mall
     // return LatLng(10.727482, 122.558188); // Alicia's
-    return LatLng(10.714335, 122.551852); // SM City
+    // return LatLng(10.714335, 122.551852); // SM City
     // return LatLng(10.697643, 122.543888); // Molo
     // return LatLng(10.693202, 122.500595); // Mohon Terminal
     // return LatLng(10.725203, 122.556715); // Jaro Plaza
     
     // If all commented out, return null and user selects destination
-    // return null;
+    return null;
   }
 
   // Helper to check if debug mode is active
@@ -109,4 +109,5 @@ class DebugLocations {
     
     return "Custom Location";
   }
+
 }
