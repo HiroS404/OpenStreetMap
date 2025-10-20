@@ -209,7 +209,17 @@ class DesktopCategoryPills extends StatelessWidget {
         // main category chips
         for (final category in categories)
           GestureDetector(
-            onTap: () => onCategorySelected(category),
+            onTap: () {
+              onCategorySelected(category);
+              // Clear search when category is selected
+              // if (context.findAncestorStateOfType<_HomePageState>() != null) {
+              //   final homeState =
+              //       context.findAncestorStateOfType<_HomePageState>()!;
+              //   homeState._searchController.clear();
+              //   homeState._searchQuery = "";
+              // }
+            },
+
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -259,7 +269,6 @@ class DesktopCategoryPills extends StatelessWidget {
                                 selectedColor: AppColors.button,
                                 onSelected: (_) {
                                   onCategorySelected(label);
-                                  Navigator.pop(context);
                                 },
                               );
                             }).toList(),
@@ -650,9 +659,6 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                                           onCategorySelected(
                                                             label,
                                                           );
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
                                                         },
                                                       );
                                                     }).toList(),
@@ -706,7 +712,16 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: TextButton(
-        onPressed: () => onCategorySelected(label),
+        onPressed: () {
+          onCategorySelected(label);
+          // Clear search when category is selected
+          if (context.findAncestorStateOfType<_HomePageState>() != null) {
+            final homeState =
+                context.findAncestorStateOfType<_HomePageState>()!;
+            homeState._searchController.clear();
+            homeState._searchQuery = "";
+          }
+        },
         style: TextButton.styleFrom(
           backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
           foregroundColor: isSelected ? Colors.white : Colors.black87,
@@ -829,7 +844,6 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                                 selectedColor: AppColors.button,
                                                 onSelected: (_) {
                                                   onCategorySelected(label);
-                                                  Navigator.pop(context);
                                                 },
                                               );
                                             }).toList(),
@@ -947,6 +961,8 @@ class _HomePageState extends State<HomePage> {
   final Distance _distance = Distance();
   final ScrollController _indicatorScrollController = ScrollController();
 
+  String? _resultsHeader;
+
   void _updateFilteredRestaurants() {
     final query = _searchQuery.toLowerCase();
 
@@ -994,6 +1010,19 @@ class _HomePageState extends State<HomePage> {
         );
         return distA.compareTo(distB);
       });
+    }
+
+    // Set the results header - UPDATED LOGIC
+    if (query.isNotEmpty && _searchQuery.trim().isNotEmpty) {
+      // Only show if there's actual text (not just whitespace)
+      _resultsHeader =
+          "${_filteredRestaurants.length} results for '$_searchQuery'";
+    } else if (_selectedCategory != "All" && query.isEmpty) {
+      // Only show category results when not searching
+      _resultsHeader =
+          "${_filteredRestaurants.length} results for '$_selectedCategory'";
+    } else {
+      _resultsHeader = null; // Don't show header for "All" or empty search
     }
 
     setState(() {});
@@ -1380,6 +1409,7 @@ class _HomePageState extends State<HomePage> {
                     controller: _searchController,
                     onChanged: (value) {
                       setState(() => _searchQuery = value.toLowerCase());
+                      _updateFilteredRestaurants();
                     },
                     decoration: InputDecoration(
                       hintText: 'What would you like to eat?',
@@ -1396,6 +1426,7 @@ class _HomePageState extends State<HomePage> {
                                   setState(() {
                                     _searchController.clear();
                                     _searchQuery = "";
+                                    _resultsHeader = null;
                                   });
                                 },
                               )
@@ -1430,10 +1461,24 @@ class _HomePageState extends State<HomePage> {
                   selectedCategory: _selectedCategory,
                   onCategorySelected: (category) {
                     setState(() => _selectedCategory = category);
+                    _updateFilteredRestaurants();
                   },
                   allCategories: _getAllCategories(),
                 ),
                 const SizedBox(height: 40),
+
+                // Section Title
+                // Results header
+                if (_resultsHeader != null) ...[
+                  Text(
+                    _resultsHeader!,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
 
                 // Section Title
                 Text(
@@ -1448,7 +1493,6 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 24),
 
                 // Restaurant List
                 Expanded(child: _buildRestaurantList()),
@@ -1938,6 +1982,7 @@ class _HomePageState extends State<HomePage> {
                                           _searchController.clear();
                                           _searchQuery = "";
                                           _updateFilteredRestaurants();
+                                          _resultsHeader = null;
                                         },
                                       )
                                       : null,
@@ -2034,6 +2079,7 @@ class _HomePageState extends State<HomePage> {
                 selectedCategory: _selectedCategory,
                 onCategorySelected: (category) {
                   setState(() => _selectedCategory = category);
+                  _updateFilteredRestaurants();
                 },
                 hiddenCategories:
                     _getAllCategories()
@@ -2064,7 +2110,9 @@ class _HomePageState extends State<HomePage> {
                                   selected: isSelected,
                                   onSelected:
                                       (_) => setState(
-                                        () => _selectedCategory = category,
+                                        () =>
+                                            _resultsHeader =
+                                                "${_filteredRestaurants.length} results for '$category'",
                                       ),
                                 ),
                               );
@@ -2084,9 +2132,27 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 16),
 
                     // Hot Deals Carousel
+                    // Show results header if available
+                    if (_resultsHeader != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          _resultsHeader!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     sectionHeader(
                       _searchQuery.isNotEmpty
-                          ? "${_searchQuery[0].toUpperCase()}${_searchQuery.substring(1)} Results"
+                          ? "Search Results"
                           : (_selectedCategory == "All"
                               ? "Hot Deals"
                               : _selectedCategory),
