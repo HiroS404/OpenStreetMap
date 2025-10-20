@@ -269,6 +269,7 @@ class DesktopCategoryPills extends StatelessWidget {
                                 selectedColor: AppColors.button,
                                 onSelected: (_) {
                                   onCategorySelected(label);
+                                  Navigator.pop(context);
                                 },
                               );
                             }).toList(),
@@ -659,6 +660,9 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                                           onCategorySelected(
                                                             label,
                                                           );
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
                                                         },
                                                       );
                                                     }).toList(),
@@ -844,6 +848,7 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
                                                 selectedColor: AppColors.button,
                                                 onSelected: (_) {
                                                   onCategorySelected(label);
+                                                  Navigator.pop(context);
                                                 },
                                               );
                                             }).toList(),
