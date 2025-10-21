@@ -86,9 +86,12 @@ class RestoDetailScreen extends StatelessWidget {
                   .toString(),
             ];
           }
-          while (optionalUrls.length < 3) optionalUrls.add('');
-          if (optionalUrls.length > 3)
+          while (optionalUrls.length < 3) {
+            optionalUrls.add('');
+          }
+          if (optionalUrls.length > 3) {
             optionalUrls = optionalUrls.take(3).toList();
+          }
 
           // ✅ Mobile View Layout
           if (!isDesktop) {
@@ -406,7 +409,7 @@ class RestoDetailScreen extends StatelessWidget {
 
                 // Horizontal gallery of items
                 SizedBox(
-                  height: 80, // adjust card height
+                  height: 100, // increased height to allow text wrapping
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: items.length,
@@ -417,7 +420,7 @@ class RestoDetailScreen extends StatelessWidget {
                       final price = (item['price'] ?? '').toString();
 
                       return Container(
-                        width: 140, // card width
+                        width: 200, // card width
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
@@ -433,21 +436,26 @@ class RestoDetailScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Item name
-                            Text(
-                              itemName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                            // Item name (full text visible, wraps to next line)
+                            Flexible(
+                              child: Text(
+                                itemName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
+                                maxLines: null, // allows unlimited lines
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            const Spacer(),
+
                             // Price
                             Text(
                               price.isEmpty ? '' : '₱$price',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                                 color: _brand,

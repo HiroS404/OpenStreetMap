@@ -1511,7 +1511,7 @@ class _HomePageState extends State<HomePage> {
           width: 400,
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('Assets/route_pics/imageiloilo.png'),
+              image: AssetImage('assets/route_pics/imageiloilo.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -1677,7 +1677,7 @@ class _HomePageState extends State<HomePage> {
                           decoration: const BoxDecoration(
                             image: DecorationImage(
                               image: AssetImage(
-                                'Assets/route_pics/imageiloilo.png',
+                                'assets/route_pics/imageiloilo.png',
                               ),
                               fit: BoxFit.cover,
                             ),

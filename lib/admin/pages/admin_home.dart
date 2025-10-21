@@ -366,7 +366,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withAlpha(25),
             ),
           ),
         ],
