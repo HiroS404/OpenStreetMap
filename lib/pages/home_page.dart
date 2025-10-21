@@ -319,50 +319,50 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
           fontWeight: FontWeight.bold,
         ),
       ),
-      Container(
-        margin: const EdgeInsets.only(right: 8),
-        child: TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.orange.shade100,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 16 : 10,
-              vertical: isDesktop ? 6 : 3,
-            ),
+      // Container(
+      //   margin: const EdgeInsets.only(right: 8),
+      //   child: TextButton(
+      //     onPressed: () {},
+      //     style: TextButton.styleFrom(
+      //       backgroundColor: Colors.orange.shade100,
+      //       foregroundColor: Colors.white,
+      //       padding: EdgeInsets.symmetric(
+      //         horizontal: isDesktop ? 16 : 10,
+      //         vertical: isDesktop ? 6 : 3,
+      //       ),
 
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.arrow_back_ios_new,
-                size: isDesktop ? 18 : 14,
-                color: Colors.grey[600],
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "Swipe",
-                style: TextStyle(
-                  fontSize: isDesktop ? 14 : 10,
-                  color: Colors.grey[700],
-                  fontStyle: FontStyle.normal,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: isDesktop ? 18 : 14,
-                color: Colors.grey[600],
-              ),
-            ],
-          ),
-        ),
-      ),
+      //       shape: RoundedRectangleBorder(
+      //         borderRadius: BorderRadius.circular(20),
+      //       ),
+      //     ),
+      //     child: Row(
+      //       mainAxisAlignment: MainAxisAlignment.center,
+      //       children: [
+      //         Icon(
+      //           Icons.arrow_back_ios_new,
+      //           size: isDesktop ? 18 : 14,
+      //           color: Colors.grey[600],
+      //         ),
+      //         const SizedBox(width: 4),
+      //         Text(
+      //           "Swipe",
+      //           style: TextStyle(
+      //             fontSize: isDesktop ? 14 : 10,
+      //             color: Colors.grey[700],
+      //             fontStyle: FontStyle.normal,
+      //             fontWeight: FontWeight.bold,
+      //           ),
+      //         ),
+      //         const SizedBox(width: 4),
+      //         Icon(
+      //           Icons.arrow_forward_ios,
+      //           size: isDesktop ? 18 : 14,
+      //           color: Colors.grey[600],
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      // ),
     ],
   );
 }
