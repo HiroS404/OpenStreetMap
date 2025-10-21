@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:map_try/admin/admin_services/resto_services.dart';
 
+enum SortOption { name, date }
+
 class RegisteredRestaurantPage extends StatefulWidget {
   const RegisteredRestaurantPage({super.key});
 
@@ -13,6 +15,43 @@ class RegisteredRestaurantPage extends StatefulWidget {
 class _RegisteredRestaurantPageState extends State<RegisteredRestaurantPage> {
   final RestaurantService _restaurantService = RestaurantService();
   final DateFormat _dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
+  SortOption _currentSort = SortOption.date;
+  bool _isAscending = true;
+
+  List<RestaurantListModel> _sortRestaurants(
+    List<RestaurantListModel> restaurants,
+  ) {
+    final sortedList = List<RestaurantListModel>.from(restaurants);
+
+    if (_currentSort == SortOption.name) {
+      sortedList.sort(
+        (a, b) =>
+            _isAscending
+                ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
+                : b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+      );
+    } else {
+      sortedList.sort(
+        (a, b) =>
+            _isAscending
+                ? a.registeredDate.compareTo(b.registeredDate)
+                : b.registeredDate.compareTo(a.registeredDate),
+      );
+    }
+
+    return sortedList;
+  }
+
+  void _toggleSort(SortOption option) {
+    setState(() {
+      if (_currentSort == option) {
+        _isAscending = !_isAscending;
+      } else {
+        _currentSort = option;
+        _isAscending = true;
+      }
+    });
+  }
 
   Future<void> _deleteRestaurant(
     String restaurantId,
@@ -135,11 +174,11 @@ class _RegisteredRestaurantPageState extends State<RegisteredRestaurantPage> {
                 );
               }
 
-              final restaurants = snapshot.data!;
+              final restaurants = _sortRestaurants(snapshot.data!);
 
               return Column(
                 children: [
-                  // Header
+                  // Header with Sort Buttons
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -158,6 +197,72 @@ class _RegisteredRestaurantPageState extends State<RegisteredRestaurantPage> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Text(
+                          'Sort by:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: () => _toggleSort(SortOption.name),
+                          icon: Icon(
+                            _currentSort == SortOption.name
+                                ? (_isAscending
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward)
+                                : Icons.sort_by_alpha,
+                            size: 16,
+                          ),
+                          label: const Text('Name'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor:
+                                _currentSort == SortOption.name
+                                    ? Colors.deepOrange
+                                    : Colors.grey.shade700,
+                            side: BorderSide(
+                              color:
+                                  _currentSort == SortOption.name
+                                      ? Colors.deepOrange
+                                      : Colors.grey.shade400,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: () => _toggleSort(SortOption.date),
+                          icon: Icon(
+                            _currentSort == SortOption.date
+                                ? (_isAscending
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward)
+                                : Icons.calendar_today,
+                            size: 16,
+                          ),
+                          label: const Text('Date'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor:
+                                _currentSort == SortOption.date
+                                    ? Colors.deepOrange
+                                    : Colors.grey.shade700,
+                            side: BorderSide(
+                              color:
+                                  _currentSort == SortOption.date
+                                      ? Colors.deepOrange
+                                      : Colors.grey.shade400,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                       ],

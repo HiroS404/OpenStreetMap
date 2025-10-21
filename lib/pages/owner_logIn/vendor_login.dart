@@ -258,7 +258,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                                     topRight: Radius.circular(30),
                                   ),
                                   child: Image.asset(
-                                    'Assets/login/loginimage.png',
+                                    'assets/login/loginimage.png',
                                     fit: BoxFit.cover,
                                     height: 200,
                                     width: double.infinity,
@@ -282,7 +282,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
                                     bottomRight: Radius.circular(30),
                                   ),
                                   child: Image.asset(
-                                    'Assets/login/loginimage.png',
+                                    'assets/login/loginimage.png',
                                     fit: BoxFit.cover,
                                     height: double.infinity,
                                   ),

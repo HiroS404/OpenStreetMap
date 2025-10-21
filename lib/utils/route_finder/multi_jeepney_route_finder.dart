@@ -1,6 +1,5 @@
 // utils/route_finder/multi_jeepney_route_finder.dart
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:map_try/model/route_loader.dart';
@@ -81,7 +80,7 @@ class MultiJeepneyRouteResult {
   });
 
   int get numberOfTransfers => transfers.length;
-  
+
   String get routeSummary {
     return segments.map((s) => s.route.routeNumber).join(' → ');
   }
@@ -106,32 +105,38 @@ class _PartialPath {
   });
 
   _PartialPath.initial(LatLng start)
-      : segments = [],
-        transfers = [],
-        currentLocation = start,
-        accumulatedScore = 0.0,
-        accumulatedDistance = 0.0,
-        usedRoutes = <String>{};
+    : segments = [],
+      transfers = [],
+      currentLocation = start,
+      accumulatedScore = 0.0,
+      accumulatedDistance = 0.0,
+      usedRoutes = <String>{};
 }
 
 class MultiJeepneyRouteFinder {
   final Distance _distance = const Distance();
   final EnhancedRouteFinder _singleRouteFinder = EnhancedRouteFinder();
-  
+
   List<TransferSpot> _transferSpots = [];
-  
+
   // Tunable parameters
   static const int MAX_TRANSFERS = 2;
   static const double MAX_TOTAL_DURATION_MINUTES = 120.0; // 2 hours max
   static const double MAX_TOTAL_WALK_DISTANCE = 1000.0; // 1km max walking
-  static const double PRUNING_THRESHOLD_MULTIPLIER = 1.5; // Prune paths 50% worse than current best
+  static const double PRUNING_THRESHOLD_MULTIPLIER =
+      1.5; // Prune paths 50% worse than current best
 
   // Load transfer spots from JSON
   Future<void> loadTransferSpots() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/transfer_spots.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/transfer_spots.json',
+      );
       final List<dynamic> jsonData = json.decode(jsonString) as List;
-      _transferSpots = jsonData.map((e) => TransferSpot.fromJson(e as Map<String, dynamic>)).toList();
+      _transferSpots =
+          jsonData
+              .map((e) => TransferSpot.fromJson(e as Map<String, dynamic>))
+              .toList();
       print('✅ Loaded ${_transferSpots.length} transfer spots');
     } catch (e) {
       print('❌ Error loading transfer spots: $e');
@@ -146,7 +151,7 @@ class MultiJeepneyRouteFinder {
     double maxDistance,
   ) {
     List<JeepneyRoute> nearbyRoutes = [];
-    
+
     for (final route in allRoutes) {
       for (final coord in route.coordinates) {
         final dist = _distance.as(LengthUnit.Meter, coord, location);
@@ -156,7 +161,7 @@ class MultiJeepneyRouteFinder {
         }
       }
     }
-    
+
     return nearbyRoutes;
   }
 
@@ -166,11 +171,11 @@ class MultiJeepneyRouteFinder {
     double maxDistanceFromRoute,
   ) {
     List<TransferSpot> accessibleSpots = [];
-    
+
     for (final spot in _transferSpots) {
       // FIXED: Convert route number to string for comparison
       if (!spot.routes.contains(route.routeNumber.toString())) continue;
-      
+
       for (final coord in route.coordinates) {
         final dist = _distance.as(LengthUnit.Meter, coord, spot.location);
         if (dist <= maxDistanceFromRoute) {
@@ -179,7 +184,7 @@ class MultiJeepneyRouteFinder {
         }
       }
     }
-    
+
     return accessibleSpots;
   }
 
@@ -205,18 +210,25 @@ class MultiJeepneyRouteFinder {
     List<MultiJeepneyRouteResult> results = [];
 
     // PRUNING 1: If current score already exceeds best by threshold, abort
-    if (currentPath.accumulatedScore > currentBestScore * PRUNING_THRESHOLD_MULTIPLIER) {
+    if (currentPath.accumulatedScore >
+        currentBestScore * PRUNING_THRESHOLD_MULTIPLIER) {
       return results;
     }
 
     // PRUNING 2: If total walking exceeds limit, abort
-    double totalWalking = currentPath.transfers.fold(0.0, (sum, t) => sum + t.walkDistance);
+    double totalWalking = currentPath.transfers.fold(
+      0.0,
+      (sum, t) => sum + t.walkDistance,
+    );
     if (totalWalking > MAX_TOTAL_WALK_DISTANCE) {
       return results;
     }
 
     // PRUNING 3: Check if we're making geographical progress
-    final currentDistToDest = _distanceToDestination(currentPath.currentLocation, destination);
+    final currentDistToDest = _distanceToDestination(
+      currentPath.currentLocation,
+      destination,
+    );
 
     // Base case: Try direct route to destination
     final directRouteCandidates = _findRoutesNearLocation(
@@ -230,14 +242,18 @@ class MultiJeepneyRouteFinder {
 
     for (final route in directRouteCandidates) {
       // Skip if already used
-      if (currentPath.usedRoutes.contains(route.routeNumber.toString())) continue;
+      if (currentPath.usedRoutes.contains(route.routeNumber.toString()))
+        continue;
 
       // Evaluate route from current location to destination
       final meta = _singleRouteFinder.evaluateRoute(
         route.coordinates,
         currentPath.currentLocation,
         destination,
-        maxBoardDistance: currentPath.segments.isEmpty ? maxBoardDistance : maxTransferWalkDistance,
+        maxBoardDistance:
+            currentPath.segments.isEmpty
+                ? maxBoardDistance
+                : maxTransferWalkDistance,
         maxAlightDistance: maxAlightDistance,
       );
 
@@ -245,8 +261,11 @@ class MultiJeepneyRouteFinder {
 
       // Calculate final score and distance
       final finalScore = currentPath.accumulatedScore + meta.score;
-      final finalDistance = currentPath.accumulatedDistance + 
-          meta.boardDistM + meta.jeepneyDistM + meta.alightDistM;
+      final finalDistance =
+          currentPath.accumulatedDistance +
+          meta.boardDistM +
+          meta.jeepneyDistM +
+          meta.alightDistM;
 
       // Estimate total duration
       final finalDuration = _estimateTotalDuration(
@@ -268,16 +287,20 @@ class MultiJeepneyRouteFinder {
         ),
       ];
 
-      results.add(MultiJeepneyRouteResult(
-        segments: segments,
-        transfers: currentPath.transfers,
-        totalScore: finalScore,
-        totalDistance: finalDistance,
-        totalDuration: finalDuration,
-      ));
+      results.add(
+        MultiJeepneyRouteResult(
+          segments: segments,
+          transfers: currentPath.transfers,
+          totalScore: finalScore,
+          totalDistance: finalDistance,
+          totalDuration: finalDuration,
+        ),
+      );
 
       if (debug && isTopLevel) {
-        print('   ✅ Found path: ${segments.map((s) => s.route.routeNumber).join(" → ")} (${(finalDuration / 60).toStringAsFixed(0)}min)');
+        print(
+          '   ✅ Found path: ${segments.map((s) => s.route.routeNumber).join(" → ")} (${(finalDuration / 60).toStringAsFixed(0)}min)',
+        );
       }
     }
 
@@ -285,11 +308,12 @@ class MultiJeepneyRouteFinder {
     if (transfersRemaining > 0) {
       for (final transferSpot in _transferSpots) {
         // Find routes that serve this transfer spot
-        final candidateRoutes = allRoutes.where((route) {
-          final routeNumStr = route.routeNumber.toString();
-          if (currentPath.usedRoutes.contains(routeNumStr)) return false;
-          return transferSpot.routes.contains(routeNumStr);
-        }).toList();
+        final candidateRoutes =
+            allRoutes.where((route) {
+              final routeNumStr = route.routeNumber.toString();
+              if (currentPath.usedRoutes.contains(routeNumStr)) return false;
+              return transferSpot.routes.contains(routeNumStr);
+            }).toList();
 
         if (candidateRoutes.isEmpty) continue;
 
@@ -299,7 +323,10 @@ class MultiJeepneyRouteFinder {
             route.coordinates,
             currentPath.currentLocation,
             transferSpot.location,
-            maxBoardDistance: currentPath.segments.isEmpty ? maxBoardDistance : maxTransferWalkDistance,
+            maxBoardDistance:
+                currentPath.segments.isEmpty
+                    ? maxBoardDistance
+                    : maxTransferWalkDistance,
             maxAlightDistance: maxTransferWalkDistance,
           );
 
@@ -315,19 +342,24 @@ class MultiJeepneyRouteFinder {
           if (transferWalkDist > maxTransferWalkDistance) continue;
 
           // Calculate new accumulated values
-          final newScore = currentPath.accumulatedScore + 
-              meta.score + 
-              (transferWalkDist * transferWalkWeight) + 
+          final newScore =
+              currentPath.accumulatedScore +
+              meta.score +
+              (transferWalkDist * transferWalkWeight) +
               transferPenalty;
-          
-          final newDistance = currentPath.accumulatedDistance + 
-              meta.boardDistM + 
-              meta.jeepneyDistM + 
-              meta.alightDistM + 
+
+          final newDistance =
+              currentPath.accumulatedDistance +
+              meta.boardDistM +
+              meta.jeepneyDistM +
+              meta.alightDistM +
               transferWalkDist;
 
           // PRUNING 5: Check if new location is closer to destination (relaxed)
-          final newDistToDest = _distanceToDestination(transferSpot.location, destination);
+          final newDistToDest = _distanceToDestination(
+            transferSpot.location,
+            destination,
+          );
           if (newDistToDest >= currentDistToDest * 1.3) continue;
 
           // Create new partial path
@@ -351,7 +383,10 @@ class MultiJeepneyRouteFinder {
             currentLocation: transferSpot.location,
             accumulatedScore: newScore,
             accumulatedDistance: newDistance,
-            usedRoutes: Set<String>.from([...currentPath.usedRoutes, route.routeNumber.toString()]),
+            usedRoutes: Set<String>.from([
+              ...currentPath.usedRoutes,
+              route.routeNumber.toString(),
+            ]),
           );
 
           if (debug && isTopLevel) {
@@ -382,7 +417,11 @@ class MultiJeepneyRouteFinder {
   }
 
   // Helper: Estimate total duration
-  double _estimateTotalDuration(_PartialPath path, RouteEvaluationMeta finalMeta, double finalTransferWalk) {
+  double _estimateTotalDuration(
+    _PartialPath path,
+    RouteEvaluationMeta finalMeta,
+    double finalTransferWalk,
+  ) {
     const walkSpeed = 1.4; // m/s
     const jeepneySpeed = 5.56; // m/s (20 km/h)
 
@@ -459,8 +498,12 @@ class MultiJeepneyRouteFinder {
     if (debug) {
       print('\n✅ BEST ROUTE: ${bestResult.routeSummary}');
       print('   Transfers: ${bestResult.numberOfTransfers}');
-      print('   Distance: ${(bestResult.totalDistance / 1000).toStringAsFixed(2)}km');
-      print('   Duration: ${(bestResult.totalDuration / 60).toStringAsFixed(0)}min');
+      print(
+        '   Distance: ${(bestResult.totalDistance / 1000).toStringAsFixed(2)}km',
+      );
+      print(
+        '   Duration: ${(bestResult.totalDuration / 60).toStringAsFixed(0)}min',
+      );
       if (allResults.length > 1) {
         print('   (Found ${allResults.length} alternatives)\n');
       }
