@@ -184,7 +184,7 @@ class RestoDetailScreen extends StatelessWidget {
                           ),
                           icon: const Icon(Icons.directions, color: _brand),
                           label: const Text(
-                            'Go to directionszzz',
+                            'Go to directions',
                             style: TextStyle(color: _brand),
                           ),
                           onPressed: () {
