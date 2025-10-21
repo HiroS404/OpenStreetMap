@@ -851,7 +851,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
+                            "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
+
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder:
@@ -949,7 +950,8 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
+                            "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
+
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder:

@@ -225,7 +225,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                                     topRight: Radius.circular(30),
                                   ),
                                   child: Image.asset(
-                                    'Assets/login/loginimage.png',
+                                    'assets/login/loginimage.png',
                                     fit: BoxFit.cover,
                                     height: 200,
                                     width: double.infinity,
@@ -249,7 +249,7 @@ class _CreateRestoAccPageState extends State<CreateRestoAccPage> {
                                     bottomRight: Radius.circular(30),
                                   ),
                                   child: Image.asset(
-                                    'Assets/login/loginimage.png',
+                                    'assets/login/loginimage.png',
                                     fit: BoxFit.cover,
                                     height: double.infinity,
                                   ),

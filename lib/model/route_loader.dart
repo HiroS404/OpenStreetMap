@@ -19,7 +19,7 @@ class JeepneyRoute {
   factory JeepneyRoute.fromJson(Map<String, dynamic> json) {
     var coords = json['coordinates'] as List;
     List<LatLng> coordinatesList =
-    coords.map((coord) => LatLng(coord['lat'], coord['lng'])).toList();
+        coords.map((coord) => LatLng(coord['lat'], coord['lng'])).toList();
 
     return JeepneyRoute(
       routeNumber: json['route_number'],
@@ -31,9 +31,10 @@ class JeepneyRoute {
   Map<String, dynamic> toJson() => {
     'route_number': routeNumber,
     'direction': direction,
-    'coordinates': coordinates
-        .map((coord) => {'lat': coord.latitude, 'lng': coord.longitude})
-        .toList(),
+    'coordinates':
+        coordinates
+            .map((coord) => {'lat': coord.latitude, 'lng': coord.longitude})
+            .toList(),
   };
 }
 
@@ -49,7 +50,9 @@ Future<List<JeepneyRoute>> getRoutesFromLocal() async {
   var box = await Hive.openBox('routesBox');
   final List<dynamic>? stored = box.get('routes');
   if (stored == null) return [];
-  return stored.map((e) => JeepneyRoute.fromJson(Map<String, dynamic>.from(e))).toList();
+  return stored
+      .map((e) => JeepneyRoute.fromJson(Map<String, dynamic>.from(e)))
+      .toList();
 }
 
 Future<int?> getLastFetchTime() async {
@@ -61,7 +64,9 @@ Future<int?> getLastFetchTime() async {
 Future<List<JeepneyRoute>> fetchUpdatedRoutesFromFirebase() async {
   int? lastFetch = await getLastFetchTime();
   Timestamp? lastFetchTimestamp =
-  lastFetch != null ? Timestamp.fromMillisecondsSinceEpoch(lastFetch) : null;
+      lastFetch != null
+          ? Timestamp.fromMillisecondsSinceEpoch(lastFetch)
+          : null;
 
   Query query = FirebaseFirestore.instance.collection('routes');
   if (lastFetchTimestamp != null) {
@@ -72,18 +77,18 @@ Future<List<JeepneyRoute>> fetchUpdatedRoutesFromFirebase() async {
 
   if (snapshot.docs.isEmpty) return []; // nothing new
 
-  List<JeepneyRoute> newRoutes = snapshot.docs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return JeepneyRoute.fromJson(data);
-  }).toList();
-
+  List<JeepneyRoute> newRoutes =
+      snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return JeepneyRoute.fromJson(data);
+      }).toList();
 
   // Merge with existing local data
   List<JeepneyRoute> localData = await getRoutesFromLocal();
 
   // Remove outdated versions of updated routes
   Map<int, JeepneyRoute> routeMap = {
-    for (var route in localData) route.routeNumber: route
+    for (var route in localData) route.routeNumber: route,
   };
   for (var route in newRoutes) {
     routeMap[route.routeNumber] = route;
@@ -116,10 +121,9 @@ Future<List<JeepneyRoute>> getRoutes() async {
   }
 }
 
-
 // ----------------- BUNDLED JSON (fallback if ever crashed ang cloudd) -----------------
 Future<List<JeepneyRoute>> loadRoutesFromJson() async {
-  final String data = await rootBundle.loadString('Assets/jeepney_routes.json');
+  final String data = await rootBundle.loadString('assets/jeepney_routes.json');
   final jsonResult = json.decode(data);
 
   return (jsonResult['routes'] as List)
