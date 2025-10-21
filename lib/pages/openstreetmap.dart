@@ -852,6 +852,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           ),
                           child: Image.asset(
                             "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
+
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder:
@@ -950,6 +951,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           ),
                           child: Image.asset(
                             "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
+
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder:
@@ -1255,6 +1257,12 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               icon: const Icon(Icons.route),
               backgroundColor: Colors.white,
               onPressed: () {
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.blue,
+                  ), // Customize color
+                  strokeWidth: 4.0, // Customize thickness
+                );
                 if (!_isModalOpen) {
                   showRouteModal(context);
                 }

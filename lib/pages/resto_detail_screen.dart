@@ -187,10 +187,16 @@ class RestoDetailScreen extends StatelessWidget {
                           ),
                           icon: const Icon(Icons.directions, color: _brand),
                           label: const Text(
-                            'Go to directions',
+                            'Go to directionszzz',
                             style: TextStyle(color: _brand),
                           ),
                           onPressed: () {
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.blue,
+                              ), // Customize color
+                              strokeWidth: 4.0, // Customize thickness
+                            );
                             final GeoPoint location = data['location'];
                             final LatLng restoLatLng = LatLng(
                               location.latitude,
