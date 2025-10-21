@@ -637,404 +637,396 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
           padding: MediaQuery.of(context).viewInsets,
-          child: FractionallySizedBox(
-            heightFactor: 1,
-            child: DraggableScrollableSheet(
-              initialChildSize: 0.9,
-              minChildSize: 0.2,
-              maxChildSize: 1.0,
-              builder: (context, scrollController) {
-                return NotificationListener<DraggableScrollableNotification>(
-                  onNotification: (notification) {
-                    if (notification.extent <= notification.minExtent + 0.05) {
-                      Navigator.of(context).pop();
-                    }
-                    return true;
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 1.0,
+            minChildSize: 0.2,
+            maxChildSize: 1.0,
+            builder: (context, scrollController) {
+              return NotificationListener<DraggableScrollableNotification>(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                    child: ListView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        // Header
-                        const Center(
-                          child: Text(
-                            '🗺️ Turn-by-Turn Directions',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // Header
+                      const Center(
+                        child: Text(
+                          '🗺️ Turn-by-Turn Directions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                      ),
+                      const SizedBox(height: 16),
 
-                        // Debug info banner (only shown if debug mode active)
-                        if (DebugLocations.isDebugStartActive ||
-                            DebugLocations.isDebugDestinationActive)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.orange[50],
-                              border: Border.all(color: Colors.orange),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.bug_report,
-                                      size: 16,
-                                      color: Colors.orange,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'DEBUG MODE ACTIVE',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                if (DebugLocations.isDebugStartActive)
-                                  Text(
-                                    'Start: ${DebugLocations.getStartLocationName()}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                if (DebugLocations.isDebugDestinationActive)
-                                  Text(
-                                    'Destination: ${DebugLocations.getDestinationLocationName()}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                              ],
-                            ),
-                          ),
-
-                        // Total Summary
+                      // Debug info banner (only shown if debug mode active)
+                      if (DebugLocations.isDebugStartActive ||
+                          DebugLocations.isDebugDestinationActive)
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: Colors.blue[50],
+                            color: Colors.orange[50],
+                            border: Border.all(color: Colors.orange),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Total: ${_getTotalDistance()} • ${_getTotalTime()}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.bug_report,
+                                    size: 16,
+                                    color: Colors.orange,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'DEBUG MODE ACTIVE',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (_matchedRoute != null)
+                              const SizedBox(height: 4),
+                              if (DebugLocations.isDebugStartActive)
                                 Text(
-                                  'via Jeepney Route ${_matchedRoute!.routeNumber}',
-                                  style: TextStyle(color: Colors.grey[700]),
+                                  'Start: ${DebugLocations.getStartLocationName()}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              if (DebugLocations.isDebugDestinationActive)
+                                Text(
+                                  'Destination: ${DebugLocations.getDestinationLocationName()}',
+                                  style: const TextStyle(fontSize: 12),
                                 ),
                             ],
                           ),
                         ),
-                        const Divider(height: 32),
-                        if (_isMultiRoute && _multiRouteResult != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.purple[50],
-                              border: Border.all(color: Colors.purple),
-                              borderRadius: BorderRadius.circular(8),
+
+                      // Total Summary
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total: ${_getTotalDistance()} • ${_getTotalTime()}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.swap_horiz,
-                                  color: Colors.purple,
+                            if (_matchedRoute != null)
+                              Text(
+                                'via Jeepney Route ${_matchedRoute!.routeNumber}',
+                                style: TextStyle(color: Colors.grey[700]),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 32),
+                      if (_isMultiRoute && _multiRouteResult != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.purple[50],
+                            border: Border.all(color: Colors.purple),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.swap_horiz,
+                                color: Colors.purple,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Multi-Route Journey: ${_multiRouteResult!.routeSummary}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.purple,
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Multi-Route Journey: ${_multiRouteResult!.routeSummary}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '🔄 Transfer Required',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Transfer at: ${_multiRouteResult!.transfers[0].transferSpot.name}',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              Text(
+                                'Transfer walk: ${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)}m',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 32),
+                      ],
+
+                      // PART 1: Walk to boarding
+                      if (_walkToBoarding != null) ...[
+                        _buildSectionHeader(
+                          '🚶 PART 1: Walk to Jeepney Boarding Point',
+                          _walkToBoarding!.formattedDistance,
+                          _walkToBoarding!.formattedDuration,
+                        ),
+                        ..._walkToBoarding!.steps.map(
+                          (step) => _buildDirectionStep(step),
+                        ),
+                      ] else ...[
+                        _buildSectionHeader(
+                          '🚶 PART 1: Walk to Jeepney Boarding Point',
+                          '${walkingDistance.toStringAsFixed(0)} m',
+                          '~${(walkingDistance / 1.4 / 60).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(child: Text('1')),
+                          title: const Text('Walk to boarding area'),
+                          subtitle: Text(
+                            '${walkingDistance.toStringAsFixed(0)} meters',
+                          ),
+                        ),
+                      ],
+
+                      const Divider(height: 32),
+                      if (_isMultiRoute && _multiRouteResult != null) ...[
+                        // FIRST JEEPNEY
+                        _buildSectionHeader(
+                          '🚌 PART 2A: First Jeepney - Route ${_multiRouteResult!.segments[0].route.routeNumber}',
+                          '${(_multiRouteResult!.segments[0].meta.jeepneyDistM / 1000).toStringAsFixed(1)} km',
+                          '~${(_multiRouteResult!.segments[0].meta.jeepneyDistM / 333.33).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.orange,
+                            child: Icon(
+                              Icons.directions_bus,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            'Board Jeepney Route ${_multiRouteResult!.segments[0].route.routeNumber}',
+                          ),
+                          subtitle: Text(
+                            _multiRouteResult!.segments[0].route.direction,
+                          ),
+                        ),
+
+                        // IMAGE for first jeepney
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Image.asset(
+                            "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
+                            height: 200,
+                            fit: BoxFit.contain,
+                            errorBuilder:
+                                (context, error, stackTrace) => Container(
+                                  height: 100,
+                                  color: Colors.grey[200],
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.directions_bus,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Route ${_multiRouteResult!.segments[0].route.routeNumber}',
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.amber[50],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '🔄 Transfer Required',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Transfer at: ${_multiRouteResult!.transfers[0].transferSpot.name}',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                Text(
-                                  'Transfer walk: ${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)}m',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(height: 32),
-                        ],
+                        ),
 
-                        // PART 1: Walk to boarding
-                        if (_walkToBoarding != null) ...[
-                          _buildSectionHeader(
-                            '🚶 PART 1: Walk to Jeepney Boarding Point',
-                            _walkToBoarding!.formattedDistance,
-                            _walkToBoarding!.formattedDuration,
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.orange,
+                            child: Icon(
+                              Icons.arrow_downward,
+                              color: Colors.white,
+                            ),
                           ),
-                          ..._walkToBoarding!.steps.map(
+                          title: Text(
+                            'Alight at ${_multiRouteResult!.transfers[0].transferSpot.name}',
+                          ),
+                          subtitle: const Text('Prepare to transfer'),
+                        ),
+                        const Divider(height: 32),
+
+                        // TRANSFER WALK
+                        _buildSectionHeader(
+                          '🚶 PART 2B: Transfer Walk',
+                          '${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)} m',
+                          '~${(_multiRouteResult!.transfers[0].walkDistance / 1.4 / 60).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.purple,
+                            child: Icon(
+                              Icons.transfer_within_a_station,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            'Walk to Route ${_multiRouteResult!.segments[1].route.routeNumber} boarding point',
+                          ),
+                          subtitle: Text(
+                            '${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)} meters',
+                          ),
+                        ),
+                        const Divider(height: 32),
+
+                        // SECOND JEEPNEY
+                        _buildSectionHeader(
+                          '🚌 PART 2C: Second Jeepney - Route ${_multiRouteResult!.segments[1].route.routeNumber}',
+                          '${(_multiRouteResult!.segments[1].meta.jeepneyDistM / 1000).toStringAsFixed(1)} km',
+                          '~${(_multiRouteResult!.segments[1].meta.jeepneyDistM / 333.33).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.blue,
+                            child: Icon(
+                              Icons.directions_bus,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            'Board Jeepney Route ${_multiRouteResult!.segments[1].route.routeNumber}',
+                          ),
+                          subtitle: Text(
+                            _multiRouteResult!.segments[1].route.direction,
+                          ),
+                        ),
+
+                        // IMAGE for second jeepney
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Image.asset(
+                            "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
+                            height: 200,
+                            fit: BoxFit.contain,
+                            errorBuilder:
+                                (context, error, stackTrace) => Container(
+                                  height: 100,
+                                  color: Colors.grey[200],
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.directions_bus,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Route ${_multiRouteResult!.segments[1].route.routeNumber}',
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                          ),
+                        ),
+
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.orange,
+                            child: Icon(
+                              Icons.arrow_downward,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: const Text('Alight near destination'),
+                          subtitle: Text(
+                            'Destination is ${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)}m away',
+                          ),
+                        ),
+
+                        const Divider(height: 32),
+
+                        // PART 3: Walk to destination
+                        if (_walkToDestination != null) ...[
+                          _buildSectionHeader(
+                            '🚶 PART 3: Walk to Final Destination',
+                            _walkToDestination!.formattedDistance,
+                            _walkToDestination!.formattedDuration,
+                          ),
+                          ..._walkToDestination!.steps.map(
                             (step) => _buildDirectionStep(step),
                           ),
                         ] else ...[
                           _buildSectionHeader(
-                            '🚶 PART 1: Walk to Jeepney Boarding Point',
-                            '${walkingDistance.toStringAsFixed(0)} m',
-                            '~${(walkingDistance / 1.4 / 60).toStringAsFixed(0)} min',
+                            '🚶 PART 3: Walk to Final Destination',
+                            '${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)} m',
+                            '~${(_multiRouteResult!.segments[1].meta.alightDistM / 1.4 / 60).toStringAsFixed(0)} min',
                           ),
                           ListTile(
                             leading: const CircleAvatar(child: Text('1')),
-                            title: const Text('Walk to boarding area'),
+                            title: const Text('Walk to destination'),
                             subtitle: Text(
-                              '${walkingDistance.toStringAsFixed(0)} meters',
+                              '${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)} meters',
                             ),
                           ),
                         ],
-
-                        const Divider(height: 32),
-                        if (_isMultiRoute && _multiRouteResult != null) ...[
-                          // FIRST JEEPNEY
-                          _buildSectionHeader(
-                            '🚌 PART 2A: First Jeepney - Route ${_multiRouteResult!.segments[0].route.routeNumber}',
-                            '${(_multiRouteResult!.segments[0].meta.jeepneyDistM / 1000).toStringAsFixed(1)} km',
-                            '~${(_multiRouteResult!.segments[0].meta.jeepneyDistM / 333.33).toStringAsFixed(0)} min',
-                          ),
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.orange,
-                              child: Icon(
-                                Icons.directions_bus,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(
-                              'Board Jeepney Route ${_multiRouteResult!.segments[0].route.routeNumber}',
-                            ),
-                            subtitle: Text(
-                              _multiRouteResult!.segments[0].route.direction,
-                            ),
-                          ),
-
-                          // IMAGE for first jeepney
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: Image.asset(
-                              "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
-                              height: 200,
-                              fit: BoxFit.contain,
-                              errorBuilder:
-                                  (context, error, stackTrace) => Container(
-                                    height: 100,
-                                    color: Colors.grey[200],
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.directions_bus,
-                                            size: 40,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Route ${_multiRouteResult!.segments[0].route.routeNumber}',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                            ),
-                          ),
-
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.orange,
-                              child: Icon(
-                                Icons.arrow_downward,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(
-                              'Alight at ${_multiRouteResult!.transfers[0].transferSpot.name}',
-                            ),
-                            subtitle: const Text('Prepare to transfer'),
-                          ),
-                          const Divider(height: 32),
-
-                          // TRANSFER WALK
-                          _buildSectionHeader(
-                            '🚶 PART 2B: Transfer Walk',
-                            '${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)} m',
-                            '~${(_multiRouteResult!.transfers[0].walkDistance / 1.4 / 60).toStringAsFixed(0)} min',
-                          ),
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.purple,
-                              child: Icon(
-                                Icons.transfer_within_a_station,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(
-                              'Walk to Route ${_multiRouteResult!.segments[1].route.routeNumber} boarding point',
-                            ),
-                            subtitle: Text(
-                              '${_multiRouteResult!.transfers[0].walkDistance.toStringAsFixed(0)} meters',
-                            ),
-                          ),
-                          const Divider(height: 32),
-
-                          // SECOND JEEPNEY
-                          _buildSectionHeader(
-                            '🚌 PART 2C: Second Jeepney - Route ${_multiRouteResult!.segments[1].route.routeNumber}',
-                            '${(_multiRouteResult!.segments[1].meta.jeepneyDistM / 1000).toStringAsFixed(1)} km',
-                            '~${(_multiRouteResult!.segments[1].meta.jeepneyDistM / 333.33).toStringAsFixed(0)} min',
-                          ),
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.blue,
-                              child: Icon(
-                                Icons.directions_bus,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(
-                              'Board Jeepney Route ${_multiRouteResult!.segments[1].route.routeNumber}',
-                            ),
-                            subtitle: Text(
-                              _multiRouteResult!.segments[1].route.direction,
-                            ),
-                          ),
-
-                          // IMAGE for second jeepney
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: Image.asset(
-                              "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
-                              height: 200,
-                              fit: BoxFit.contain,
-                              errorBuilder:
-                                  (context, error, stackTrace) => Container(
-                                    height: 100,
-                                    color: Colors.grey[200],
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.directions_bus,
-                                            size: 40,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Route ${_multiRouteResult!.segments[1].route.routeNumber}',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                            ),
-                          ),
-
-                          ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.orange,
-                              child: Icon(
-                                Icons.arrow_downward,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: const Text('Alight near destination'),
-                            subtitle: Text(
-                              'Destination is ${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)}m away',
-                            ),
-                          ),
-
-                          const Divider(height: 32),
-
-                          // PART 3: Walk to destination
-                          if (_walkToDestination != null) ...[
-                            _buildSectionHeader(
-                              '🚶 PART 3: Walk to Final Destination',
-                              _walkToDestination!.formattedDistance,
-                              _walkToDestination!.formattedDuration,
-                            ),
-                            ..._walkToDestination!.steps.map(
-                              (step) => _buildDirectionStep(step),
-                            ),
-                          ] else ...[
-                            _buildSectionHeader(
-                              '🚶 PART 3: Walk to Final Destination',
-                              '${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)} m',
-                              '~${(_multiRouteResult!.segments[1].meta.alightDistM / 1.4 / 60).toStringAsFixed(0)} min',
-                            ),
-                            ListTile(
-                              leading: const CircleAvatar(child: Text('1')),
-                              title: const Text('Walk to destination'),
-                              subtitle: Text(
-                                '${_multiRouteResult!.segments[1].meta.alightDistM.toStringAsFixed(0)} meters',
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 80),
-                        ],
+                        const SizedBox(height: 80),
                       ],
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         );
       },

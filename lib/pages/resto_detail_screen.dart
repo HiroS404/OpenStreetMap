@@ -25,7 +25,7 @@ class RestoDetailScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: _brand,
         title: const Text(
-          'Restaurant Details',
+          'Restaurant Detailssss',
           style: TextStyle(color: Colors.white, fontSize: 15),
         ),
         leading: IconButton(
