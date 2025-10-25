@@ -213,7 +213,7 @@ class RestoDetailScreen extends StatelessWidget {
                 ),
               ),
 
-              // 🧭 SUBTLE SEPARATOR
+              // SUBTLE SEPARATOR
               Container(
                 width: 1,
                 height: double.infinity,
@@ -237,7 +237,7 @@ class RestoDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      buildMenuList(menuList),
+                      buildMenuList(menuList, isDesktop: true),
                       const SizedBox(height: 30),
                       const Text(
                         'Gallery',
@@ -366,7 +366,7 @@ class RestoDetailScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
-              buildMenuList(menuList),
+              buildMenuList(menuList, isDesktop: false),
             ],
           ),
         ),
@@ -388,7 +388,11 @@ class RestoDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget buildMenuList(List menuList) {
+  //  version that adapts to screen size:
+
+  Widget buildMenuList(List menuList, {bool isDesktop = false}) {
+    if (menuList.isEmpty) return const SizedBox.shrink();
+
     final groupedMenu = groupMenuByCategory(menuList);
 
     return Column(
@@ -407,75 +411,115 @@ class RestoDetailScreen extends StatelessWidget {
                   child: Text(
                     category,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
 
-                // Horizontal gallery of items
-                SizedBox(
-                  height: 100, // increased height to allow text wrapping
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
+                // Desktop: Grid layout, Mobile: Horizontal scroll
+                if (isDesktop)
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, // 2 columns
+                          childAspectRatio: 1.5, // width:height ratio
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
                     itemCount: items.length,
-                    separatorBuilder: (context, _) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
-                      final item = items[index];
-                      final itemName = (item['name'] ?? '').toString();
-                      final price = (item['price'] ?? '').toString();
-
-                      return Container(
-                        width: 200, // card width
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: _brand, width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(20),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Item name (full text visible, wraps to next line)
-                            Flexible(
-                              child: Text(
-                                itemName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                softWrap: true,
-                                overflow: TextOverflow.visible,
-                                maxLines: null, // allows unlimited lines
-                              ),
-                            ),
-
-                            // Price
-                            Text(
-                              price.isEmpty ? '' : '₱$price',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: _brand,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+                      return _buildMenuCard(items[index]);
                     },
+                  )
+                else
+                  // Mobile: Horizontal scroll (original)
+                  SizedBox(
+                    height: 180,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: items.length,
+                      separatorBuilder:
+                          (context, _) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        return SizedBox(
+                          width: 270,
+                          child: _buildMenuCard(items[index]),
+                        );
+                      },
+                    ),
                   ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 10),
+                  child: Divider(color: Colors.grey, thickness: 1),
                 ),
               ],
             );
           }).toList(),
+    );
+  }
+
+  Widget _buildMenuCard(Map<String, dynamic> item) {
+    final itemName = (item['name'] ?? '').toString();
+    final price = (item['price'] ?? '').toString();
+    final description =
+        (item['description'] ?? 'Did not provide a description').toString();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _brand, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              itemName,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Flexible(
+            flex: 2,
+            child: Text(
+              description,
+              style: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+              ),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            price.isEmpty ? '' : '₱$price',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: _brand,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

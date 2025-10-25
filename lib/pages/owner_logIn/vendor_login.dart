@@ -85,7 +85,7 @@ class _VendorLoginPageState extends State<VendorLoginPage> {
             child: Column(
               children: [
                 Text(
-                  "Welcome!",
+                  "Welcome Back!",
                   style: TextStyle(
                     fontSize: isMobile ? 28 : 40,
                     fontWeight: FontWeight.bold,

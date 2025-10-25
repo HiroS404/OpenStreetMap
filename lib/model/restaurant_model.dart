@@ -10,6 +10,7 @@ class Restaurant {
   final List<Map<String, dynamic>> menu;
   final List<String> categories;
   final GeoPoint? location;
+  final String? hours;
 
   Restaurant({
     required this.id, //
@@ -21,6 +22,7 @@ class Restaurant {
     required this.menu,
     required this.categories,
     this.location,
+    this.hours,
   });
 
   double? get latitude => location?.latitude;
@@ -55,6 +57,7 @@ class Restaurant {
       optionalImageUrl: data['optionalImageUrl'] ?? '',
       categories: (data['category'] as List?)?.cast<String>() ?? [],
       location: data['location'] as GeoPoint?,
+      hours: data['hours'] as String?,
     );
   }
 
@@ -67,6 +70,8 @@ class Restaurant {
       'menu': menu,
       'optionalImageUrl': optionalImageUrl,
       'location': location,
+      'category': categories,
+      'hours': hours,
     };
   }
 }

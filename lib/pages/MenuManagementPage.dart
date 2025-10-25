@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:map_try/pages/home_page.dart';
 
 class MenuManagementPage extends StatefulWidget {
   final Map<String, dynamic> vendorData;
@@ -19,6 +20,8 @@ class MenuManagementPage extends StatefulWidget {
 class _MenuManagementPageState extends State<MenuManagementPage> {
   final TextEditingController _menuNameController = TextEditingController();
   final TextEditingController _menuPriceController = TextEditingController();
+  final TextEditingController _menuDescriptionController =
+      TextEditingController();
 
   final List<String> _categories = [];
   String? _selectedCategory;
@@ -72,6 +75,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
       'name': _menuNameController.text.trim(),
       'category': _selectedCategory!,
       'price': double.tryParse(_menuPriceController.text.trim()) ?? 0.0,
+      'description': _menuDescriptionController.text.trim(),
     };
 
     setState(() {
@@ -84,6 +88,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
     // Clear controllers
     _menuNameController.clear();
     _menuPriceController.clear();
+    _menuDescriptionController.clear();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -204,6 +209,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
   void dispose() {
     _menuNameController.dispose();
     _menuPriceController.dispose();
+    _menuDescriptionController.dispose();
     super.dispose();
   }
 
@@ -304,13 +310,41 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                     ),
                     const SizedBox(height: 12),
 
+                    // Description field
+                    TextField(
+                      controller: _menuDescriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Description (Optional)',
+                        prefixIcon: const Icon(Icons.description),
+                        border: const OutlineInputBorder(),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: AppColors.secondary,
+                            width: 2.0,
+                          ),
+                        ),
+                        floatingLabelStyle: const TextStyle(
+                          color: AppColors.secondary,
+                        ),
+                        hintText: 'Add a brief description of the menu item',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
                     // Price field
                     TextField(
                       controller: _menuPriceController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Price',
-                        prefixIcon: Icon(Icons.attach_money),
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: Text(
+                            '₱',
+                            style: TextStyle(color: Colors.black, fontSize: 20),
+                          ),
+                        ),
                         border: OutlineInputBorder(),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -395,7 +429,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                       ),
                     ),
 
-                    // ✅ If more than 3 items → ExpansionTile
+                    // If more than 3 items → ExpansionTile
                     if (showAsDropdown)
                       ExpansionTile(
                         tilePadding: const EdgeInsets.only(left: 8.0),
@@ -454,26 +488,42 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
     final TextEditingController priceController = TextEditingController(
       text: item['price'].toString(),
     );
+    final TextEditingController descriptionController = TextEditingController(
+      text: item['description'] ?? '',
+    );
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Menu Item'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Menu Name'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Price'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Menu Name'),
+                ),
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 9,
+
+                  decoration: const InputDecoration(
+                    labelText: 'Description (Optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Price'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -485,6 +535,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                 final updatedName = nameController.text.trim();
                 final updatedPrice =
                     double.tryParse(priceController.text.trim()) ?? 0.0;
+                final updatedDescription = descriptionController.text.trim();
 
                 if (updatedName.isEmpty) return;
 
@@ -493,6 +544,7 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
                     'name': updatedName,
                     'price': updatedPrice,
                     'category': category,
+                    'description': updatedDescription,
                   };
                 });
 
@@ -524,21 +576,35 @@ class _MenuManagementPageState extends State<MenuManagementPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Name + Price
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item['name'] ?? '',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['name'] ?? '',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              Text(
-                '₱${item['price']}',
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ],
+                if (item['description'] != null &&
+                    item['description'].isNotEmpty)
+                  Text(
+                    item['description'],
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                Text(
+                  '₱${item['price']}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
           ),
 
           // Edit + Delete buttons

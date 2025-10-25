@@ -124,7 +124,7 @@ Widget buildDesktopRestaurantCard({
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  restaurant.address ?? 'No address provided',
+                  restaurant.description ?? 'No address provided',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -138,18 +138,22 @@ Widget buildDesktopRestaurantCard({
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.button,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.star, size: 12, color: Colors.white),
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 15,
+                            color: Colors.green,
+                          ),
                           SizedBox(width: 4),
                           Text(
-                            '0',
+                            restaurant.hours ?? 'No opening hours provided',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Colors.green,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -192,9 +196,9 @@ class DesktopCategoryPills extends StatelessWidget {
     final categories = [
       "All",
       "Nearby",
-      "Meals",
-      "Drinks",
-      "Fast Food",
+      "Batchoy",
+      "Chicken",
+      "Unli Rice",
       "Snacks",
     ];
 
@@ -210,7 +214,12 @@ class DesktopCategoryPills extends StatelessWidget {
         for (final category in categories)
           GestureDetector(
             onTap: () {
-              onCategorySelected(category);
+              // Toggle: if already selected, deselect to "All"
+              if (selectedCategory == category) {
+                onCategorySelected("All");
+              } else {
+                onCategorySelected(category);
+              }
               // Clear search when category is selected
               // if (context.findAncestorStateOfType<_HomePageState>() != null) {
               //   final homeState =
@@ -371,7 +380,8 @@ Widget sectionHeader(String title, {bool isDesktop = false}) {
 Widget restoCard({
   required String headerImageUrl,
   required String name,
-  required String address,
+  required String description,
+  required String hours,
   bool isDesktop = false,
 }) {
   final bool hasImage = headerImageUrl.isNotEmpty;
@@ -392,6 +402,7 @@ Widget restoCard({
                 fit: BoxFit.cover,
               )
               : null,
+
       boxShadow: [
         BoxShadow(
           color: AppColors.sysAccent.withAlpha(30),
@@ -440,13 +451,13 @@ Widget restoCard({
                   color: Colors.white,
                 ),
                 const SizedBox(width: 2),
-                Text(
-                  "0",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isDesktop ? 14 : 12,
-                  ),
-                ),
+                // Text(
+                //   "0",
+                //   style: TextStyle(
+                //     color: Colors.white,
+                //     fontSize: isDesktop ? 14 : 12,
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -486,8 +497,8 @@ Widget restoCard({
                     Text(
                       name,
                       style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        color: AppColors.secondary,
+                        fontWeight: FontWeight.w900,
                         fontSize: isDesktop ? 22 : 19,
                         height: 1.2,
                       ),
@@ -496,14 +507,46 @@ Widget restoCard({
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      address,
+                      description,
                       style: TextStyle(
-                        color: AppColors.secondary,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: isDesktop ? 15 : 13.5,
+                        overflow: TextOverflow.visible,
                       ),
-                      maxLines: isDesktop ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
+
+                      maxLines: isDesktop ? 5 : 2,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 15,
+                                color: Colors.green[300],
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                hours,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -549,7 +592,8 @@ Widget buildDesktopGrid(
         child: restoCard(
           headerImageUrl: resto.headerImageUrl,
           name: resto.name,
-          address: resto.address ?? '',
+          description: resto.description ?? '',
+          hours: resto.hours ?? '',
           isDesktop: true,
         ),
       );
@@ -579,9 +623,9 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
     final mainCategories = [
       "All",
       "Nearby",
-      "Meals",
-      "Drinks",
-      "Fast Food",
+      "Batchoy",
+      "Chicken",
+      "Unli Rice",
       "Snacks",
     ];
 
@@ -716,8 +760,13 @@ class DesktopCategoryChipsHeader extends SliverPersistentHeaderDelegate {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: TextButton(
+        //mobile toggle logic
         onPressed: () {
-          onCategorySelected(label);
+          if (selectedCategory == label) {
+            onCategorySelected("All");
+          } else {
+            onCategorySelected(label);
+          }
           // Clear search when category is selected
           if (context.findAncestorStateOfType<_HomePageState>() != null) {
             final homeState =
@@ -780,9 +829,9 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
     final mainCategories = [
       "All",
       "Nearby",
-      "Meals",
-      "Drinks",
-      "Fast Food",
+      "Batchoy",
+      "Chicken",
+      "Unli Rice",
       "Snacks",
     ];
 
@@ -898,7 +947,13 @@ class CategoryChipsHeader extends SliverPersistentHeaderDelegate {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: TextButton(
-        onPressed: () => onCategorySelected(label),
+        onPressed: () {
+          if (selectedCategory == label) {
+            onCategorySelected("All");
+          } else {
+            onCategorySelected(label);
+          }
+        },
         style: TextButton.styleFrom(
           backgroundColor: isSelected ? AppColors.button : AppColors.sysBg,
           foregroundColor: isSelected ? Colors.white : Colors.black87,
@@ -970,15 +1025,23 @@ class _HomePageState extends State<HomePage> {
 
   void _updateFilteredRestaurants() {
     final query = _searchQuery.toLowerCase();
+    final isNearbySelected = _selectedCategory == "Nearby";
+    final hasSearchQuery = query.isNotEmpty && _searchQuery.trim().isNotEmpty;
 
     _filteredRestaurants =
         _restaurants.where((resto) {
-          if (_selectedCategory == "Nearby") {
+          // First, check if we need to apply nearby filter
+          bool passesNearbyFilter = true;
+          if (isNearbySelected) {
             if (_userLocation == null) return false;
-            return _isRestaurantNearby(resto);
+            passesNearbyFilter = _isRestaurantNearby(resto);
           }
 
-          if (query.isNotEmpty) {
+          // If nearby filter fails, exclude this restaurant
+          if (!passesNearbyFilter) return false;
+
+          // Now apply search filter if there's a query
+          if (hasSearchQuery) {
             final nameMatch = resto.name.toLowerCase().contains(query);
             final addressMatch = (resto.address ?? '').toLowerCase().contains(
               query,
@@ -990,18 +1053,22 @@ class _HomePageState extends State<HomePage> {
             });
 
             return nameMatch || addressMatch || menuMatch;
-          } else {
-            return _selectedCategory == "All"
-                ? true
-                : resto.menu.any(
-                  (item) =>
-                      (item['category'] as String).toLowerCase() ==
-                      _selectedCategory.toLowerCase(),
-                );
           }
+
+          // If no search query, apply category filter (but Nearby already handled)
+          if (_selectedCategory == "All" || isNearbySelected) {
+            return true;
+          }
+
+          return resto.menu.any(
+            (item) =>
+                (item['category'] as String).toLowerCase() ==
+                _selectedCategory.toLowerCase(),
+          );
         }).toList();
 
-    if (_selectedCategory == "Nearby" && _userLocation != null) {
+    // Sort by distance if nearby is involved
+    if (isNearbySelected && _userLocation != null) {
       _filteredRestaurants.sort((a, b) {
         final distA = _distance.as(
           LengthUnit.Meter,
@@ -1017,17 +1084,21 @@ class _HomePageState extends State<HomePage> {
       });
     }
 
-    // Set the results header - UPDATED LOGIC
-    if (query.isNotEmpty && _searchQuery.trim().isNotEmpty) {
-      // Only show if there's actual text (not just whitespace)
+    // Update results header with combined logic
+    if (hasSearchQuery && isNearbySelected) {
+      // Combined: search + nearby
       _resultsHeader =
-          "${_filteredRestaurants.length} results for '$_searchQuery'";
-    } else if (_selectedCategory != "All" && query.isEmpty) {
-      // Only show category results when not searching
+          "${_filteredRestaurants.length} Restaurant found for '$_searchQuery' Nearby";
+    } else if (hasSearchQuery) {
+      // Search only
       _resultsHeader =
-          "${_filteredRestaurants.length} results for '$_selectedCategory'";
+          "${_filteredRestaurants.length} Restaurant found for '$_searchQuery'";
+    } else if (_selectedCategory != "All") {
+      // Category only (including Nearby without search)
+      _resultsHeader =
+          "${_filteredRestaurants.length} Restaurant found for '$_selectedCategory'";
     } else {
-      _resultsHeader = null; // Don't show header for "All" or empty search
+      _resultsHeader = null;
     }
 
     setState(() {});
@@ -1369,7 +1440,7 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           flex: 1,
           child: Container(
-            padding: const EdgeInsets.all(40),
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1433,6 +1504,7 @@ class _HomePageState extends State<HomePage> {
                                     _searchQuery = "";
                                     _resultsHeader = null;
                                   });
+                                  _updateFilteredRestaurants();
                                 },
                               )
                               : null,
@@ -1459,7 +1531,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 // Category Pills
                 DesktopCategoryPills(
@@ -1470,7 +1542,7 @@ class _HomePageState extends State<HomePage> {
                   },
                   allCategories: _getAllCategories(),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 15),
 
                 // Section Title
                 // Results header
@@ -1493,7 +1565,7 @@ class _HomePageState extends State<HomePage> {
                           ? 'Hot Deals'
                           : _selectedCategory),
                   style: GoogleFonts.poppins(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
@@ -1741,46 +1813,46 @@ class _HomePageState extends State<HomePage> {
                                 tooltip: 'Register your Resto',
                               ),
                             ),
-                            Row(
-                              children: [
-                                badges.Badge(
-                                  position: badges.BadgePosition.topEnd(
-                                    top: -1,
-                                    end: -1,
-                                  ),
-                                  badgeStyle: const badges.BadgeStyle(
-                                    padding: EdgeInsets.all(0),
-                                    badgeColor: AppColors.button,
-                                  ),
-                                  badgeContent: const Text(
-                                    '0',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_none,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                //   const SizedBox(width: 6),
-                                //   Container(
-                                //     width: 38,
-                                //     height: 38,
-                                //     decoration: BoxDecoration(
-                                //       shape: BoxShape.circle,
-                                //       boxShadow: [
-                                //         BoxShadow(
-                                //           color: AppColors.sysAccent.withAlpha(40),
-                                //           blurRadius: 6,
-                                //           offset: const Offset(0, 2),
-                                //         ),
-                                //       ],
-                                //     ),
-                                //   ),
-                              ],
-                            ),
+                            // Row(
+                            //   children: [
+                            //     badges.Badge(
+                            //       position: badges.BadgePosition.topEnd(
+                            //         top: -1,
+                            //         end: -1,
+                            //       ),
+                            //       badgeStyle: const badges.BadgeStyle(
+                            //         padding: EdgeInsets.all(0),
+                            //         badgeColor: AppColors.button,
+                            //       ),
+                            //       badgeContent: const Text(
+                            //         '0',
+                            //         style: TextStyle(
+                            //           color: Colors.white,
+                            //           fontSize: 10,
+                            //         ),
+                            //       ),
+                            //       child: const Icon(
+                            //         Icons.notifications_none,
+                            //         color: Colors.white,
+                            //       ),
+                            //     ),
+                            //     //   const SizedBox(width: 6),
+                            //     //   Container(
+                            //     //     width: 38,
+                            //     //     height: 38,
+                            //     //     decoration: BoxDecoration(
+                            //     //       shape: BoxShape.circle,
+                            //     //       boxShadow: [
+                            //     //         BoxShadow(
+                            //     //           color: AppColors.sysAccent.withAlpha(40),
+                            //     //           blurRadius: 6,
+                            //     //           offset: const Offset(0, 2),
+                            //     //         ),
+                            //     //       ],
+                            //     //     ),
+                            //     //   ),
+                            //   ],
+                            // ),
                           ],
                         ),
                       ),
@@ -1973,7 +2045,7 @@ class _HomePageState extends State<HomePage> {
                           child: TextField(
                             controller: _searchController,
                             onChanged: (value) {
-                              _searchQuery = value;
+                              _searchQuery = value.toLowerCase();
                               _updateFilteredRestaurants();
                             },
                             decoration: InputDecoration(
@@ -2092,9 +2164,9 @@ class _HomePageState extends State<HomePage> {
                           (cat) =>
                               ![
                                 "All",
-                                "Meals",
-                                "Drinks",
-                                "Fast Food",
+                                "Batchoy",
+                                "Chicken",
+                                "Unli Rice",
                                 "Snacks",
                               ].contains(cat),
                         )
@@ -2337,7 +2409,8 @@ class _HomePageState extends State<HomePage> {
                                         child: restoCard(
                                           headerImageUrl: resto.headerImageUrl,
                                           name: resto.name,
-                                          address: resto.address ?? '',
+                                          description: resto.description ?? '',
+                                          hours: resto.hours ?? '',
                                         ),
                                       );
                                     },
@@ -2481,7 +2554,9 @@ class _HomePageState extends State<HomePage> {
                                               headerImageUrl:
                                                   resto.headerImageUrl,
                                               name: resto.name,
-                                              address: resto.address ?? '',
+                                              description:
+                                                  resto.description ?? '',
+                                              hours: resto.hours ?? '',
                                             ),
                                           );
                                         },
