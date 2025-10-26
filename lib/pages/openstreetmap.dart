@@ -13,6 +13,7 @@ import 'package:map_try/services/ors_service.dart';
 import 'package:map_try/utils/route_finder/route_finder.dart';
 import 'package:map_try/config/debug_locations.dart';
 import 'package:map_try/utils/route_finder/multi_jeepney_route_finder.dart';
+import 'package:map_try/config/route_colours.dart';
 
 class OpenstreetmapScreen extends StatefulWidget {
   final ValueNotifier<LatLng?> destinationNotifier;
@@ -415,7 +416,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       _firstJeepneyPolylines = [
         Polyline(
           points: firstSegment.meta.jeepneySegment,
-          color: const Color.fromARGB(255, 255, 143, 0),
+          color: RouteColors.getColorForRoute(firstSegment.route.routeNumber),
           strokeWidth: 4,
         ),
       ];
@@ -423,12 +424,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       _secondJeepneyPolylines = [
         Polyline(
           points: secondSegment.meta.jeepneySegment,
-          color: const Color.fromARGB(
-            255,
-            0,
-            150,
-            255,
-          ), // Different color for 2nd jeepney
+          color: RouteColors.getColorForRoute(secondSegment.route.routeNumber),
           strokeWidth: 4,
         ),
       ];
@@ -624,6 +620,37 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     if (_isModalOpen) return;
     _isModalOpen = true;
 
+    // 🖼️ DEBUG: Print comprehensive route info
+    print('🖼️ === ROUTE MODAL DEBUG ===');
+    print('🖼️ _isMultiRoute: $_isMultiRoute');
+    print('🖼️ _multiRouteResult is null: ${_multiRouteResult == null}');
+    print('🖼️ _matchedRoute is null: ${_matchedRoute == null}');
+
+    if (_matchedRoute != null) {
+      print('🖼️ Single route number: ${_matchedRoute!.routeNumber}');
+      print(
+        '🖼️ Single route path: Assets/route_pics/${_matchedRoute!.routeNumber}.png',
+      );
+    }
+
+    if (_isMultiRoute && _multiRouteResult != null) {
+      print('🖼️ MULTI-ROUTE DETECTED');
+      print(
+        '🖼️ First jeepney route number: ${_multiRouteResult!.segments[0].route.routeNumber}',
+      );
+      print(
+        '🖼️ Second jeepney route number: ${_multiRouteResult!.segments[1].route.routeNumber}',
+      );
+      print('🖼️ Expected image paths:');
+      print(
+        '   - Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
+      );
+      print(
+        '   - Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
+      );
+    }
+    print('🖼️ === END DEBUG ===');
+
     final animationController = BottomSheet.createAnimationController(this);
     animationController.duration = const Duration(milliseconds: 1000);
     animationController.reverseDuration = const Duration(milliseconds: 300);
@@ -739,6 +766,145 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                         ),
                       ),
                       const Divider(height: 32),
+
+                      // PART 1: Walk to boarding
+                      if (_walkToBoarding != null) ...[
+                        _buildSectionHeader(
+                          '🚶 PART 1: Walk to Jeepney Boarding Point',
+                          _walkToBoarding!.formattedDistance,
+                          _walkToBoarding!.formattedDuration,
+                        ),
+                        ..._walkToBoarding!.steps.map(
+                          (step) => _buildDirectionStep(step),
+                        ),
+                      ] else ...[
+                        _buildSectionHeader(
+                          '🚶 PART 1: Walk to Jeepney Boarding Point',
+                          '${walkingDistance.toStringAsFixed(0)} m',
+                          '~${(walkingDistance / 1.4 / 60).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(child: Text('1')),
+                          title: const Text('Walk to boarding area'),
+                          subtitle: Text(
+                            '${walkingDistance.toStringAsFixed(0)} meters',
+                          ),
+                        ),
+                      ],
+
+                      const Divider(height: 32),
+
+                      // SINGLE ROUTE SECTION
+                      if (!_isMultiRoute &&
+                          _matchedRoute != null &&
+                          _routeMeta != null) ...[
+                        // PART 2: Ride the jeepney
+                        _buildSectionHeader(
+                          '🚌 PART 2: Ride Jeepney Route ${_matchedRoute!.routeNumber}',
+                          '${(segmentDistance / 1000).toStringAsFixed(1)} km',
+                          '~${(segmentDistance / 333.33).toStringAsFixed(0)} min',
+                        ),
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.orange,
+                            child: Icon(
+                              Icons.directions_bus,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            'Board Jeepney Route ${_matchedRoute!.routeNumber}',
+                          ),
+                          subtitle: Text(_matchedRoute!.direction),
+                        ),
+
+                        // IMAGE for single route jeepney
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Image.asset(
+                            "Assets/route_pics/${_matchedRoute!.routeNumber}.png",
+                            height: 200,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Failed to load jeepney image');
+                              print(
+                                '   Path: Assets/route_pics/${_matchedRoute!.routeNumber}.png',
+                              );
+                              print('   Error: $error');
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.directions_bus,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Route ${_matchedRoute!.routeNumber}',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.orange,
+                            child: Icon(
+                              Icons.arrow_downward,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: const Text('Alight near destination'),
+                          subtitle: Text(
+                            'Destination is ${endWalkingDistance.toStringAsFixed(0)}m away',
+                          ),
+                        ),
+
+                        const Divider(height: 32),
+
+                        // PART 3: Walk to destination
+                        if (_walkToDestination != null) ...[
+                          _buildSectionHeader(
+                            '🚶 PART 3: Walk to Final Destination',
+                            _walkToDestination!.formattedDistance,
+                            _walkToDestination!.formattedDuration,
+                          ),
+                          ..._walkToDestination!.steps.map(
+                            (step) => _buildDirectionStep(step),
+                          ),
+                        ] else ...[
+                          _buildSectionHeader(
+                            '🚶 PART 3: Walk to Final Destination',
+                            '${endWalkingDistance.toStringAsFixed(0)} m',
+                            '~${(endWalkingDistance / 1.4 / 60).toStringAsFixed(0)} min',
+                          ),
+                          ListTile(
+                            leading: const CircleAvatar(child: Text('1')),
+                            title: const Text('Walk to destination'),
+                            subtitle: Text(
+                              '${endWalkingDistance.toStringAsFixed(0)} meters',
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 80),
+                      ],
+
+                      // MULTI-ROUTE SECTION
                       if (_isMultiRoute && _multiRouteResult != null) ...[
                         Container(
                           padding: const EdgeInsets.all(8),
@@ -793,35 +959,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                           ),
                         ),
                         const Divider(height: 32),
-                      ],
 
-                      // PART 1: Walk to boarding
-                      if (_walkToBoarding != null) ...[
-                        _buildSectionHeader(
-                          '🚶 PART 1: Walk to Jeepney Boarding Point',
-                          _walkToBoarding!.formattedDistance,
-                          _walkToBoarding!.formattedDuration,
-                        ),
-                        ..._walkToBoarding!.steps.map(
-                          (step) => _buildDirectionStep(step),
-                        ),
-                      ] else ...[
-                        _buildSectionHeader(
-                          '🚶 PART 1: Walk to Jeepney Boarding Point',
-                          '${walkingDistance.toStringAsFixed(0)} m',
-                          '~${(walkingDistance / 1.4 / 60).toStringAsFixed(0)} min',
-                        ),
-                        ListTile(
-                          leading: const CircleAvatar(child: Text('1')),
-                          title: const Text('Walk to boarding area'),
-                          subtitle: Text(
-                            '${walkingDistance.toStringAsFixed(0)} meters',
-                          ),
-                        ),
-                      ],
-
-                      const Divider(height: 32),
-                      if (_isMultiRoute && _multiRouteResult != null) ...[
                         // FIRST JEEPNEY
                         _buildSectionHeader(
                           '🚌 PART 2A: First Jeepney - Route ${_multiRouteResult!.segments[0].route.routeNumber}',
@@ -851,35 +989,39 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
-
+                            "Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
                             height: 200,
                             fit: BoxFit.contain,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  height: 100,
-                                  color: Colors.grey[200],
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.directions_bus,
-                                          size: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Failed to load FIRST jeepney image');
+                              print(
+                                '   Path: Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
+                              );
+                              print('   Error: $error');
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.directions_bus,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Route ${_multiRouteResult!.segments[0].route.routeNumber}',
+                                        style: const TextStyle(
                                           color: Colors.grey,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Route ${_multiRouteResult!.segments[0].route.routeNumber}',
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
+                              );
+                            },
                           ),
                         ),
 
@@ -950,35 +1092,39 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
-
+                            "Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
                             height: 200,
                             fit: BoxFit.contain,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  height: 100,
-                                  color: Colors.grey[200],
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.directions_bus,
-                                          size: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Failed to load SECOND jeepney image');
+                              print(
+                                '   Path: Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
+                              );
+                              print('   Error: $error');
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.directions_bus,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Route ${_multiRouteResult!.segments[1].route.routeNumber}',
+                                        style: const TextStyle(
                                           color: Colors.grey,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Route ${_multiRouteResult!.segments[1].route.routeNumber}',
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
+                              );
+                            },
                           ),
                         ),
 
@@ -1133,13 +1279,16 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
             if (_isMultiRoute && _secondJeepneyPolylines.isNotEmpty)
               PolylineLayer(polylines: _secondJeepneyPolylines),
 
+            // ✅ FIXED: Only draw single route when NOT in multi-route mode
             // Jeepney route (single route)
-            if (_route.isNotEmpty)
+            if (!_isMultiRoute && _route.isNotEmpty && _matchedRoute != null)
               PolylineLayer(
                 polylines: [
                   Polyline(
                     points: _route,
-                    color: const Color.fromARGB(255, 255, 143, 0),
+                    color: RouteColors.getColorForRoute(
+                      _matchedRoute!.routeNumber,
+                    ),
                     strokeWidth: 4,
                   ),
                 ],
@@ -1257,12 +1406,6 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
               icon: const Icon(Icons.route),
               backgroundColor: Colors.white,
               onPressed: () {
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.blue,
-                  ), // Customize color
-                  strokeWidth: 4.0, // Customize thickness
-                );
                 if (!_isModalOpen) {
                   showRouteModal(context);
                 }
