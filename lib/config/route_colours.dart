@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 class RouteColors {
   // Define colors for each route number
   static final Map<dynamic, Color> _routeColorMap = {
-    1: const Color(0xFF226C0A),   
-    2: const Color(0xFFfb0406),   
-    3: const Color(0xFF08046e),  
-    4: const Color(0xFF4e0681),   
+    1: const Color(0xFF226C0A),
+    2: const Color(0xFFfb0406),
+    3: const Color(0xFF08046e),
+    4: const Color(0xFF4e0681),
     5: const Color(0xFFa5ad0a),
     6: const Color(0xFF387aed),
     7: const Color(0xFF1642a0),
@@ -39,9 +39,12 @@ class RouteColors {
   }
 
   /// Get a slightly transparent version of the route color
-  static Color getColorForRouteWithOpacity(dynamic routeNumber, double opacity) {
+  static Color getColorForRouteWithOpacity(
+    dynamic routeNumber,
+    double opacity,
+  ) {
     final color = getColorForRoute(routeNumber);
-    return color.withOpacity(opacity);
+    return color.withAlpha((opacity * 255).toInt());
   }
 
   /// Generate a random color for routes not in the map (optional)
@@ -49,7 +52,7 @@ class RouteColors {
     if (_routeColorMap.containsKey(routeNumber)) {
       return _routeColorMap[routeNumber]!;
     }
-    
+
     // Generate deterministic color based on route number hash
     final hash = routeNumber.hashCode;
     final hue = (hash % 360).toDouble();

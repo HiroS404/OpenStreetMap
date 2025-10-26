@@ -629,7 +629,7 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
     if (_matchedRoute != null) {
       print('🖼️ Single route number: ${_matchedRoute!.routeNumber}');
       print(
-        '🖼️ Single route path: Assets/route_pics/${_matchedRoute!.routeNumber}.png',
+        '🖼️ Single route path: assets/route_pics/${_matchedRoute!.routeNumber}.png',
       );
     }
 
@@ -643,10 +643,10 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
       );
       print('🖼️ Expected image paths:');
       print(
-        '   - Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
+        '   - assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
       );
       print(
-        '   - Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
+        '   - assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
       );
     }
     print('🖼️ === END DEBUG ===');
@@ -825,13 +825,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "Assets/route_pics/${_matchedRoute!.routeNumber}.png",
+                            "assets/route_pics/${_matchedRoute!.routeNumber}.png",
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               print('❌ Failed to load jeepney image');
                               print(
-                                '   Path: Assets/route_pics/${_matchedRoute!.routeNumber}.png',
+                                '   Path: assets/route_pics/${_matchedRoute!.routeNumber}.png',
                               );
                               print('   Error: $error');
                               return Container(
@@ -989,13 +989,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
+                            "assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png",
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               print('❌ Failed to load FIRST jeepney image');
                               print(
-                                '   Path: Assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
+                                '   Path: assets/route_pics/${_multiRouteResult!.segments[0].route.routeNumber}.png',
                               );
                               print('   Error: $error');
                               return Container(
@@ -1092,13 +1092,13 @@ class _OpenstreetmapScreenState extends State<OpenstreetmapScreen>
                             vertical: 8,
                           ),
                           child: Image.asset(
-                            "Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
+                            "assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png",
                             height: 200,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               print('❌ Failed to load SECOND jeepney image');
                               print(
-                                '   Path: Assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
+                                '   Path: assets/route_pics/${_multiRouteResult!.segments[1].route.routeNumber}.png',
                               );
                               print('   Error: $error');
                               return Container(
