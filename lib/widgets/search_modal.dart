@@ -338,7 +338,7 @@ class _SearchModalState extends State<SearchModal> {
                         : _results.isEmpty
                         ? const Center(
                       child: Text(
-                        "No results found. \n \nFOR DEMO: try adobo, fried chicken, cordon bleu, hedang pantat.....\n or try type 'all' ",
+                        "Tap searchbox, search for your wants \n    Type 'all' to show all restaurants",
                       ),
                     )
                         : ListView.builder(
